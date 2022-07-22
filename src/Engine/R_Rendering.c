@@ -63,40 +63,19 @@ void R_ComposeFrame(void)
     }
 }
 
-Uint32 getpixel(SDL_Surface *surface, int x, int y)
+//-------------------------------------
+// Gets a pixel from a surface
+//-------------------------------------
+Uint32 R_GetPixelFromSurface(SDL_Surface *surface, int x, int y)
 {
     SDL_LockSurface(surface);
-    int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to retrieve */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+    Uint32* target_pixel = (Uint32 *) ((Uint8 *) surface->pixels
+                        + ((int)(y)) * surface->pitch
+                        + x * surface->format->BytesPerPixel);
     SDL_UnlockSurface(surface);
 
-switch (bpp)
-{
-    case 1:
-        return *p;
-        break;
-
-    case 2:
-        return *(Uint16 *)p;
-        break;
-
-    case 3:
-        if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-            return p[0] << 16 | p[1] << 8 | p[2];
-        else
-            return p[0] | p[1] << 8 | p[2] << 16;
-            break;
-
-        case 4:
-            return *(Uint32 *)p;
-            break;
-
-        default:
-            return 0;       /* shouldn't happen, but avoids warnings */
-      }
+    return *target_pixel;
 }
-
 
 //-------------------------------------
 // Reads the framebuffer with the dirtybox and transfer to win_surface
@@ -620,7 +599,7 @@ void R_Raycast(void)
             if(beta < 0)
                 beta += 2*M_PI;
 
-            for(int y = end; y < PROJECTION_PLANE_HEIGHT; y++)
+            for(int y = end+1; y < PROJECTION_PLANE_HEIGHT; y++)
             {
                 // Get distance
                 float straightlinedist = (32.0f * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
@@ -635,10 +614,10 @@ void R_Raycast(void)
                 int textureY = (int)floory % 64;
                 
                 // Draw floor
-                R_DrawPixel(x, y, getpixel(surfaces[W_Floor1], textureX, textureY));
+                R_DrawPixel(x, y, R_GetPixelFromSurface(tomentdatapack.objects[W_Floor1]->texture, textureX, textureY));
                 
                 // Draw ceiling
-                R_DrawPixel(x, PROJECTION_PLANE_HEIGHT-y, getpixel(surfaces[W_Ceiling1], textureX, textureY));
+                R_DrawPixel(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.objects[W_Ceiling1]->texture, textureX, textureY));
             }
         }
         

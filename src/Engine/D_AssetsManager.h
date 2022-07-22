@@ -11,9 +11,10 @@ typedef enum objectID_e
 {
     // 0 = Empty
     W_Cave1 = 1,
-    W_Cave2 = 2,
-    W_Floor1 = 3,
-    W_Ceiling1 = 4
+    W_Cave1Alt = 2,
+    W_Cave2 = 3,
+    W_Floor1 = 4,
+    W_Ceiling1 = 5
 } objectID_t;
 
 typedef struct object_s
@@ -31,10 +32,6 @@ typedef struct tomentdatapack_s
 } tomentdatapack_t;
 
     
-extern SDL_Surface* floortext;
-extern SDL_Surface* ceilingtext;
-
-extern SDL_Surface* surfaces[256];
 extern tomentdatapack_t tomentdatapack;
 
 

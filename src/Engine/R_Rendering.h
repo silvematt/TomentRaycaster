@@ -50,6 +50,11 @@ void R_UpdateNoBlit(void);
 void R_FinishUpdate(void);
 
 //-------------------------------------
+// Gets a pixel from a surface
+//-------------------------------------
+Uint32 R_GetPixelFromSurface(SDL_Surface *surface, int x, int y);
+
+//-------------------------------------
 // Given an SDL_Surface, extracts the pixels of it and puts them in the selected framebuffer
 //-------------------------------------
 void R_BlitIntoBuffer(int buffer, SDL_Surface* sur, SDL_Rect* pos);
