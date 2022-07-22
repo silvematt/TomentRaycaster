@@ -63,6 +63,40 @@ void R_ComposeFrame(void)
     }
 }
 
+Uint32 getpixel(SDL_Surface *surface, int x, int y)
+{
+    SDL_LockSurface(surface);
+    int bpp = surface->format->BytesPerPixel;
+    /* Here p is the address to the pixel we want to retrieve */
+    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+    SDL_UnlockSurface(surface);
+
+switch (bpp)
+{
+    case 1:
+        return *p;
+        break;
+
+    case 2:
+        return *(Uint16 *)p;
+        break;
+
+    case 3:
+        if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+            return p[0] << 16 | p[1] << 8 | p[2];
+        else
+            return p[0] | p[1] << 8 | p[2] << 16;
+            break;
+
+        case 4:
+            return *(Uint32 *)p;
+            break;
+
+        default:
+            return 0;       /* shouldn't happen, but avoids warnings */
+      }
+}
+
 
 //-------------------------------------
 // Reads the framebuffer with the dirtybox and transfer to win_surface
@@ -343,6 +377,8 @@ void R_Raycast(void)
         int hobjectIDHit = -1;    // The ID of the object hit
         int vobjectIDHit = -1;    // The ID of the object hit
         int objectIDHit;
+        
+        vector2_t wallPoint;
 
         // HORIZONTAL CHECK
         if(rayAngle != 0.0f && rayAngle != M_PI) 
@@ -501,6 +537,9 @@ void R_Raycast(void)
                 correctDistance = hDistance;
                 objectIDHit = hobjectIDHit;
 
+                wallPoint.x = hcurx;
+                wallPoint.y = hcury;
+
                 if(DEBUG_RAYCAST_MINIMAP == 1)
                     R_DrawLine((player.centeredPos.x) / MINIMAP_DIVIDER, (player.centeredPos.y) / MINIMAP_DIVIDER, hcurx / MINIMAP_DIVIDER, hcury / MINIMAP_DIVIDER, r_debugColor);
             }
@@ -509,6 +548,9 @@ void R_Raycast(void)
                 horizontal = false;
                 correctDistance = vDistance;
                 objectIDHit = vobjectIDHit;
+
+                wallPoint.x = vcurx;
+                wallPoint.y = vcury;
 
                 if(DEBUG_RAYCAST_MINIMAP == 1)
                     R_DrawLine((player.centeredPos.x) / MINIMAP_DIVIDER, (player.centeredPos.y) / MINIMAP_DIVIDER, vcurx / MINIMAP_DIVIDER, vcury / MINIMAP_DIVIDER, SDL_MapRGB(win_surface->format, 255, 255,0));
@@ -539,7 +581,7 @@ void R_Raycast(void)
             float end = wallOffset+wallHeight;
             end = SDL_clamp(end, 0, PROJECTION_PLANE_HEIGHT);
 
-            object_t* curObject = &tomentdatapack.objects[objectIDHit];
+            object_t* curObject = tomentdatapack.objects[objectIDHit];
             // Check if object is null
             if(curObject->texture == NULL)
             {
@@ -568,6 +610,35 @@ void R_Raycast(void)
                     offset = (TILE_SIZE-1) - offset;
 
                 R_DrawColumnTextured( (x), wallOffset, end, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped);
+            }
+
+            // Floor Casting & Ceiling
+            float beta = (player.angle - rayAngle);
+            if(beta > 2*M_PI)
+                beta -= 2*M_PI;
+
+            if(beta < 0)
+                beta += 2*M_PI;
+
+            for(int y = end; y < PROJECTION_PLANE_HEIGHT; y++)
+            {
+                // Get distance
+                float straightlinedist = (32.0f * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
+                float d = straightlinedist / cos(beta);
+
+                // Get coordinates
+                float floorx = player.centeredPos.x + (cos(rayAngle) * d);
+                float floory = player.centeredPos.y + (sin(rayAngle) * d);
+
+                // Get textels
+                int textureX = (int)floorx % 64;
+                int textureY = (int)floory % 64;
+                
+                // Draw floor
+                R_DrawPixel(x, y, getpixel(surfaces[W_Floor1], textureX, textureY));
+                
+                // Draw ceiling
+                R_DrawPixel(x, PROJECTION_PLANE_HEIGHT-y, getpixel(surfaces[W_Ceiling1], textureX, textureY));
             }
         }
         
