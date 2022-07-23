@@ -7,7 +7,7 @@ tomentdatapack_t tomentdatapack;
 //-------------------------------------
 // Sets an Object 
 //-------------------------------------
-void D_SetObject(object_t* obj, objectID_t id, SDL_Surface* texture, object_t* alt)
+void D_SetObject(object_t* obj, int id, SDL_Surface* texture, object_t* alt)
 {
     obj->ID = id;
     
@@ -18,54 +18,86 @@ void D_SetObject(object_t* obj, objectID_t id, SDL_Surface* texture, object_t* a
     obj->alt = alt;
 }
 
-
 //-------------------------------------
 // Initializes the Assets and datapacks 
 //-------------------------------------
 void D_InitAssetManager(void)
 {
+    D_InitLoadWalls();
+    D_InitLoadFloors();
+    D_InitLoadCeilings();
+}
+
+void D_InitLoadWalls(void)
+{
     // Create Objects
-    object_t* wallCave1 = (object_t*)malloc(sizeof(object_t));
-    object_t* wallCave1Alt = (object_t*)malloc(sizeof(object_t));
-    object_t* wallCave2 = (object_t*)malloc(sizeof(object_t));
-    object_t* floor1 = (object_t*)malloc(sizeof(object_t));
-    object_t* ceiling1 = (object_t*)malloc(sizeof(object_t));
+    object_t* wall1 = (object_t*)malloc(sizeof(object_t));
+    object_t* wall1Alt = (object_t*)malloc(sizeof(object_t));
+    object_t* wall2 = (object_t*)malloc(sizeof(object_t));
 
     // Put objects in the datapack
-    tomentdatapack.objects[W_Cave1] = wallCave1;
-    tomentdatapack.objects[W_Cave1Alt] = wallCave1Alt;
-    tomentdatapack.objects[W_Cave2] = wallCave2;
-    tomentdatapack.objects[W_Floor1] = floor1;
-    tomentdatapack.objects[W_Ceiling1] = ceiling1;
+    tomentdatapack.walls[W_1] = wall1;
+    tomentdatapack.walls[W_1Alt] = wall1Alt;
+    tomentdatapack.walls[W_2] = wall2;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
     SDL_Surface *temp1;
 
     temp1 = SDL_LoadBMP("Data/wall1.bmp");
-    tomentdatapack.objects[W_Cave1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    tomentdatapack.walls[W_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     SDL_FreeSurface(temp1);
 
     temp1 = SDL_LoadBMP("Data/wall1alt.bmp");
-    tomentdatapack.objects[W_Cave1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    tomentdatapack.walls[W_1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     SDL_FreeSurface(temp1);
 
     temp1 = SDL_LoadBMP("Data/wall2.bmp");
-    tomentdatapack.objects[W_Cave2]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-    SDL_FreeSurface(temp1);
-
-    temp1 = SDL_LoadBMP("Data/floor.bmp");
-    tomentdatapack.objects[W_Floor1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-    SDL_FreeSurface(temp1);
-
-    temp1 = SDL_LoadBMP("Data/ceiling1.bmp");
-    tomentdatapack.objects[W_Ceiling1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    tomentdatapack.walls[W_2]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     SDL_FreeSurface(temp1);
 
     // Final sets
-    D_SetObject(wallCave1, W_Cave1, tomentdatapack.objects[W_Cave1]->texture, wallCave1Alt);
-    D_SetObject(wallCave1Alt, W_Cave1Alt, tomentdatapack.objects[W_Cave1Alt]->texture, NULL);
-    D_SetObject(wallCave2, W_Cave2, tomentdatapack.objects[W_Cave2]->texture, NULL);
-    D_SetObject(floor1, W_Floor1, tomentdatapack.objects[W_Floor1]->texture, NULL);
-    D_SetObject(ceiling1, W_Ceiling1, tomentdatapack.objects[W_Ceiling1]->texture, NULL);
+    D_SetObject(wall1, W_1, tomentdatapack.walls[W_1]->texture, wall1Alt);
+    D_SetObject(wall1Alt, W_1Alt, tomentdatapack.walls[W_1Alt]->texture, NULL);
+    D_SetObject(wall2, W_2, tomentdatapack.walls[W_2]->texture, NULL);
+}
+
+void D_InitLoadFloors(void)
+{
+    // Create Objects
+    object_t* floor1 = (object_t*)malloc(sizeof(object_t));
+
+    // Put objects in the datapack
+    tomentdatapack.floors[F_1] = floor1;
+
+    // Fill objects
+    // Convert all the surfaces that we will load in the same format as the win_surface
+    SDL_Surface *temp1;
+
+    temp1 = SDL_LoadBMP("Data/floor.bmp");
+    tomentdatapack.floors[F_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    SDL_FreeSurface(temp1);
+
+    // Final sets
+    D_SetObject(floor1, F_1, tomentdatapack.floors[F_1]->texture, NULL);
+}
+
+void D_InitLoadCeilings(void)
+{
+    // Create Objects
+    object_t* ceiling1 = (object_t*)malloc(sizeof(object_t));
+
+    // Put objects in the datapack
+    tomentdatapack.ceilings[C_1] = ceiling1;
+
+    // Fill objects
+    // Convert all the surfaces that we will load in the same format as the win_surface
+    SDL_Surface *temp1;
+
+    temp1 = SDL_LoadBMP("Data/ceiling1.bmp");
+    tomentdatapack.ceilings[C_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    SDL_FreeSurface(temp1);
+
+    // Final sets
+    D_SetObject(ceiling1, C_1, tomentdatapack.ceilings[C_1]->texture, NULL);
 }

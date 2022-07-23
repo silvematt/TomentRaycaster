@@ -265,7 +265,7 @@ void R_DrawMinimap(void)
                 curRect.y = y * TILE_SIZE / MINIMAP_DIVIDER;
 
                 // If it is an empty space
-                if(currentMap.map[y][x] == 0)
+                if(currentMap.wallMap[y][x] == 0)
                 {
                     R_BlitColorIntoBuffer(0, SDL_MapRGB(win_surface->format, 128, 128, 128), &curRect);
                 }
@@ -407,10 +407,10 @@ void R_Raycast(void)
                 if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
                 {
                     // If it hit a wall, register it, save the distance and get out of the while
-                    if(currentMap.map[curGridY][curGridX] >= 1)
+                    if(currentMap.wallMap[curGridY][curGridX] >= 1)
                     {
                         hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
-                        hobjectIDHit = currentMap.map[curGridY][curGridX];
+                        hobjectIDHit = currentMap.wallMap[curGridY][curGridX];
                         break;
                     }
                 }
@@ -479,10 +479,10 @@ void R_Raycast(void)
                 if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
                 {
                     // If it hit a wall, register it, save the distance and get out of the while
-                    if(currentMap.map[curGridY][curGridX] >= 1)
+                    if(currentMap.wallMap[curGridY][curGridX] >= 1)
                         {
                             vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
-                            vobjectIDHit = currentMap.map[curGridY][curGridX];
+                            vobjectIDHit = currentMap.wallMap[curGridY][curGridX];
                             break;
                         }
                 }
@@ -560,7 +560,7 @@ void R_Raycast(void)
             float end = wallOffset+wallHeight;
             end = SDL_clamp(end, 0, PROJECTION_PLANE_HEIGHT);
 
-            object_t* curObject = tomentdatapack.objects[objectIDHit];
+            object_t* curObject = tomentdatapack.walls[objectIDHit];
             // Check if object is null
             if(curObject->texture == NULL)
             {
@@ -610,14 +610,37 @@ void R_Raycast(void)
                 float floory = player.centeredPos.y + (sin(rayAngle) * d);
 
                 // Get textels
-                int textureX = (int)floorx % 64;
-                int textureY = (int)floory % 64;
-                
-                // Draw floor
-                R_DrawPixel(x, y, R_GetPixelFromSurface(tomentdatapack.objects[W_Floor1]->texture, textureX, textureY));
-                
-                // Draw ceiling
-                R_DrawPixel(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.objects[W_Ceiling1]->texture, textureX, textureY));
+                int textureX = (int)floorx % TILE_SIZE;
+                int textureY = (int)floory % TILE_SIZE;
+
+                // Get map coordinates
+                int curGridX = floor(floorx / TILE_SIZE);
+                int curGridY = floor(floory / TILE_SIZE);
+
+                int floorObjectID = -1;
+                int ceilingObjectID = -1;
+
+                // If the ray is in a grid that is inside the map
+                if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
+                {
+                    // Check the floor texture at that point
+                    if(currentMap.floorMap[curGridY][curGridX] >= 1)
+                    {
+                        floorObjectID = currentMap.floorMap[curGridY][curGridX];
+                        
+                        // Draw floor
+                        R_DrawPixel(x, y, R_GetPixelFromSurface(tomentdatapack.floors[floorObjectID]->texture, textureX, textureY));
+                    }
+
+                    // Check the ceiling texture at that point
+                    if(currentMap.ceilingMap[curGridY][curGridX] >= 1)
+                    {
+                        ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
+
+                        // Draw ceiling
+                        R_DrawPixel(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY));
+                    }
+                }
             }
         }
         

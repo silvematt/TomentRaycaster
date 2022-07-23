@@ -26,7 +26,7 @@ void A_InitApplication(void)
 
     win_width = win_surface->w;
     pixels = win_surface->pixels;
-
+    
     // Init Renderer
     R_InitRendering();
 }

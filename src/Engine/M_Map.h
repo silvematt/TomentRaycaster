@@ -18,7 +18,9 @@ typedef struct map_s
 {
     char id[MAX_STRLEN];
     char name[MAX_STRLEN];
-    int map[MAP_HEIGHT][MAP_WIDTH];
+    int wallMap[MAP_HEIGHT][MAP_WIDTH];
+    int floorMap[MAP_HEIGHT][MAP_WIDTH];
+    int ceilingMap[MAP_HEIGHT][MAP_WIDTH];
 } map_t;
 
 extern map_t currentMap;
