@@ -11,6 +11,7 @@ Features:
 - Rendering 640x480
 - Player Input (Walk forward/backwards, rotate, strafe)
 - Textured Walls, Floors and Ceilings
+- Shading
 - Load map from file
 - Assets Manager (different values in the map files are different walls)
 - Minimap
