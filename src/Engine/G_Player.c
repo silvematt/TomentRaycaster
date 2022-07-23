@@ -5,6 +5,7 @@
 #include "I_InputHandling.h"
 #include "M_Map.h"
 #include "G_Physics.h"
+#include "U_Utilities.h"
 
 player_t player; // Player
 SDL_Rect destRect;
@@ -46,25 +47,28 @@ void G_InitPlayer(void)
 void G_PlayerTick(void)
 {
     // Get player grid pos
-    player.gridPosition.x = (player.position.x / TILE_SIZE);
-    player.gridPosition.y = (player.position.y / TILE_SIZE);
+    player.gridPosition.x = ((player.position.x+PLAYER_CENTER_FIX) / TILE_SIZE);
+    player.gridPosition.y = ((player.position.y+PLAYER_CENTER_FIX) / TILE_SIZE);
     
     //player.angle = M_PI / 4;
     player.angle += playerinput.input.x * PLAYER_ROT_SPEED * deltaTime;
-
     
-    if(player.angle > 2*M_PI)
-        player.angle -= 2*M_PI;
-
-    if(player.angle < 0)
-        player.angle += 2*M_PI;
-    
+    FIX_ANGLES(player.angle);
 
     playerinput.dir.x = cos(player.angle);
     playerinput.dir.y = sin(player.angle);
 
     //printf(" ANGLE: %f DIR: %f | %f\n", player.angle, playerinput.dir.x, playerinput.dir.y);
 
+    // Calculate dx dy
+    player.deltaPos.x = (playerinput.dir.x * playerinput.input.y) * PLAYER_SPEED * deltaTime;
+    player.deltaPos.y = (playerinput.dir.y * playerinput.input.y) * PLAYER_SPEED * deltaTime;
+
+    // Calculate the player position relative to cell
+    float playerXCellOffset = (int)(player.position.x+PLAYER_CENTER_FIX) % TILE_SIZE;
+    float playerYCellOffset = (int)(player.position.y+PLAYER_CENTER_FIX) % TILE_SIZE;
+
+    // Strafe
     if(playerinput.strafe.x != 0.0f)
     {
         float adjustedAngle = player.angle;
@@ -79,13 +83,40 @@ void G_PlayerTick(void)
         strafedDir.x = cos(adjustedAngle);
         strafedDir.y = sin(adjustedAngle);
 
-        player.position.x += (strafedDir.x) * PLAYER_SPEED * deltaTime;
-        player.position.y += (strafedDir.y) * PLAYER_SPEED * deltaTime;
+        player.deltaPos.x += (strafedDir.x) * PLAYER_SPEED * deltaTime;
+        player.deltaPos.y += (strafedDir.y) * PLAYER_SPEED * deltaTime;
+    }
+
+    // Collision detection
+    if(player.deltaPos.x > 0)
+    {
+        // Player is moving right, check if it's too right
+        if(currentMap.wallMap[player.gridPosition.y][player.gridPosition.x+1] != 0 && playerXCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // If player is close to wall
+            player.deltaPos.x = 0;
+    }
+    else
+    {
+        // Player is moving left
+        if(currentMap.wallMap[player.gridPosition.y][player.gridPosition.x-1] != 0 && playerXCellOffset < PLAYER_MIN_DIST_TO_WALL) // If player is close to wall
+            player.deltaPos.x = 0;
+    }
+
+    if(player.deltaPos.y < 0)
+    {
+        // Player is going up
+        if(currentMap.wallMap[player.gridPosition.y-1][player.gridPosition.x] != 0 && playerYCellOffset < PLAYER_MIN_DIST_TO_WALL) // If player is close to wall
+            player.deltaPos.y = 0;
+    }
+    else
+    {
+        // Player is going down
+        if(currentMap.wallMap[player.gridPosition.y+1][player.gridPosition.x] != 0 && playerYCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // If player is close to wall
+            player.deltaPos.y = 0;
     }
     
     // Move Player normally
-    player.position.x += (playerinput.dir.x * playerinput.input.y) * PLAYER_SPEED * deltaTime;
-    player.position.y += (playerinput.dir.y * playerinput.input.y) * PLAYER_SPEED * deltaTime;
+    player.position.x += player.deltaPos.x;
+    player.position.y += player.deltaPos.y;
 
     player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
     player.centeredPos.y = player.position.y + PLAYER_CENTER_FIX;

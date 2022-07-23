@@ -8,6 +8,7 @@
 #include "M_Map.h"
 #include "I_InputHandling.h"
 #include "D_AssetsManager.h"
+#include "U_Utilities.h"
 
 uint32_t r_blankColor;
 uint32_t r_transparencyColor;
@@ -325,11 +326,7 @@ void R_Raycast(void)
     for(int x = 0; x < PROJECTION_PLANE_WIDTH; x++)
     {
         // Fix angles
-        if(rayAngle > 2*M_PI)
-            rayAngle -= 2*M_PI;
-
-        if(rayAngle < 0)
-            rayAngle += 2*M_PI;
+        FIX_ANGLES(rayAngle);
 
         // Hit distances
         float hDistance = 99999.9f;
@@ -593,11 +590,7 @@ void R_Raycast(void)
 
             // Floor Casting & Ceiling
             float beta = (player.angle - rayAngle);
-            if(beta > 2*M_PI)
-                beta -= 2*M_PI;
-
-            if(beta < 0)
-                beta += 2*M_PI;
+            FIX_ANGLES(beta);
 
             for(int y = end+1; y < PROJECTION_PLANE_HEIGHT; y++)
             {

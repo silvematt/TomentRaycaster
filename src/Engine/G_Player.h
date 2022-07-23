@@ -12,12 +12,15 @@
 #define PLAYER_SPEED 250.0f
 #define PLAYER_ROT_SPEED 1.5f
 
+#define PLAYER_MIN_DIST_TO_WALL 30
+
 typedef struct player_s
 {
     vector2_t position;
     vector2_t centeredPos;
     
-    vector2_t gridPosition;
+    vector2Int_t gridPosition;
+    vector2_t deltaPos;
 
     SDL_Surface* surface;
     SDL_Rect surfaceRect;
