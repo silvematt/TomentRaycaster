@@ -233,6 +233,25 @@ void R_DrawPixel(int x, int y, int color)
             screenBuffers[0][x + y * win_width] = color;
 }
 
+//------------------------------------------------
+// Draws a single pixel on the current framebuffer
+//-------------------------------------------------
+void R_DrawPixelShaded(int x, int y, int color, float intensity)
+{
+    if( x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)    // To not go outside of boundaries
+    {
+        // Do shading
+        Uint8 r,g,b;
+        SDL_GetRGB(color, win_surface->format, &r, &g, &b);
+        r*=intensity;
+        g*=intensity;
+        b*=intensity;
+
+        // Put it in the framebuffer
+        screenBuffers[0][x + y * win_width] = SDL_MapRGB(win_surface->format, r,g,b);
+    }
+}
+
 
 //------------------------------------------------
 // Draws a column of pixel on the current framebuffer
@@ -541,7 +560,7 @@ void R_Raycast(void)
             float wallHeight = (TILE_SIZE  / finalDistance) * DISTANCE_TO_PROJECTION;
             float wallHeightUncapped = wallHeight;
 
-            float wallOffset = (PROJECTION_PLANE_HEIGHT / 2) - (wallHeight / 2);    // Wall Y offset to draw them in the middle of the screen
+            float wallOffset = (PROJECTION_PLANE_CENTER) - (wallHeight / 2);    // Wall Y offset to draw them in the middle of the screen
 
             // Prevent from going off projection plane
             if(wallOffset < 0)
@@ -556,6 +575,10 @@ void R_Raycast(void)
             // Don't draw outside of the Projection Plane Height
             float end = wallOffset+wallHeight;
             end = SDL_clamp(end, 0, PROJECTION_PLANE_HEIGHT);
+
+            // Calculate lighting intensity
+            float wallLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.wallLight)  / finalDistance;
+            wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
 
             object_t* curObject = tomentdatapack.walls[objectIDHit];
             // Check if object is null
@@ -575,7 +598,7 @@ void R_Raycast(void)
                 if(rayAngle < M_PI)
                     offset = (TILE_SIZE-1) - offset;
                     
-                R_DrawColumnTextured( (x), wallOffset, end, curObject->texture, offset, wallHeightUncapped);
+                R_DrawColumnTexturedShaded((x), wallOffset+1, end+1, curObject->texture, offset, wallHeightUncapped, wallLighting);
             }
             else
             {
@@ -585,18 +608,22 @@ void R_Raycast(void)
                 if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
                     offset = (TILE_SIZE-1) - offset;
 
-                R_DrawColumnTextured( (x), wallOffset, end, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped);
+                R_DrawColumnTexturedShaded( (x), wallOffset+1, end+1, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
             }
 
             // Floor Casting & Ceiling
             float beta = (player.angle - rayAngle);
             FIX_ANGLES(beta);
 
-            for(int y = end+1; y < PROJECTION_PLANE_HEIGHT; y++)
+            for(int y = floor(end); y < PROJECTION_PLANE_HEIGHT; y++)
             {
                 // Get distance
-                float straightlinedist = (32.0f * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
+                float straightlinedist = (RENDERING_PLAYER_HEIGHT * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
                 float d = straightlinedist / cos(beta);
+
+                // Calculate lighting intensity
+                float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
+                floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
 
                 // Get coordinates
                 float floorx = player.centeredPos.x + (cos(rayAngle) * d);
@@ -622,7 +649,7 @@ void R_Raycast(void)
                         floorObjectID = currentMap.floorMap[curGridY][curGridX];
                         
                         // Draw floor
-                        R_DrawPixel(x, y, R_GetPixelFromSurface(tomentdatapack.floors[floorObjectID]->texture, textureX, textureY));
+                        R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.floors[floorObjectID]->texture, textureX, textureY), floorLighting);
                     }
 
                     // Check the ceiling texture at that point
@@ -631,7 +658,7 @@ void R_Raycast(void)
                         ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
 
                         // Draw ceiling
-                        R_DrawPixel(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY));
+                        R_DrawPixelShaded(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting);
                     }
                 }
             }
@@ -654,8 +681,6 @@ void R_Raycast(void)
 //-------------------------------------------------
 void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight)
 {
-    Uint32* target_pixel;
-
     // The offset to extract Y pixels from the texture, this is != 0 only if the wall is bigger than the projection plane height
     float textureYoffset = 0.0f;
 
@@ -671,12 +696,51 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
     for(int i = y; i < endY; i++)
     {
         // Extract pixel
-        target_pixel = (Uint32 *) ((Uint8 *) texture->pixels
-                            + ((int)(textureY)) * texture->pitch
-                            + xOffset * texture->format->BytesPerPixel);
+        // Put it in the framebuffer
+        screenBuffers[0][x + i * win_width] = R_GetPixelFromSurface(texture, xOffset, textureY);
+
+        // Go forward
+        textureY+= offset;
+    }
+}
+
+//------------------------------------------------
+// Draws a column of pixel on the current framebuffer and applies shading
+// x = column
+// y = start of the wall (upper pixel)
+// endY = last pixel of the wall
+// texture = the texture to draw
+// xOffset = the x index of the texture for this column
+// wallheight = the height of the wall to be drawn (must be uncapped)
+//-------------------------------------------------
+void R_DrawColumnTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity)
+{
+    // The offset to extract Y pixels from the texture, this is != 0 only if the wall is bigger than the projection plane height
+    float textureYoffset = 0.0f;
+
+    // Correct the offset if the wall height is higher than the projection plane height
+    if(wallheight > PROJECTION_PLANE_HEIGHT)
+        textureYoffset = (wallheight-PROJECTION_PLANE_HEIGHT) / 2.0f;
+
+    // Increment at each pixel
+    float offset = TILE_SIZE / (wallheight);
+
+    // The actual Y index
+    float textureY = textureYoffset * offset;
+    for(int i = y; i < endY; i++)
+    {
+        // Extract pixel
+        Uint32 pixel = R_GetPixelFromSurface(texture, xOffset, textureY);
+
+        // Do shading
+        Uint8 r,g,b;
+        SDL_GetRGB(pixel, texture->format, &r, &g, &b);
+        r*=intensity;
+        g*=intensity;
+        b*=intensity;
 
         // Put it in the framebuffer
-        screenBuffers[0][x + i * win_width] = *target_pixel;
+        screenBuffers[0][x + i * win_width] = SDL_MapRGB(texture->format, r,g,b);
 
         // Go forward
         textureY+= offset;

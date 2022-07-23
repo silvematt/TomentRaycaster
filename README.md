@@ -1,7 +1,7 @@
 # TomentRaycaster
 A super simple Software Rendering Raycaster written in C and SDL2.
 
-![alt text](https://i.imgur.com/oRjljpd.png)
+![alt text](https://i.imgur.com/vxnHFox.png)
 
 I've written this raycaster following Permadi's paper, as a pilgrimage to my God John Carmack.
 

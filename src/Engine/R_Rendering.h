@@ -10,7 +10,7 @@
 #define PROJECTION_PLANE_CENTER 240
 //#define DISTANCE_TO_PROJECTION ((PROJECTION_PLANE_WIDTH / 2) / tan(PLAYER_FOV /2))
 #define DISTANCE_TO_PROJECTION 554      // Distance to projection
-
+#define RENDERING_PLAYER_HEIGHT 32
 //#define GAME_VIEW_OFFSETX 350           // Offset of the GameView
 //#define GAME_VIEW_OFFSETY 125           // Offset of the GameView
 
@@ -67,6 +67,7 @@ void R_BlitColorIntoBuffer(int buffer, int color, SDL_Rect* pos);
 void R_DrawLine(int x0, int y0, int x1, int y1, int color);
 
 void R_DrawPixel(int x, int y, int color);
+void R_DrawPixelShaded(int x, int y, int color, float intensity);
 
 void R_DrawColumn(int x, int y, int endY, int color);
 
@@ -91,5 +92,7 @@ void R_DrawBackground(void);
 void R_Raycast(void);
 
 void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight);
+
+void R_DrawColumnTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity);
 
 #endif

@@ -36,9 +36,6 @@ void G_InitPlayer(void)
 
     player.gridPosition.x = 12.0f;
     player.gridPosition.y = 12.0f;
-
-    player.projectionPlane.x = 0;
-    player.projectionPlane.y = 0.66f;
 }
 
 //-------------------------------------

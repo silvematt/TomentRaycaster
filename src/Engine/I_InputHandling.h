@@ -11,7 +11,6 @@ typedef struct playerinput_s
     vector2_t input;
     vector2_t dir;
     vector2_t strafe; // 1 = right -1 = left
-    vector2_t cameraPlane;
 } playerinput_t;
 
 extern playerinput_t playerinput;

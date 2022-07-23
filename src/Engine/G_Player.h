@@ -14,6 +14,9 @@
 
 #define PLAYER_MIN_DIST_TO_WALL 30
 
+// The light that the player will always carry, no matter the current map
+#define PLAYER_POINT_LIGHT_INTENSITY 10
+
 typedef struct player_s
 {
     vector2_t position;
@@ -27,8 +30,6 @@ typedef struct player_s
 
     float angle;
     float height;
-    vector2_t projectionPlane;
-    vector2_t cameraPlane;
 
 } player_t;
 
