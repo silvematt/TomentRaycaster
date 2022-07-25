@@ -1,11 +1,11 @@
 # TomentRaycaster
-A super simple Software Rendering Raycaster written in C and SDL2.
+A Software Rendering Raycaster Engine written in C and SDL2.
 
 ![alt text](https://i.imgur.com/vxnHFox.png)
 
-I've written this raycaster following Permadi's paper, as a pilgrimage to my God John Carmack.
+I've written this raycaster following Permadi's paper and Wolfenstein 3D code (and Black Book), as a pilgrimage to my God John Carmack.
 
-I've loved the time I've spent on it! May continue working on it in the future.
+I've loved the time I've spent on it, it's a work in progress with other features on schedule :)
 
 Features:
 - Rendering 640x480
