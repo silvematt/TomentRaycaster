@@ -235,9 +235,62 @@ void M_LoadMapAsCurrent(char* mapID)
       }
 
       // --------------------
+      // Read Sprites Map Layout
+      // --------------------
+      fgets(curLine, MAX_STRLEN, fp); // Layout =
+      fgets(curLine, MAX_STRLEN, fp); // [ start of map
+
+      fgets(curLine, MAX_STRLEN, fp); // First Row
+
+      // Find the first row
+      str = strchr(curLine, '{');
+      indx = (int)(str - curLine) + 1;
+
+      mapDone = false;
+      column = 0;
+      row = 0;
+      rowEnded = false;
+
+      while(!mapDone)
+      {
+            // Read columns
+            while(curLine[indx] != '}')
+            {
+                  currentMap.spritesMap[column][row] = curLine[indx] - '0'; // Set int value
+                  indx++;  
+
+                  // If next is comma, continue and get next number
+                  if(curLine[indx] == ',')
+                  {
+                        indx++;
+                        row++;
+                  }
+
+                  //printf("%c!\n", curLine[indx]);
+            }
+
+            // Row end, check if there's a next row or if it is finished
+            if(curLine[indx + 1] == ',')
+            {
+                  // There is a next column
+                  column++;
+                  indx = 1; // Move at the start of the next column
+                  row = 0;
+                  fgets(curLine, MAX_STRLEN, fp); // Get next line
+                  continue;
+            }
+            else if(curLine[indx + 1] == ']')
+            {
+                  // Map has finished loading
+                  mapDone = true;
+                  fgets(curLine, MAX_STRLEN, fp); // Get next line
+                  break;
+            }
+      }
+
+      // --------------------
       // Read Wall Lighting
       // --------------------
-
       // Find index for reading
       str = strchr(curLine, '=');
       indx = (int)(str - curLine) + 1;
@@ -258,7 +311,6 @@ void M_LoadMapAsCurrent(char* mapID)
 
       // Convert to float
       currentMap.wallLight = atof(tempStr);
-      printf("%f", currentMap.wallLight);
 
       // --------------------
       // Read Ceiling Lighting
@@ -283,7 +335,6 @@ void M_LoadMapAsCurrent(char* mapID)
 
       // Convert to float
       currentMap.floorLight = atof(tempStr);
-      printf("%f", currentMap.floorLight);
 
       printf("Map loaded successfully!\n");
       fclose(fp);

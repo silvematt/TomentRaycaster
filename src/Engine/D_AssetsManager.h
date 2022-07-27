@@ -31,6 +31,11 @@ typedef enum ceilingObjectID_e
     C_1 = 1,
 } ceilingObjectID_t;
 
+typedef enum spritesObjectID_e
+{
+    S_Barrel1 = 1,
+} spritesObjectID_t;
+
 typedef struct object_s
 {
     int ID;
@@ -45,16 +50,17 @@ typedef struct tomentdatapack_s
     object_t* walls[OBJECTARRAY_DEFAULT_SIZE];
     object_t* floors[OBJECTARRAY_DEFAULT_SIZE];
     object_t* ceilings[OBJECTARRAY_DEFAULT_SIZE];
+    object_t* sprites[OBJECTARRAY_DEFAULT_SIZE];
 } tomentdatapack_t;
 
     
 extern tomentdatapack_t tomentdatapack;
 
-
 void D_InitAssetManager(void);
 void D_InitLoadWalls(void);
 void D_InitLoadFloors(void);
 void D_InitLoadCeilings(void);
+void D_InitLoadSprites(void);
 
 void D_SetObject(object_t* obj, int id, SDL_Surface* texture, object_t* alt);
 

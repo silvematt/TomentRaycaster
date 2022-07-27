@@ -26,6 +26,7 @@ void D_InitAssetManager(void)
     D_InitLoadWalls();
     D_InitLoadFloors();
     D_InitLoadCeilings();
+    D_InitLoadSprites();
 }
 
 void D_InitLoadWalls(void)
@@ -100,4 +101,24 @@ void D_InitLoadCeilings(void)
 
     // Final sets
     D_SetObject(ceiling1, C_1, tomentdatapack.ceilings[C_1]->texture, NULL);
+}
+
+void D_InitLoadSprites(void)
+{
+    // Create Objects
+    object_t* spritesBarrel1 = (object_t*)malloc(sizeof(object_t));
+
+    // Put objects in the datapack
+    tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
+
+    // Fill objects
+    // Convert all the surfaces that we will load in the same format as the win_surface
+    SDL_Surface *temp1;
+
+    temp1 = SDL_LoadBMP("Data/barrel.bmp");
+    tomentdatapack.sprites[S_Barrel1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    SDL_FreeSurface(temp1);
+
+    // Final sets
+    D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
 }

@@ -21,6 +21,7 @@ typedef struct map_s
     int wallMap[MAP_HEIGHT][MAP_WIDTH];
     int floorMap[MAP_HEIGHT][MAP_WIDTH];
     int ceilingMap[MAP_HEIGHT][MAP_WIDTH];
+    int spritesMap[MAP_HEIGHT][MAP_WIDTH];
     float wallLight;
     float floorLight;
 } map_t;

@@ -3,7 +3,12 @@
 
 #include "../include/SDL2/SDL.h"
 
+#include "M_Map.h"
+#include "U_DataTypes.h"
 
+// =========================================
+// Raycasting
+// =========================================
 #define PLAYER_FOV 60                   // FOV of the player for raycasting
 #define PROJECTION_PLANE_WIDTH 640      // Projection Plane
 #define PROJECTION_PLANE_HEIGHT 480
@@ -14,20 +19,35 @@
 //#define GAME_VIEW_OFFSETX 350           // Offset of the GameView
 //#define GAME_VIEW_OFFSETY 125           // Offset of the GameView
 
+// =========================================
+// Minimap
+// =========================================
 #define MINIMAP_DIVIDER 16               // Divider for making the minimap smaller
 #define MINIMAP_PLAYER_WIDTH 4          // Dividers for making the player in the minimap smaller
 #define MINIMAP_PLAYER_HEIGHT 4
 
 // =========================================
+// Sprites
+// =========================================
+#define MAXVISABLE 50
+
+// =========================================
 // Debug
 // =========================================
 #define DEBUG_RAYCAST_MINIMAP 0
+#define DEBUG_VISIBLE_TILES_MINIMAP 0
+#define DEBUG_VISIBLE_SPRITES_MINIMAP 1
 
 extern uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
 extern uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
 
 extern unsigned int* screenBuffers[5];  // Buffers for the screen renderer
 extern SDL_Rect dirtybox;               // Marks the dirty pixels, used for optimization
+
+// Visible Sprite Determination
+extern bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];
+extern sprite_t visibleSprites[MAXVISABLE];
+extern int visibleSpritesLength;
 
 //-------------------------------------
 // Initializes the rendering 
@@ -90,6 +110,11 @@ void R_DrawBackground(void);
 // Performs the Raycast and draws the walls
 //-------------------------------------
 void R_Raycast(void);
+
+//-------------------------------------
+// Draws the visible sprites
+//-------------------------------------
+void R_DrawSprites(void);
 
 void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight);
 

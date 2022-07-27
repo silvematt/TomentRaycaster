@@ -4,7 +4,7 @@
 #include "A_Application.h"
 #include "U_DataTypes.h"
 
-#define PLAYER_FOV 60
+#define PLAYER_FOV 60 // Player's FOV in degrees
 #define PLAYER_WIDTH 16
 #define PLAYER_HEIGHT 16
 #define PLAYER_CENTER_FIX 8     // To fix the player position to be at the center instead of the upper corner, this is WIDTH/2
@@ -29,8 +29,6 @@ typedef struct player_s
     SDL_Rect surfaceRect;
 
     float angle;
-    float height;
-
 } player_t;
 
 extern player_t player;
