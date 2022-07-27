@@ -1,7 +1,7 @@
 # TomentRaycaster
 A Software Rendering Raycaster Engine written in C and SDL2.
 
-![alt text](https://i.imgur.com/vxnHFox.png)
+![alt text](https://i.imgur.com/B0JB8QJ.png)
 
 I've written this raycaster following Permadi's paper and Wolfenstein 3D code (and Black Book), as a pilgrimage to my God John Carmack.
 
@@ -11,6 +11,7 @@ Features:
 - Rendering 640x480
 - Player Input (Walk forward/backwards, rotate, strafe)
 - Textured Walls, Floors and Ceilings
+- Sprites Rendering [WIP]
 - Shading and Map Lighting
 - Load map from file
 - Assets Manager (different values in the map files are different walls)
