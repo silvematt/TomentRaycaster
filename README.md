@@ -11,9 +11,9 @@ Features:
 - Rendering 640x480
 - Player Input (Walk forward/backwards, rotate, strafe)
 - Textured Walls, Floors and Ceilings
-- Sprites Rendering [WIP]
+- Sprites Rendering & Physics (Sprites can be solid or not)
 - Shading and Map Lighting
 - Load map from file
-- Assets Manager (different values in the map files are different walls)
+- Assets Manager (different values in the map files are different walls/floors/ceilings)
 - Minimap
 - Fixed Time Step
