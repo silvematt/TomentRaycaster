@@ -6,6 +6,7 @@
 #include "M_Map.h"
 #include "G_Physics.h"
 #include "U_Utilities.h"
+#include "D_AssetsManager.h"
 
 player_t player; // Player
 SDL_Rect destRect;
@@ -84,30 +85,43 @@ void G_PlayerTick(void)
         player.deltaPos.y += (strafedDir.y) * PLAYER_SPEED * deltaTime;
     }
 
-    // Collision detection
+    // Collision detection (Walls and solid sprites)
     if(player.deltaPos.x > 0)
     {
+        int wallID  = currentMap.wallMap[player.gridPosition.y][player.gridPosition.x+1];
+        int spriteID = currentMap.spritesMap[player.gridPosition.y][player.gridPosition.x+1];
+    
         // Player is moving right, check if it's too right
-        if(currentMap.wallMap[player.gridPosition.y][player.gridPosition.x+1] != 0 && playerXCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // If player is close to wall
+        if((wallID != 0 ||  spriteID != 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1) && playerXCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // Wall check
+
             player.deltaPos.x = 0;
     }
     else
     {
+        int wallID  = currentMap.wallMap[player.gridPosition.y][player.gridPosition.x-1];
+        int spriteID = currentMap.spritesMap[player.gridPosition.y][player.gridPosition.x-1];
+
         // Player is moving left
-        if(currentMap.wallMap[player.gridPosition.y][player.gridPosition.x-1] != 0 && playerXCellOffset < PLAYER_MIN_DIST_TO_WALL) // If player is close to wall
+        if((wallID != 0 ||  spriteID != 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1) && playerXCellOffset < PLAYER_MIN_DIST_TO_WALL) // Wall check
             player.deltaPos.x = 0;
     }
 
     if(player.deltaPos.y < 0)
     {
+        int wallID  = currentMap.wallMap[player.gridPosition.y-1][player.gridPosition.x];
+        int spriteID = currentMap.spritesMap[player.gridPosition.y-1][player.gridPosition.x];
+
         // Player is going up
-        if(currentMap.wallMap[player.gridPosition.y-1][player.gridPosition.x] != 0 && playerYCellOffset < PLAYER_MIN_DIST_TO_WALL) // If player is close to wall
+        if((wallID != 0 ||  spriteID != 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1) && playerYCellOffset < PLAYER_MIN_DIST_TO_WALL) // Wall check
             player.deltaPos.y = 0;
     }
     else
     {
+        int wallID  = currentMap.wallMap[player.gridPosition.y+1][player.gridPosition.x];
+        int spriteID = currentMap.spritesMap[player.gridPosition.y+1][player.gridPosition.x];
+
         // Player is going down
-        if(currentMap.wallMap[player.gridPosition.y+1][player.gridPosition.x] != 0 && playerYCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // If player is close to wall
+        if((wallID != 0 ||  spriteID != 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1) && playerYCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // Wall check
             player.deltaPos.y = 0;
     }
     

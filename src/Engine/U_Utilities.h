@@ -7,7 +7,10 @@
 #define FIX_ANGLES_DEGREES(a) (a > 360) ? a -= 360 : (a < 0) ? a += 360 : a
 #define RADIAN_TO_DEGREE 57.2957795131
 
-void U_SetBit(byte* b, byte n);
-byte U_GetBit(byte* b, byte n);
+void    U_SetBit(byte* b, byte n);
+byte    U_GetBit(byte* b, byte n);
+float   U_GetDistanceSquared(float x1, float y1, float x2, float y2);
+
+void    U_QuicksortSprites(sprite_t visibleSprites[], int first, int last);
 
 #endif

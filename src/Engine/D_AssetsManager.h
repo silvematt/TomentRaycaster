@@ -2,6 +2,7 @@
 #define ASSETS_MANAGER_H_INCLUDED
 
 #include "../include/SDL2/SDL.h"
+#include "U_DataTypes.h"
 
 // --------------------------------------------
 // DEFINES
@@ -41,8 +42,16 @@ typedef struct object_s
     int ID;
     SDL_Surface* texture;
     struct object_s* alt;
+    byte flags; // Extra data
 } object_t;
 
+/* object_t Flags
+
+    For sprites
+    // 0000000 0
+    //          \
+    //           1 = solid (used for collision checking)
+*/
 
 typedef struct tomentdatapack_s
 {

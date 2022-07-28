@@ -10,6 +10,7 @@
 // Raycasting
 // =========================================
 #define PLAYER_FOV 60                   // FOV of the player for raycasting
+#define PLAYER_FOV_F 60.0f              // FOV of the player for raycasting (as float)
 #define PROJECTION_PLANE_WIDTH 640      // Projection Plane
 #define PROJECTION_PLANE_HEIGHT 480
 #define PROJECTION_PLANE_CENTER 240
@@ -30,6 +31,7 @@
 // Sprites
 // =========================================
 #define MAXVISABLE 50
+#define MAX_SPRITE_HEIGHT 1000
 
 // =========================================
 // Debug
@@ -43,6 +45,9 @@ extern uint32_t r_transparencyColor;    // Color marked as "transparency", rende
 
 extern unsigned int* screenBuffers[5];  // Buffers for the screen renderer
 extern SDL_Rect dirtybox;               // Marks the dirty pixels, used for optimization
+
+// Wall height
+extern float wallHeights[PROJECTION_PLANE_WIDTH];
 
 // Visible Sprite Determination
 extern bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "A_Application.h"
 #include "D_AssetsManager.h"
+#include "U_Utilities.h"
 
 tomentdatapack_t tomentdatapack;
 
@@ -117,6 +118,7 @@ void D_InitLoadSprites(void)
 
     temp1 = SDL_LoadBMP("Data/barrel.bmp");
     tomentdatapack.sprites[S_Barrel1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    U_SetBit(&tomentdatapack.sprites[S_Barrel1]->flags, 0); // Set collision bit flag to 1
     SDL_FreeSurface(temp1);
 
     // Final sets

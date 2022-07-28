@@ -19,6 +19,9 @@ uint32_t r_debugColor;
 unsigned int* screenBuffers[5];
 SDL_Rect dirtybox;
 
+// Wall height
+float wallHeights[PROJECTION_PLANE_WIDTH];
+
 // Visible Sprite Determination
 bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];
 sprite_t visibleSprites[MAXVISABLE];
@@ -164,7 +167,6 @@ void R_Raycast(void)
     // Set the visibleTiles back to 0
     memset(visibleTiles, false, (MAP_HEIGHT*MAP_WIDTH));
     visibleSpritesLength = 0;
-    memset(visibleSprites, false, sizeof(visibleSprites));
 
     //printf("ANGLE: %f\n", player.angle);
     //float rayAngle = player.angle;
@@ -257,14 +259,27 @@ void R_Raycast(void)
                     if(!visibleTiles[curGridY][curGridX] && currentMap.spritesMap[curGridY][curGridX] >= 1)
                     {
                         // Add sprite and data in the array
+
+                        // Get Grid Pos
                         visibleSprites[visibleSpritesLength].gridPos.x = curGridX;
                         visibleSprites[visibleSpritesLength].gridPos.y = curGridY;
+
+                        // Get World Pos
                         visibleSprites[visibleSpritesLength].pos.x = curGridX * TILE_SIZE;
                         visibleSprites[visibleSpritesLength].pos.y = curGridY * TILE_SIZE;
 
+                        // Get Player Space pos
+                        visibleSprites[visibleSpritesLength].pSpacePos.x = (visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
+                        visibleSprites[visibleSpritesLength].pSpacePos.y = (visibleSprites[visibleSpritesLength].pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
+
+                        // Calculate the distance to player
+                        visibleSprites[visibleSpritesLength].dist = sqrt(visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x + visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y);
+
+                        // Get ID
                         visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[curGridY][curGridX];
                         visibleSpritesLength++;
 
+                        // Mark this sprite as added so we don't get duplicates
                         visibleTiles[curGridY][curGridX] = true;
                     }
 
@@ -336,8 +351,6 @@ void R_Raycast(void)
                     curGridX = floor((vcurx-1) / TILE_SIZE);
                     curGridY = floor(vcury / TILE_SIZE);
                 }
-
-
                 
                 // If the ray is in a grid that is inside the map
                 if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
@@ -346,14 +359,27 @@ void R_Raycast(void)
                     if(!visibleTiles[curGridY][curGridX] && currentMap.spritesMap[curGridY][curGridX] >= 1)
                     {
                         // Add sprite and data in the array
+
+                        // Get Grid Pos
                         visibleSprites[visibleSpritesLength].gridPos.x = curGridX;
                         visibleSprites[visibleSpritesLength].gridPos.y = curGridY;
+
+                        // Get World Pos
                         visibleSprites[visibleSpritesLength].pos.x = curGridX * TILE_SIZE;
                         visibleSprites[visibleSpritesLength].pos.y = curGridY * TILE_SIZE;
 
+                        // Get Player Space pos
+                        visibleSprites[visibleSpritesLength].pSpacePos.x = (visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
+                        visibleSprites[visibleSpritesLength].pSpacePos.y = (visibleSprites[visibleSpritesLength].pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
+
+                        // Calculate the distance to player
+                        visibleSprites[visibleSpritesLength].dist = sqrt((visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x) + (visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y));
+
+                        // Get ID
                         visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[curGridY][curGridX];
                         visibleSpritesLength++;
 
+                        // Mark this sprite as added so we don't get duplicates
                         visibleTiles[curGridY][curGridX] = true;
                     }
 
@@ -422,6 +448,9 @@ void R_Raycast(void)
             // DRAW WALL
             float wallHeight = (TILE_SIZE  / finalDistance) * DISTANCE_TO_PROJECTION;
             float wallHeightUncapped = wallHeight;
+
+            // Save wall height
+            wallHeights[x] = wallHeightUncapped;
 
             float wallOffset = (PROJECTION_PLANE_CENTER) - (wallHeight / 2);    // Wall Y offset to draw them in the middle of the screen
 
@@ -540,44 +569,62 @@ void R_DrawSprites(void)
     if(!visibleSpritesLength)
         return;
 
+    U_QuicksortSprites(visibleSprites, 0, visibleSpritesLength-1);
+
     // Done in degrees to avoid computations (even if I could cache radians values and stuff)
     for(int i = 0; i < visibleSpritesLength; i++)
     {
-        // Translate to player's coordinates
-        float dx = (visibleSprites[i].pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
-        float dy = (visibleSprites[i].pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
-
         // Calculate angle and convert to degrees (*-1 makes sure it uses SDL screen space coordinates for unit circle and quadrants)
-        float angle = ((atan2(-dy, dx))* RADIAN_TO_DEGREE)*-1;
+        float angle = ((atan2(-visibleSprites[i].pSpacePos.y, visibleSprites[i].pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
         FIX_ANGLES_DEGREES(angle);
 
         float playerAngle = player.angle * RADIAN_TO_DEGREE;
-        
-        float yTemp = playerAngle + 30 - angle;
+        float yTemp = playerAngle + (PLAYER_FOV / 2) - angle;
 
         if(angle > 270 && playerAngle < 90)
-            yTemp = playerAngle + 30 - angle + 360;
+            yTemp = playerAngle + (PLAYER_FOV / 2) - angle + 360;
 
         if(playerAngle > 270 && angle < 90)
-            yTemp = playerAngle + 30 - angle - 360;
+            yTemp = playerAngle + (PLAYER_FOV / 2) - angle - 360;
 
-        float spriteX = yTemp * (PROJECTION_PLANE_WIDTH / 60.0f);
+        float spriteX = yTemp * (PROJECTION_PLANE_WIDTH / PLAYER_FOV_F);
         float spriteY = PROJECTION_PLANE_HEIGHT / 2;
         
         // Calculate distance and fix fisheye
-        float fixedAngle = (player.angle - (angle*RADIAN));
-        float dist = sqrt((dx*dx) + (dy*dy)) * cos(fixedAngle);
+        float fixedAngle = ((angle*RADIAN) - player.angle);
+        float dist = (visibleSprites[i].dist * cos(fixedAngle));
 
-        float height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
+        visibleSprites[i].height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
+
+        if(visibleSprites[i].height <= 0)
+            continue;
+
+        if(visibleSprites[i].height > MAX_SPRITE_HEIGHT)
+            visibleSprites[i].height = MAX_SPRITE_HEIGHT;
 
         // Calculate lighting intensity
         float lighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / dist;
         lighting = SDL_clamp(lighting, 0, 1.0f);
 
-        for(int j = 0; j < height; j++)
+        // Draw
+        int offset, drawX, drawYStart, drawYEnd;
+        for(int j = 0; j < visibleSprites[i].height; j++)
         {
-            int offset = j*TILE_SIZE/height;
-            R_DrawColumnTexturedShaded(PROJECTION_PLANE_WIDTH-(spriteX)+j-(height/2), (SCREEN_HEIGHT / 2)-(height/2), SCREEN_HEIGHT / 2 + height-(height/2), tomentdatapack.sprites[visibleSprites[i].spriteID]->texture,offset, height, lighting);
+            offset = j*TILE_SIZE/visibleSprites[i].height;
+            drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(visibleSprites[i].height/2);
+
+            // Check clipping with wall
+            if(wallHeights[drawX] >= visibleSprites[i].height)
+                continue;
+
+            drawYStart = (SCREEN_HEIGHT / 2)-(visibleSprites[i].height/2);
+            drawYEnd = SCREEN_HEIGHT / 2 + visibleSprites[i].height-(visibleSprites[i].height/2);
+
+            // Prevent overflow that causes sprites to lift up when too close
+            if(drawYStart < 0) 
+                drawYStart = 0;
+
+            R_DrawColumnTexturedShaded(drawX, drawYStart, drawYEnd, tomentdatapack.sprites[visibleSprites[i].spriteID]->texture,offset, visibleSprites[i].height, lighting);
         }
 
         // Draws the center of the sprite
@@ -592,7 +639,7 @@ Uint32 R_GetPixelFromSurface(SDL_Surface *surface, int x, int y)
 {
     SDL_LockSurface(surface);
     Uint32* target_pixel = (Uint32 *) ((Uint8 *) surface->pixels
-                        + ((int)(y)) * surface->pitch
+                        + y * surface->pitch
                         + x * surface->format->BytesPerPixel);
     SDL_UnlockSurface(surface);
 
