@@ -16,6 +16,7 @@ typedef enum wallObjectID_e
     W_1 = 1,
     W_1Alt = 2,
     W_2 = 3,
+    WD_Gate1 = 4,
 } wallObjectID_t;
 
 // All Floors
@@ -37,6 +38,11 @@ typedef enum spritesObjectID_e
     S_Barrel1 = 1,
 } spritesObjectID_t;
 
+typedef enum doorsObjectID_e
+{
+    D_Gate1 = 1
+} doorsObjectID_t;
+
 typedef struct object_s
 {
     int ID;
@@ -47,6 +53,16 @@ typedef struct object_s
 
 /* object_t Flags
 
+    // ============
+    // For walls
+    // ============
+    // 0000000 0
+    //          \
+    //           1 = Is Thin Wall
+
+    // ============
+    // For sprites
+    // ============
     For sprites
     // 0000000 0
     //          \
