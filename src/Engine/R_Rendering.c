@@ -282,13 +282,48 @@ void R_Raycast(void)
                         // Mark this sprite as added so we don't get duplicates
                         visibleTiles[curGridY][curGridX] = true;
                     }
+                    
+                    int idHit = currentMap.wallMap[curGridY][curGridX];
 
                     // If it hit a wall, register it, save the distance and get out of the while
-                    if(currentMap.wallMap[curGridY][curGridX] >= 1)
+                    if(idHit >= 1)
                     {
-                        hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
-                        hobjectIDHit = currentMap.wallMap[curGridY][curGridX];
-                        break;
+                        // Check if this is a thin wall
+                        if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 0) == 1)
+                        {
+                            // Check if this is an Horzintal thin wall (if it is a vertical, just ignore it)
+                            if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 0)
+                            {
+                                // This is a thin wall, check if we hit it or if it was occluded by the wall
+
+                                // Add half a tile to the current point
+                                hcurx += (Xa/2);
+                                hcury += (Ya/2);
+
+                                // Calculate tile gird of the new point (added of a half a tile)
+                                int newGridX = floor(hcurx / TILE_SIZE);
+                                int newGridY = floor(hcury / TILE_SIZE);
+
+                                // If they're in the same tile, the door is visible
+                                if(newGridX == curGridX && newGridY == curGridY)
+                                {
+                                    hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
+                                    hobjectIDHit = currentMap.wallMap[curGridY][curGridX];
+                                    break;
+                                }
+                                else // otherwise it's visible, revert the point and keep scanning
+                                {
+                                    hcurx -= (Xa/2);
+                                    hcury -= (Ya/2);
+                                }
+                            }
+                        }
+                        else // This is a normal wall
+                        {
+                            hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
+                            hobjectIDHit = currentMap.wallMap[curGridY][curGridX];
+                            break;
+                        }
                     }
                 }
                 else // If the ray went outisde the map the check fails, stop
@@ -383,13 +418,48 @@ void R_Raycast(void)
                         visibleTiles[curGridY][curGridX] = true;
                     }
 
+                    int idHit = currentMap.wallMap[curGridY][curGridX];
+
                     // If it hit a wall, register it, save the distance and get out of the while
-                    if(currentMap.wallMap[curGridY][curGridX] >= 1)
+                    if(idHit >= 1)
+                    {
+                        // Check if this is a thin wall
+                        if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 0) == 1)
+                        {
+                             // Check if this is an Vertical thin wall (if it is an horizontal, just ignore it)
+                            if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 1)
+                            {
+                                // This is a thin wall, check if we hit it or if it was occluded by the wall
+
+                                // Add half a tile to the current point
+                                vcurx += (Xa/2);
+                                vcury += (Ya/2);
+
+                                // Calculate tile gird of the new point (added of a half a tile)
+                                int newGridX = floor(vcurx / TILE_SIZE);
+                                int newGridY = floor(vcury / TILE_SIZE);
+
+                                // If they're in the same tile, the door is visible
+                                if(newGridX == curGridX && newGridY == curGridY)
+                                {
+                                    vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
+                                    vobjectIDHit = currentMap.wallMap[curGridY][curGridX];
+                                    break;
+                                }
+                                else // otherwise it's visible, revert the point and keep scanning
+                                {
+                                    vcurx -= (Xa/2);
+                                    vcury -= (Ya/2);
+                                }
+                            }
+                        }
+                        else
                         {
                             vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
                             vobjectIDHit = currentMap.wallMap[curGridY][curGridX];
                             break;
                         }
+                    }
                 }
                 else // If the ray went outisde the map the check fails, stop
                 {
@@ -503,61 +573,66 @@ void R_Raycast(void)
                 R_DrawColumnTexturedShaded( (x), wallOffset+1, end+1, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
             }
 
-            // Floor Casting & Ceiling
-            float beta = (player.angle - rayAngle);
-            FIX_ANGLES(beta);
-
-            for(int y = floor(end); y < PROJECTION_PLANE_HEIGHT; y++)
-            {
-                // Get distance
-                float straightlinedist = (RENDERING_PLAYER_HEIGHT * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
-                float d = straightlinedist / cos(beta);
-
-                // Calculate lighting intensity
-                float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
-                floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
-
-                // Get coordinates
-                float floorx = player.centeredPos.x + (cos(rayAngle) * d);
-                float floory = player.centeredPos.y + (sin(rayAngle) * d);
-
-                // Get textels
-                int textureX = (int)floorx % TILE_SIZE;
-                int textureY = (int)floory % TILE_SIZE;
-
-                // Get map coordinates
-                int curGridX = floor(floorx / TILE_SIZE);
-                int curGridY = floor(floory / TILE_SIZE);
-
-                int floorObjectID = -1;
-                int ceilingObjectID = -1;
-
-                // If the ray is in a grid that is inside the map
-                if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
-                {
-                    // Check the floor texture at that point
-                    if(currentMap.floorMap[curGridY][curGridX] >= 1)
-                    {
-                        floorObjectID = currentMap.floorMap[curGridY][curGridX];
-                        
-                        // Draw floor
-                        R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.floors[floorObjectID]->texture, textureX, textureY), floorLighting);
-                    }
-
-                    // Check the ceiling texture at that point
-                    if(currentMap.ceilingMap[curGridY][curGridX] >= 1)
-                    {
-                        ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
-
-                        // Draw ceiling
-                        R_DrawPixelShaded(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting);
-                    }
-                }
-            }
+            R_FloorCastingAndCeiling(end, rayAngle, x);
         }
         
         // Check next ray
         rayAngle += (RADIAN * PLAYER_FOV) / PROJECTION_PLANE_WIDTH;
+    }
+}
+
+void R_FloorCastingAndCeiling(float end, float rayAngle, int x)
+{
+    // Floor Casting & Ceiling
+    float beta = (player.angle - rayAngle);
+    FIX_ANGLES(beta);
+
+    for(int y = floor(end); y < PROJECTION_PLANE_HEIGHT; y++)
+    {
+        // Get distance
+        float straightlinedist = (RENDERING_PLAYER_HEIGHT * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
+        float d = straightlinedist / cos(beta);
+
+        // Calculate lighting intensity
+        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
+        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
+
+        // Get coordinates
+        float floorx = player.centeredPos.x + (cos(rayAngle) * d);
+        float floory = player.centeredPos.y + (sin(rayAngle) * d);
+
+        // Get textels
+        int textureX = (int)floorx % TILE_SIZE;
+        int textureY = (int)floory % TILE_SIZE;
+
+        // Get map coordinates
+        int curGridX = floor(floorx / TILE_SIZE);
+        int curGridY = floor(floory / TILE_SIZE);
+
+        int floorObjectID = -1;
+        int ceilingObjectID = -1;
+
+        // If the ray is in a grid that is inside the map
+        if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
+        {
+            // Check the floor texture at that point
+            if(currentMap.floorMap[curGridY][curGridX] >= 1)
+            {
+                floorObjectID = currentMap.floorMap[curGridY][curGridX];
+                
+                // Draw floor
+                R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.floors[floorObjectID]->texture, textureX, textureY), floorLighting);
+            }
+
+            // Check the ceiling texture at that point
+            if(currentMap.ceilingMap[curGridY][curGridX] >= 1)
+            {
+                ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
+
+                // Draw ceiling
+                R_DrawPixelShaded(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting);
+            }
+        }
     }
 }
 

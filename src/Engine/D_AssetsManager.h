@@ -60,6 +60,10 @@ typedef struct object_s
     //          \
     //           1 = Is Thin Wall
 
+    // 000000 0 0
+    //         \
+    //          1 = Is Vertical (used with thin Wall)
+
     // ============
     // For sprites
     // ============
@@ -80,6 +84,11 @@ typedef struct tomentdatapack_s
 
     
 extern tomentdatapack_t tomentdatapack;
+
+//-------------------------------------
+// Sets defauls for an object
+//-------------------------------------
+void D_InitObject(object_t* obj);
 
 void D_InitAssetManager(void);
 void D_InitLoadWalls(void);

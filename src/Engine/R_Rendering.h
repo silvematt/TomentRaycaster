@@ -38,7 +38,7 @@
 // =========================================
 #define DEBUG_RAYCAST_MINIMAP 0
 #define DEBUG_VISIBLE_TILES_MINIMAP 0
-#define DEBUG_VISIBLE_SPRITES_MINIMAP 1
+#define DEBUG_VISIBLE_SPRITES_MINIMAP 0
 
 extern uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
 extern uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
@@ -115,6 +115,17 @@ void R_DrawBackground(void);
 // Performs the Raycast and draws the walls
 //-------------------------------------
 void R_Raycast(void);
+
+void R_DrawWall(void);
+
+//-------------------------------------
+// Floorcast and ceilingcast
+// Params:
+// - end = the end of the wall that states where to start to floorcast
+// - rayAngle = the current rayangle
+// - x = the x coordinate on the screen for this specific floor cast call
+//-------------------------------------
+void R_FloorCastingAndCeiling(float end, float rayAngle, int x);
 
 //-------------------------------------
 // Draws the visible sprites

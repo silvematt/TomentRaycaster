@@ -5,6 +5,15 @@
 
 tomentdatapack_t tomentdatapack;
 
+
+//-------------------------------------
+// Sets defauls for an object
+//-------------------------------------
+void D_InitObject(object_t* obj)
+{
+    obj->flags = 0;
+}
+
 //-------------------------------------
 // Sets an Object 
 //-------------------------------------
@@ -38,6 +47,11 @@ void D_InitLoadWalls(void)
     object_t* wall2 = (object_t*)malloc(sizeof(object_t));
     object_t* gate1 = (object_t*)malloc(sizeof(object_t));
 
+    D_InitObject(wall1);
+    D_InitObject(wall1Alt);
+    D_InitObject(wall2);
+    D_InitObject(gate1);
+
     // Put objects in the datapack
     tomentdatapack.walls[W_1] = wall1;
     tomentdatapack.walls[W_1Alt] = wall1Alt;
@@ -62,8 +76,7 @@ void D_InitLoadWalls(void)
 
     temp1 = SDL_LoadBMP("Data/gate.bmp");
     tomentdatapack.walls[WD_Gate1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-    U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 0); // Set Thin Wall bit flag to 1
-    U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 1); // Set Thin Wall Vertical bit flag to 1
+    U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
 
     SDL_FreeSurface(temp1);
 
@@ -78,6 +91,8 @@ void D_InitLoadFloors(void)
 {
     // Create Objects
     object_t* floor1 = (object_t*)malloc(sizeof(object_t));
+
+    D_InitObject(floor1);
 
     // Put objects in the datapack
     tomentdatapack.floors[F_1] = floor1;
@@ -99,6 +114,8 @@ void D_InitLoadCeilings(void)
     // Create Objects
     object_t* ceiling1 = (object_t*)malloc(sizeof(object_t));
 
+    D_InitObject(ceiling1);
+
     // Put objects in the datapack
     tomentdatapack.ceilings[C_1] = ceiling1;
 
@@ -118,6 +135,8 @@ void D_InitLoadSprites(void)
 {
     // Create Objects
     object_t* spritesBarrel1 = (object_t*)malloc(sizeof(object_t));
+
+    D_InitObject(spritesBarrel1);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
