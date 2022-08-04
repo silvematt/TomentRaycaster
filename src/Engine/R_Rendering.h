@@ -54,6 +54,10 @@ extern bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];
 extern sprite_t visibleSprites[MAXVISABLE];
 extern int visibleSpritesLength;
 
+// Doors
+extern int doorstate[MAP_HEIGHT][MAP_WIDTH];
+extern float doorpositions[MAP_HEIGHT][MAP_WIDTH];
+
 //-------------------------------------
 // Initializes the rendering 
 //-------------------------------------

@@ -30,9 +30,11 @@ void G_GameLoop(void)
     I_HandleInput();
 
     G_PhysicsTick();
-
+    
     // Do stuff
     G_PlayerTick();
+
+    G_UpdateDoors();
 
     G_PhysicsEndTick();
     
@@ -45,4 +47,47 @@ void G_GameLoop(void)
 
     // Displays it on the screen
     R_FinishUpdate();
+}
+
+void G_UpdateDoors(void)
+{
+    for(int y = 0; y < MAP_HEIGHT; y++)
+        for(int x = 0; x < MAP_WIDTH; x++)
+            {
+                // If the door is closed or open, continue
+                if(doorstate[y][x] == DState_Closed || doorstate[y][x] == DState_Open)
+                    continue;
+                else
+                {
+                    // Open the door
+                    if(doorstate[y][x] == DState_Opening)
+                    {
+                        if(doorpositions[y][x] > DOOR_FULLY_OPENED)
+                            doorpositions[y][x] -= DOOR_OPEN_SPEED * deltaTime;
+                        else
+                        {
+                            // Door opened
+                            doorpositions[y][x] = DOOR_FULLY_OPENED;
+                            doorstate[y][x] = DState_Open;
+
+                            // Update collision map
+                            currentMap.collisionMap[y][x] = 0;
+                        }
+                    }
+                    else if(doorstate[y][x] == DState_Closing)
+                    {
+                        if(doorpositions[y][x] < DOOR_FULLY_CLOSED)
+                            doorpositions[y][x] += DOOR_CLOSE_SPEED * deltaTime;
+                        else
+                        {
+                            // Door closed
+                            doorpositions[y][x] = DOOR_FULLY_CLOSED;
+                            doorstate[y][x] = DState_Closed;
+
+                            // Update collision map
+                            currentMap.collisionMap[y][x] = 1;
+                        }
+                    }
+                }
+            }
 }

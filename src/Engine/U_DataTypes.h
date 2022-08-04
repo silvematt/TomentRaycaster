@@ -30,4 +30,12 @@ typedef struct sprite_s
     float height;   // how big the sprite will be drawn
 } sprite_t;
 
+typedef enum doorstate_e
+{
+    DState_Closed = 0,
+    DState_Opening,
+    DState_Open,
+    DState_Closing
+} doorstate_e;
+
 #endif

@@ -18,7 +18,10 @@ void I_HandleInput(void)
             case SDL_QUIT:
                 application.quit = true;
             break;
+
         }
+
+        G_PlayerHandleInputEvent(&e);
     }
 
     // Send Input event to subsystems

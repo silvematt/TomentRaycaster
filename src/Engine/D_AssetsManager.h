@@ -14,9 +14,10 @@ typedef enum wallObjectID_e
 {
     // 0 = Empty
     W_1 = 1,
-    W_1Alt = 2,
+    W_1Alt = 2, // Alt is vertical
     W_2 = 3,
     WD_Gate1 = 4,
+    WD_Gate1Alt = 5,
 } wallObjectID_t;
 
 // All Floors
@@ -48,7 +49,7 @@ typedef struct object_s
     int ID;
     SDL_Surface* texture;
     struct object_s* alt;
-    byte flags; // Extra data
+    byte flags;             // Flags to diversify types of objects
 } object_t;
 
 /* object_t Flags
@@ -63,6 +64,10 @@ typedef struct object_s
     // 000000 0 0
     //         \
     //          1 = Is Vertical (used with thin Wall)
+
+    // 00000  0 00
+    //         \
+    //          1 = Is Door
 
     // ============
     // For sprites

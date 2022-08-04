@@ -5,6 +5,7 @@
 #include "R_Rendering.h"
 #include "A_Application.h"
 #include "G_Player.h"
+#include "G_Game.h"
 #include "I_InputHandling.h"
 #include "D_AssetsManager.h"
 #include "U_Utilities.h"
@@ -28,7 +29,8 @@ sprite_t visibleSprites[MAXVISABLE];
 int visibleSpritesLength;
 
 // Doors
-unsigned doorposition[MAXDOORS];
+int doorstate[MAP_HEIGHT][MAP_WIDTH];
+float doorpositions[MAP_HEIGHT][MAP_WIDTH];
 
 //-------------------------------------
 // Initializes the rendering 
@@ -50,6 +52,14 @@ void R_InitRendering(void)
     {
         screenBuffers[i] = (base + (SCREEN_WIDTH * SCREEN_HEIGHT* i));
     }
+
+    // Initialize Doors //
+    memset(doorstate, 0, (MAP_HEIGHT*MAP_WIDTH));
+    
+    // All doors start closed
+    for(int y = 0; y < MAP_HEIGHT; y++)
+        for(int x = 0; x < MAP_WIDTH; x++)
+            doorpositions[y][x] = DOOR_FULLY_CLOSED;
 }
 
 
@@ -204,10 +214,22 @@ void R_Raycast(void)
         // Current Vertical point
         float vcurx;
         float vcury;
+        
+        // Current Horizontal grid Point
+        int hcurGridX;
+        int hcurGridY;
+
+        // Current Vertical grid Point
+        int vcurGridX;
+        int vcurGridY;
 
         int hobjectIDHit = -1;    // The ID of the object hit
         int vobjectIDHit = -1;    // The ID of the object hit
         int objectIDHit;
+
+        // Final grid point
+        int fcurGridX;
+        int fcurGridY;
         
         vector2_t wallPoint;
 
@@ -239,37 +261,34 @@ void R_Raycast(void)
             // Check for wall, if not, check next grid
             while(hDepth < MAP_WIDTH)
             {
-                // Current grid the ray is in
-                int curGridX;
-                int curGridY;
-                
+                // Calculate grid point
                 if(rayAngle < M_PI) // Facing down
                 {
-                    curGridX = floor(hcurx / TILE_SIZE);
-                    curGridY = floor(hcury / TILE_SIZE);
+                    hcurGridX = floor(hcurx / TILE_SIZE);
+                    hcurGridY = floor(hcury / TILE_SIZE);
                 }
                 else
                 {
                     // Here Y is reduced of 1 to make sure it goes to the upper grid instead of the collision point
-                    curGridX = floor(hcurx / TILE_SIZE);
-                    curGridY = floor((hcury-1) / TILE_SIZE);
+                    hcurGridX = floor(hcurx / TILE_SIZE);
+                    hcurGridY = floor((hcury-1) / TILE_SIZE);
                 }
                     
                 // If the ray is in a grid that is inside the map
-                if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
+                if(hcurGridX >= 0 && hcurGridY >= 0 && hcurGridX < MAP_WIDTH && hcurGridY < MAP_HEIGHT)
                 {
                     // Check for sprites
-                    if(!visibleTiles[curGridY][curGridX] && currentMap.spritesMap[curGridY][curGridX] >= 1)
+                    if(!visibleTiles[hcurGridY][hcurGridX] && currentMap.spritesMap[hcurGridY][hcurGridX] >= 1)
                     {
                         // Add sprite and data in the array
 
                         // Get Grid Pos
-                        visibleSprites[visibleSpritesLength].gridPos.x = curGridX;
-                        visibleSprites[visibleSpritesLength].gridPos.y = curGridY;
+                        visibleSprites[visibleSpritesLength].gridPos.x = hcurGridX;
+                        visibleSprites[visibleSpritesLength].gridPos.y = hcurGridY;
 
                         // Get World Pos
-                        visibleSprites[visibleSpritesLength].pos.x = curGridX * TILE_SIZE;
-                        visibleSprites[visibleSpritesLength].pos.y = curGridY * TILE_SIZE;
+                        visibleSprites[visibleSpritesLength].pos.x = hcurGridX * TILE_SIZE;
+                        visibleSprites[visibleSpritesLength].pos.y = hcurGridY * TILE_SIZE;
 
                         // Get Player Space pos
                         visibleSprites[visibleSpritesLength].pSpacePos.x = (visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
@@ -279,14 +298,14 @@ void R_Raycast(void)
                         visibleSprites[visibleSpritesLength].dist = sqrt(visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x + visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y);
 
                         // Get ID
-                        visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[curGridY][curGridX];
+                        visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[hcurGridY][hcurGridX];
                         visibleSpritesLength++;
 
                         // Mark this sprite as added so we don't get duplicates
-                        visibleTiles[curGridY][curGridX] = true;
+                        visibleTiles[hcurGridY][hcurGridX] = true;
                     }
                     
-                    int idHit = currentMap.wallMap[curGridY][curGridX];
+                    int idHit = currentMap.wallMap[hcurGridY][hcurGridX];
 
                     // If it hit a wall, register it, save the distance and get out of the while
                     if(idHit >= 1)
@@ -303,32 +322,37 @@ void R_Raycast(void)
                                 hcurx += (Xa/2);
                                 hcury += (Ya/2);
 
-                                if(hcury < doorposition[0])
-                                {
-
                                 // Calculate tile gird of the new point (added of a half a tile)
                                 int newGridX = floor(hcurx / TILE_SIZE);
                                 int newGridY = floor(hcury / TILE_SIZE);
 
-                                // If they're in the same tile, the door is visible
-                                if(newGridX == curGridX && newGridY == curGridY)
+                                // If the ray intersects with the door
+                                if((hcurx - (64*newGridX)) < doorpositions[newGridY][newGridX])
                                 {
-                                    hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
-                                    hobjectIDHit = currentMap.wallMap[curGridY][curGridX];
-                                    break;
+                                    // If they're in the same tile, the door is visible
+                                    if(newGridX == hcurGridX && newGridY == hcurGridY)
+                                    {
+                                        hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
+                                        hobjectIDHit = currentMap.wallMap[hcurGridY][hcurGridX];
+                                        break;
+                                    }
+                                    else // otherwise it's visible, revert the point and keep scanning
+                                    {
+                                        hcurx -= (Xa/2);
+                                        hcury -= (Ya/2);
+                                    }
                                 }
-                                else // otherwise it's visible, revert the point and keep scanning
+                                else // otherwise the ray passes through the door (it's opening/closing)
                                 {
                                     hcurx -= (Xa/2);
                                     hcury -= (Ya/2);
-                                }
                                 }
                             }
                         }
                         else // This is a normal wall
                         {
                             hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
-                            hobjectIDHit = currentMap.wallMap[curGridY][curGridX];
+                            hobjectIDHit = currentMap.wallMap[hcurGridY][hcurGridX];
                             break;
                         }
                     }
@@ -378,37 +402,34 @@ void R_Raycast(void)
             // Check for wall, if not, check next grid
             while(vDepth < MAP_HEIGHT)
             {
-                // Current grid the ray is in
-                int curGridX;
-                int curGridY;
-
+                // Calculate current grid the ray is in
                 if(rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)
                 {
-                    curGridX = floor(vcurx / TILE_SIZE);
-                    curGridY = floor(vcury / TILE_SIZE);
+                    vcurGridX = floor(vcurx / TILE_SIZE);
+                    vcurGridY = floor(vcury / TILE_SIZE);
                 }
                 else
                 {
                     // Here X is reduced of 1 to make sure it goes to the grid on the left of the collision point
-                    curGridX = floor((vcurx-1) / TILE_SIZE);
-                    curGridY = floor(vcury / TILE_SIZE);
+                    vcurGridX = floor((vcurx-1) / TILE_SIZE);
+                    vcurGridY = floor(vcury / TILE_SIZE);
                 }
                 
                 // If the ray is in a grid that is inside the map
-                if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
+                if(vcurGridX >= 0 && vcurGridY >= 0 && vcurGridX < MAP_WIDTH && vcurGridY < MAP_HEIGHT)
                 {
                     // Check for sprites
-                    if(!visibleTiles[curGridY][curGridX] && currentMap.spritesMap[curGridY][curGridX] >= 1)
+                    if(!visibleTiles[vcurGridY][vcurGridX] && currentMap.spritesMap[vcurGridY][vcurGridX] >= 1)
                     {
                         // Add sprite and data in the array
 
                         // Get Grid Pos
-                        visibleSprites[visibleSpritesLength].gridPos.x = curGridX;
-                        visibleSprites[visibleSpritesLength].gridPos.y = curGridY;
+                        visibleSprites[visibleSpritesLength].gridPos.x = vcurGridX;
+                        visibleSprites[visibleSpritesLength].gridPos.y = vcurGridY;
 
                         // Get World Pos
-                        visibleSprites[visibleSpritesLength].pos.x = curGridX * TILE_SIZE;
-                        visibleSprites[visibleSpritesLength].pos.y = curGridY * TILE_SIZE;
+                        visibleSprites[visibleSpritesLength].pos.x = vcurGridX * TILE_SIZE;
+                        visibleSprites[visibleSpritesLength].pos.y = vcurGridY * TILE_SIZE;
 
                         // Get Player Space pos
                         visibleSprites[visibleSpritesLength].pSpacePos.x = (visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
@@ -418,14 +439,14 @@ void R_Raycast(void)
                         visibleSprites[visibleSpritesLength].dist = sqrt((visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x) + (visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y));
 
                         // Get ID
-                        visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[curGridY][curGridX];
+                        visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[vcurGridY][vcurGridX];
                         visibleSpritesLength++;
 
                         // Mark this sprite as added so we don't get duplicates
-                        visibleTiles[curGridY][curGridX] = true;
+                        visibleTiles[vcurGridY][vcurGridX] = true;
                     }
 
-                    int idHit = currentMap.wallMap[curGridY][curGridX];
+                    int idHit = currentMap.wallMap[vcurGridY][vcurGridX];
 
                     // If it hit a wall, register it, save the distance and get out of the while
                     if(idHit >= 1)
@@ -446,14 +467,23 @@ void R_Raycast(void)
                                 int newGridX = floor(vcurx / TILE_SIZE);
                                 int newGridY = floor(vcury / TILE_SIZE);
 
-                                // If they're in the same tile, the door is visible
-                                if(newGridX == curGridX && newGridY == curGridY)
+                                // If the ray intersects with the door
+                                if((vcury - (64*newGridY)) < doorpositions[newGridY][newGridX])
                                 {
-                                    vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
-                                    vobjectIDHit = currentMap.wallMap[curGridY][curGridX];
-                                    break;
+                                    // If they're in the same tile, the door is visible
+                                    if(newGridX == vcurGridX && newGridY == vcurGridY)
+                                    {
+                                        vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
+                                        vobjectIDHit = currentMap.wallMap[vcurGridY][vcurGridX];
+                                        break;
+                                    }
+                                    else // otherwise it's visible, revert the point and keep scanning
+                                    {
+                                        vcurx -= (Xa/2);
+                                        vcury -= (Ya/2);
+                                    }
                                 }
-                                else // otherwise it's visible, revert the point and keep scanning
+                                else // otherwise the ray passes through the door (it's opening/closing)
                                 {
                                     vcurx -= (Xa/2);
                                     vcury -= (Ya/2);
@@ -463,7 +493,7 @@ void R_Raycast(void)
                         else
                         {
                             vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
-                            vobjectIDHit = currentMap.wallMap[curGridY][curGridX];
+                            vobjectIDHit = currentMap.wallMap[vcurGridY][vcurGridX];
                             break;
                         }
                     }
@@ -485,6 +515,41 @@ void R_Raycast(void)
         else
             vDistance = 99999.9f;
 
+        
+        // Get the in front grid of the player and save it (can be optimized)
+        float firstHDistance = fabs(sqrt((((player.centeredPos.x) - A.x) * ((player.centeredPos.x) - A.x)) + (((player.centeredPos.y) - A.y) * ((player.centeredPos.y) - A.y))));
+        float firstVDistance = fabs(sqrt((((player.centeredPos.x) - B.x) * ((player.centeredPos.x) - B.x)) + (((player.centeredPos.y) - B.y) * ((player.centeredPos.y) - B.y))));
+
+        // Save the grid pos, 
+        if(firstVDistance < firstHDistance)
+        {
+            if(rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)
+            {
+                player.inFrontGridPosition.x = floor(B.x / TILE_SIZE);
+                player.inFrontGridPosition.y = floor(B.y / TILE_SIZE);
+            }
+            else
+            {
+                // Here X is reduced of 1 to make sure it goes to the grid on the left of the collision point
+                player.inFrontGridPosition.x = floor((B.x-1) / TILE_SIZE);
+                player.inFrontGridPosition.y = floor(B.y / TILE_SIZE);
+            }
+        }
+        else
+        {
+            if(rayAngle < M_PI)
+            {
+                player.inFrontGridPosition.x = floor(A.x / TILE_SIZE);
+                player.inFrontGridPosition.y = floor(A.y / TILE_SIZE);
+            }
+            else
+            {
+                // Here X is reduced of 1 to make sure it goes to the grid on the left of the collision point
+                player.inFrontGridPosition.x = floor(A.x / TILE_SIZE);
+                player.inFrontGridPosition.y = floor((A.y-1) / TILE_SIZE);
+            }
+        }
+
         bool horizontal = false;    // Has this ray hit an horizontal?
         float correctDistance;      // Corrected distance for fixing fisheye
 
@@ -501,6 +566,9 @@ void R_Raycast(void)
                 wallPoint.x = hcurx;
                 wallPoint.y = hcury;
 
+                fcurGridX = hcurGridX;
+                fcurGridY = hcurGridY;
+
                 if(DEBUG_RAYCAST_MINIMAP == 1)
                     R_DrawLine((player.centeredPos.x) / MINIMAP_DIVIDER, (player.centeredPos.y) / MINIMAP_DIVIDER, hcurx / MINIMAP_DIVIDER, hcury / MINIMAP_DIVIDER, r_debugColor);
             }
@@ -512,6 +580,9 @@ void R_Raycast(void)
 
                 wallPoint.x = vcurx;
                 wallPoint.y = vcury;
+
+                fcurGridX = vcurGridX;
+                fcurGridY = vcurGridY;
 
                 if(DEBUG_RAYCAST_MINIMAP == 1)
                     R_DrawLine((player.centeredPos.x) / MINIMAP_DIVIDER, (player.centeredPos.y) / MINIMAP_DIVIDER, vcurx / MINIMAP_DIVIDER, vcury / MINIMAP_DIVIDER, r_debugColor);
@@ -561,7 +632,12 @@ void R_Raycast(void)
             // Draw the walls as column of pixels
             if(horizontal) 
             {
-                int offset = (int)hcurx % TILE_SIZE;
+                // Texture offset (shifted if it's a door)
+                // Note:
+                // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
+                // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
+                // but this calculation lets us slide the texture offset too for the doors
+                int offset = (int)(hcurx - (doorpositions[fcurGridY][fcurGridX])) % TILE_SIZE;
 
                 // If looking down, flip the texture offset
                 if(rayAngle < M_PI)
@@ -571,7 +647,12 @@ void R_Raycast(void)
             }
             else
             {
-                int offset = (int)vcury % TILE_SIZE;
+                // Texture offset (shifted if it's a door)
+                // Note:
+                // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
+                // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
+                // but this calculation lets us slide the texture offse too for the doors
+                int offset = (int)(vcury - (doorpositions[fcurGridY][fcurGridX])) % TILE_SIZE;
 
                 // If looking left, flip the texture offset
                 if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)

@@ -22,6 +22,7 @@ typedef struct player_s
     vector2_t centeredPos;
     
     vector2Int_t gridPosition;
+    vector2Int_t inFrontGridPosition; // The grid pos of the cell in front of the player
     vector2_t deltaPos;
 
     SDL_Surface* surface;
@@ -44,8 +45,13 @@ void G_InitPlayer(void);
 void G_PlayerTick(void);
 
 //-------------------------------------
-// Handles Input from the player 
+// Handles Input from the player while reading the keyboard state
 //-------------------------------------
 void G_PlayerHandleInput(const uint8_t* keyboardState, SDL_Event* e);
+
+//-------------------------------------
+// Handles Input from the player while doing the Event Input Handling
+//-------------------------------------
+void G_PlayerHandleInputEvent(SDL_Event* e);
 
 #endif

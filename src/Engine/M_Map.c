@@ -338,4 +338,58 @@ void M_LoadMapAsCurrent(char* mapID)
 
       printf("Map loaded successfully!\n");
       fclose(fp);
+
+      // Load the TMap
+      M_LoadObjectTMap();
+
+      // Load the Collision Map
+      M_LoadCollisionMap();
+}
+
+void M_LoadObjectTMap(void)
+{
+      for(int y = 0; y < MAP_HEIGHT; y++)
+            for(int x = 0; x < MAP_WIDTH; x++)
+                  {
+                        // Initialize
+                        currentMap.objectTMap[y][x] = ObjT_Empty;
+
+                        // Check if it's a wall
+                        int wallID = currentMap.wallMap[y][x];
+                        if(wallID > 0)
+                        {
+                              // Check if it is a door
+                              if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 2) == 1)
+                              {
+                                    currentMap.objectTMap[y][x] = ObjT_Door;
+                              }
+                              else
+                                    currentMap.objectTMap[y][x] = ObjT_Wall;
+                        }
+
+                        // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
+                        int spriteID = currentMap.spritesMap[y][x];
+                        if(spriteID > 0)
+                              currentMap.objectTMap[y][x] = ObjT_Sprite;
+                  }
+}
+
+void M_LoadCollisionMap(void)
+{
+      for(int y = 0; y < MAP_HEIGHT; y++)
+            for(int x = 0; x < MAP_WIDTH; x++)
+                  {
+                        // Initialize
+                        currentMap.collisionMap[y][x] = 0;
+
+                        // Check if it's a wall
+                        int wallID = currentMap.wallMap[y][x];
+                        if(wallID > 0)
+                              currentMap.collisionMap[y][x] = 1;
+
+                        // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
+                        int spriteID = currentMap.spritesMap[y][x];
+                        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1)
+                              currentMap.collisionMap[y][x] = 1;
+                  }
 }

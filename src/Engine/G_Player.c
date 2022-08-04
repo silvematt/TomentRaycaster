@@ -88,40 +88,35 @@ void G_PlayerTick(void)
     // Collision detection (Walls and solid sprites)
     if(player.deltaPos.x > 0)
     {
-        int wallID  = currentMap.wallMap[player.gridPosition.y][player.gridPosition.x+1];
-        int spriteID = currentMap.spritesMap[player.gridPosition.y][player.gridPosition.x+1];
-    
-        // Player is moving right, check if it's too right
-        if((wallID != 0 ||  spriteID != 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1) && playerXCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // Wall check
+        int coll = currentMap.collisionMap[player.gridPosition.y][player.gridPosition.x+1];
 
+        // Player is moving right, check if it's too right
+        if(coll != 0 && playerXCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // Wall check
             player.deltaPos.x = 0;
     }
     else
     {
-        int wallID  = currentMap.wallMap[player.gridPosition.y][player.gridPosition.x-1];
-        int spriteID = currentMap.spritesMap[player.gridPosition.y][player.gridPosition.x-1];
+        int coll  = currentMap.collisionMap[player.gridPosition.y][player.gridPosition.x-1];
 
         // Player is moving left
-        if((wallID != 0 ||  spriteID != 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1) && playerXCellOffset < PLAYER_MIN_DIST_TO_WALL) // Wall check
+        if(coll != 0 && playerXCellOffset < PLAYER_MIN_DIST_TO_WALL) // Wall check
             player.deltaPos.x = 0;
     }
 
     if(player.deltaPos.y < 0)
     {
-        int wallID  = currentMap.wallMap[player.gridPosition.y-1][player.gridPosition.x];
-        int spriteID = currentMap.spritesMap[player.gridPosition.y-1][player.gridPosition.x];
+        int coll  = currentMap.collisionMap[player.gridPosition.y-1][player.gridPosition.x];
 
         // Player is going up
-        if((wallID != 0 ||  spriteID != 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1) && playerYCellOffset < PLAYER_MIN_DIST_TO_WALL) // Wall check
+        if(coll != 0 && playerYCellOffset < PLAYER_MIN_DIST_TO_WALL) // Wall check
             player.deltaPos.y = 0;
     }
     else
     {
-        int wallID  = currentMap.wallMap[player.gridPosition.y+1][player.gridPosition.x];
-        int spriteID = currentMap.spritesMap[player.gridPosition.y+1][player.gridPosition.x];
+        int coll  = currentMap.collisionMap[player.gridPosition.y+1][player.gridPosition.x];
 
         // Player is going down
-        if((wallID != 0 ||  spriteID != 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1) && playerYCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // Wall check
+        if(coll != 0 && playerYCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // Wall check
             player.deltaPos.y = 0;
     }
     
@@ -164,4 +159,41 @@ void G_PlayerHandleInput(const uint8_t* keyboardState, SDL_Event* e)
 
     playerinput.input.x = SDL_clamp(playerinput.input.x, -1.0f , 1.0f);
     playerinput.input.y = SDL_clamp(playerinput.input.y, -1.0f , 1.0f);
+}
+
+void G_PlayerHandleInputEvent(SDL_Event* e)
+{
+    switch(e->type)
+    {
+        case SDL_KEYUP:
+            if(e->key.keysym.sym == SDLK_SPACE)
+            {
+                // Interactions
+                objectType_e objType = currentMap.objectTMap[player.inFrontGridPosition.y][player.inFrontGridPosition.x];
+
+                if(objType == ObjT_Door)
+                {
+                    printf("Tapped a door\n");
+                    if(doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Closed || doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Closing)
+                        doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] = DState_Opening;
+                    
+                    else if(doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Open || doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Opening)
+                        doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] = DState_Closing;
+                }
+                else if(objType == ObjT_Empty)
+                {
+                    printf("Tapped an empty space\n");
+                }
+                else if(objType == ObjT_Sprite)
+                {
+                    printf("Tapped a sprite\n");
+                }
+                else if(objType == ObjT_Wall)
+                {
+                    printf("Tapped a wall\n");
+                }
+            }
+
+        break;
+    }
 }
