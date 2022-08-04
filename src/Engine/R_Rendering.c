@@ -27,6 +27,9 @@ bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];
 sprite_t visibleSprites[MAXVISABLE];
 int visibleSpritesLength;
 
+// Doors
+unsigned doorposition[MAXDOORS];
+
 //-------------------------------------
 // Initializes the rendering 
 //-------------------------------------
@@ -300,6 +303,9 @@ void R_Raycast(void)
                                 hcurx += (Xa/2);
                                 hcury += (Ya/2);
 
+                                if(hcury < doorposition[0])
+                                {
+
                                 // Calculate tile gird of the new point (added of a half a tile)
                                 int newGridX = floor(hcurx / TILE_SIZE);
                                 int newGridY = floor(hcury / TILE_SIZE);
@@ -315,6 +321,7 @@ void R_Raycast(void)
                                 {
                                     hcurx -= (Xa/2);
                                     hcury -= (Ya/2);
+                                }
                                 }
                             }
                         }
