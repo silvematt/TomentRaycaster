@@ -9,7 +9,12 @@
 // --------------------------------------------
 #define OBJECTARRAY_DEFAULT_SIZE 256
 
-// All Walls
+// --------------------------------------------
+// All Walls and doors
+// 
+// W_   walls
+// WD_  doors
+// --------------------------------------------
 typedef enum wallObjectID_e
 {
     // 0 = Empty
@@ -34,13 +39,16 @@ typedef enum ceilingObjectID_e
     C_1 = 1,
 } ceilingObjectID_t;
 
+// All sprites
 typedef enum spritesObjectID_e
 {
+    // 0 = Empty
     S_Barrel1 = 1,
 } spritesObjectID_t;
 
 typedef enum doorsObjectID_e
 {
+    // 0 = Empty
     D_Gate1 = 1
 } doorsObjectID_t;
 
@@ -78,6 +86,7 @@ typedef struct object_s
     //           1 = solid (used for collision checking)
 */
 
+// The whole datapack of the game
 typedef struct tomentdatapack_s
 {
     // All the walls in the game
@@ -91,7 +100,7 @@ typedef struct tomentdatapack_s
 extern tomentdatapack_t tomentdatapack;
 
 //-------------------------------------
-// Sets defauls for an object
+// Initializes defauls for an object
 //-------------------------------------
 void D_InitObject(object_t* obj);
 
@@ -101,6 +110,9 @@ void D_InitLoadFloors(void);
 void D_InitLoadCeilings(void);
 void D_InitLoadSprites(void);
 
+//-------------------------------------
+// Sets the object for the given parameters
+//-------------------------------------
 void D_SetObject(object_t* obj, int id, SDL_Surface* texture, object_t* alt);
 
 #endif

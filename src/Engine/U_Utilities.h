@@ -11,6 +11,8 @@ void    U_SetBit(byte* b, byte n);
 byte    U_GetBit(byte* b, byte n);
 float   U_GetDistanceSquared(float x1, float y1, float x2, float y2);
 
-void    U_QuicksortSprites(sprite_t visibleSprites[], int first, int last);
-
+// -------------------------------
+// Perform quicksorts before drawing drawables to draw from farther to nearest
+// -------------------------------
+void    U_QuicksortDrawables(drawabledata_t drawables[], int first, int last);
 #endif

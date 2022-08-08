@@ -9,6 +9,10 @@ double curTime = 0;
 // Game Time at last tick
 double oldTime = 0;
 
+// Doors
+int doorstate[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, closed, opening, closing)
+float doorpositions[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
+
 //-------------------------------------
 // Initialize game related stuff 
 //-------------------------------------
@@ -49,6 +53,9 @@ void G_GameLoop(void)
     R_FinishUpdate();
 }
 
+//-------------------------------------
+// Update Doors by moving them in base of their timer
+//-------------------------------------
 void G_UpdateDoors(void)
 {
     for(int y = 0; y < MAP_HEIGHT; y++)
@@ -62,7 +69,8 @@ void G_UpdateDoors(void)
                     // Open the door
                     if(doorstate[y][x] == DState_Opening)
                     {
-                        if(doorpositions[y][x] > DOOR_FULLY_OPENED)
+                        if(doorpositions[y][x] > DOOR_FULLY_OPENED &&
+                            doorpositions[y][x] - DOOR_OPEN_SPEED * deltaTime > DOOR_FULLY_OPENED) // check if a step is too big
                             doorpositions[y][x] -= DOOR_OPEN_SPEED * deltaTime;
                         else
                         {
@@ -76,7 +84,8 @@ void G_UpdateDoors(void)
                     }
                     else if(doorstate[y][x] == DState_Closing)
                     {
-                        if(doorpositions[y][x] < DOOR_FULLY_CLOSED)
+                        if(doorpositions[y][x] < DOOR_FULLY_CLOSED &&
+                            doorpositions[y][x] + DOOR_CLOSE_SPEED * deltaTime < DOOR_FULLY_CLOSED) // check if step is too big
                             doorpositions[y][x] += DOOR_CLOSE_SPEED * deltaTime;
                         else
                         {

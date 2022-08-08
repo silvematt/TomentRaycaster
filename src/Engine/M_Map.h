@@ -14,8 +14,7 @@
 #define MAP_HEIGHT 24
 #define TILE_SIZE 64
 
-#define DEVMAP 0
-
+// Types of object
 typedef enum objectType_e
 {
     ObjT_Empty = 0,
@@ -24,6 +23,7 @@ typedef enum objectType_e
     ObjT_Sprite
 } objectType_e;
 
+// Map info
 typedef struct map_s
 {
     char id[MAX_STRLEN];
@@ -35,14 +35,26 @@ typedef struct map_s
     float wallLight;
     float floorLight;
 
-    int objectTMap[MAP_HEIGHT][MAP_WIDTH];    // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
-    int collisionMap[MAP_HEIGHT][MAP_WIDTH];
+    int objectTMap[MAP_HEIGHT][MAP_WIDTH];      // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
+    int collisionMap[MAP_HEIGHT][MAP_WIDTH];    // Collision data
 } map_t;
 
+// The currently loaded map
 extern map_t currentMap;
 
+// -------------------------------
+// Loads the map from the file named mapID
+// -------------------------------
 void M_LoadMapAsCurrent(char* mapID);
+
+// -------------------------------
+// Loads the object map
+// -------------------------------
 void M_LoadObjectTMap(void);
+
+// -------------------------------
+// Loads the collision map
+// -------------------------------
 void M_LoadCollisionMap(void);
 
 #endif

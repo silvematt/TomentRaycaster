@@ -6,6 +6,10 @@
 #include "A_Application.h"
 #include "G_Player.h"
 
+
+// -------------------------------
+// Holds the player's input
+// -------------------------------
 typedef struct playerinput_s
 {
     vector2_t input;

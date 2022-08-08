@@ -8,8 +8,7 @@
 #include "U_Utilities.h"
 #include "D_AssetsManager.h"
 
-player_t player; // Player
-SDL_Rect destRect;
+player_t player;    // Player
 
 // ----------------------------------------------------
 // Sets an SDL_Rect
@@ -29,14 +28,16 @@ void G_InitPlayer(void)
 {
     player.surface = SDL_LoadBMP("Data/player.bmp");
 
-    player.position.x = 12 * TILE_SIZE;
-    player.position.y = 12 * TILE_SIZE;
+    // Init player
+    player.position.x = PLAYER_STARTING_X;
+    player.position.y = PLAYER_STARTING_Y;
     player.angle = 0.0f;
 
-    SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
+    player.gridPosition.x = PLAYER_STARTING_GRID_X;
+    player.gridPosition.y = PLAYER_STARTING_GRID_Y;
 
-    player.gridPosition.x = 12.0f;
-    player.gridPosition.y = 12.0f;
+    // Rect for minimap
+    SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
 }
 
 //-------------------------------------
@@ -124,6 +125,7 @@ void G_PlayerTick(void)
     player.position.x += player.deltaPos.x;
     player.position.y += player.deltaPos.y;
 
+    // Compute centered pos for calculations
     player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
     player.centeredPos.y = player.position.y + PLAYER_CENTER_FIX;
 }
@@ -161,11 +163,15 @@ void G_PlayerHandleInput(const uint8_t* keyboardState, SDL_Event* e)
     playerinput.input.y = SDL_clamp(playerinput.input.y, -1.0f , 1.0f);
 }
 
+//-------------------------------------
+// Handles Input from the player while doing the Event Input Handling
+//-------------------------------------
 void G_PlayerHandleInputEvent(SDL_Event* e)
 {
     switch(e->type)
     {
         case SDL_KEYUP:
+            // Space player's interacions
             if(e->key.keysym.sym == SDLK_SPACE)
             {
                 // Interactions
@@ -174,6 +180,8 @@ void G_PlayerHandleInputEvent(SDL_Event* e)
                 if(objType == ObjT_Door)
                 {
                     printf("Tapped a door\n");
+
+                    // Open/Close
                     if(doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Closed || doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Closing)
                         doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] = DState_Opening;
                     

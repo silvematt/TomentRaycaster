@@ -10,8 +10,9 @@
 #include "D_AssetsManager.h"
 #include "U_Utilities.h"
 
-uint32_t r_blankColor;
-uint32_t r_transparencyColor;
+uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
+uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
+
 uint32_t r_debugColor;
 
 // ---------------------------------------------------------
@@ -28,9 +29,15 @@ bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];
 sprite_t visibleSprites[MAXVISABLE];
 int visibleSpritesLength;
 
-// Doors
-int doorstate[MAP_HEIGHT][MAP_WIDTH];
-float doorpositions[MAP_HEIGHT][MAP_WIDTH];
+// =========================================
+// Thin wall Transparency
+// =========================================
+walldata_t currentThinWalls[PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
+unsigned visibleThinWallsLength;
+
+// Drawables
+drawabledata_t allDrawables[MAX_DRAWABLES];
+int allDrawablesLength;
 
 //-------------------------------------
 // Initializes the rendering 
@@ -63,12 +70,15 @@ void R_InitRendering(void)
 }
 
 
+//-------------------------------------
+// Render routine
+//-------------------------------------
 void R_RenderDev(void)
 {
     R_DrawBackground();
     R_Raycast();
+    R_DrawDrawables();
     R_DrawMinimap();
-    R_DrawSprites();
 }
 
 //-------------------------------------
@@ -180,6 +190,11 @@ void R_Raycast(void)
     // Set the visibleTiles back to 0
     memset(visibleTiles, false, (MAP_HEIGHT*MAP_WIDTH));
     visibleSpritesLength = 0;
+    visibleThinWallsLength = 0;
+    allDrawablesLength = 0;
+    
+    // Thin wall recursion depth counter
+    int thinWallDepth = 0;    
 
     //printf("ANGLE: %f\n", player.angle);
     //float rayAngle = player.angle;
@@ -190,8 +205,12 @@ void R_Raycast(void)
     // Cast a ray foreach pixel of the projection plane
     for(int x = 0; x < PROJECTION_PLANE_WIDTH; x++)
     {
+        thinWallDepth = 0;
+
         // Fix angles
         FIX_ANGLES(rayAngle);
+
+        // Set thin wall tranparency array to 0 length
 
         // Hit distances
         float hDistance = 99999.9f;
@@ -299,6 +318,15 @@ void R_Raycast(void)
 
                         // Get ID
                         visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[hcurGridY][hcurGridX];
+                        
+                        // Add it to the drawables
+                        allDrawables[allDrawablesLength].type = DRWB_SPRITE;
+                        allDrawables[allDrawablesLength].spritePtr = &visibleSprites[visibleSpritesLength];
+                        
+                        // Quick variable access
+                        allDrawables[allDrawablesLength].dist = visibleSprites[visibleSpritesLength].dist;
+                        
+                        allDrawablesLength++;
                         visibleSpritesLength++;
 
                         // Mark this sprite as added so we don't get duplicates
@@ -306,7 +334,6 @@ void R_Raycast(void)
                     }
                     
                     int idHit = currentMap.wallMap[hcurGridY][hcurGridX];
-
                     // If it hit a wall, register it, save the distance and get out of the while
                     if(idHit >= 1)
                     {
@@ -330,13 +357,38 @@ void R_Raycast(void)
                                 if((hcurx - (64*newGridX)) < doorpositions[newGridY][newGridX])
                                 {
                                     // If they're in the same tile, the door is visible
-                                    if(newGridX == hcurGridX && newGridY == hcurGridY)
-                                    {
-                                        hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
-                                        hobjectIDHit = currentMap.wallMap[hcurGridY][hcurGridX];
-                                        break;
+                                    if(newGridX == hcurGridX && newGridY == hcurGridY && thinWallDepth < MAX_THIN_WALL_TRANSPARENCY_RECURSION)
+                                    {   
+                                        hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));;
+                                        
+                                        // Save the information about this hit, it will be drawn later after this ray draws a wall
+                                        walldata_t* data = &currentThinWalls[visibleThinWallsLength];
+                                        data->rayAngle = rayAngle;
+                                        data->x = x;
+                                        data->curX = hcurx;
+                                        data->curY = hcury;
+                                        data->distance = hDistance;
+                                        data->gridPos.x = hcurGridX;
+                                        data->gridPos.y = hcurGridY;
+                                        data->idHit = currentMap.wallMap[hcurGridY][hcurGridX];
+                                        data->isVertical = false;
+                                        
+                                        // Add it to the drawables
+                                        allDrawables[allDrawablesLength].type = DRWB_WALL;
+                                        allDrawables[allDrawablesLength].wallPtr = &currentThinWalls[visibleThinWallsLength];
+                                        // Quick variable access
+                                        allDrawables[allDrawablesLength].dist = data->distance;
+
+                                        allDrawablesLength++;
+                                        visibleThinWallsLength++;
+
+                                        hcurx -= (Xa/2);
+                                        hcury -= (Ya/2);
+
+                                        thinWallDepth++;
+                                        // break; don't break, keep casting the ray
                                     }
-                                    else // otherwise it's visible, revert the point and keep scanning
+                                    else // otherwise it's not visible, revert the point and keep scanning
                                     {
                                         hcurx -= (Xa/2);
                                         hcury -= (Ya/2);
@@ -361,8 +413,8 @@ void R_Raycast(void)
                 {
                     hDistance = 99999.9f;
                     break;
-                }
 
+                }
                 // If the ray hit an empty grid, check next
                 hcurx += Xa;
                 hcury += Ya;
@@ -440,6 +492,16 @@ void R_Raycast(void)
 
                         // Get ID
                         visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[vcurGridY][vcurGridX];
+                        
+                        // Add it to the drawables
+                        allDrawables[allDrawablesLength].type = DRWB_SPRITE;
+                        allDrawables[allDrawablesLength].spritePtr = &visibleSprites[visibleSpritesLength];
+                       
+                        // Quick variable access
+                        allDrawables[allDrawablesLength].dist = visibleSprites[visibleSpritesLength].dist;
+                       
+                        allDrawablesLength++;
+                        
                         visibleSpritesLength++;
 
                         // Mark this sprite as added so we don't get duplicates
@@ -473,11 +535,36 @@ void R_Raycast(void)
                                     // If they're in the same tile, the door is visible
                                     if(newGridX == vcurGridX && newGridY == vcurGridY)
                                     {
-                                        vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
-                                        vobjectIDHit = currentMap.wallMap[vcurGridY][vcurGridX];
-                                        break;
+                                        vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));;
+                                        
+                                        // Save the information about this hit, it will be drawn later after this ray draws a wall
+                                        walldata_t* data = &currentThinWalls[visibleThinWallsLength];
+                                        data->rayAngle = rayAngle;
+                                        data->x = x;
+                                        data->curX = vcurx;
+                                        data->curY = vcury;
+                                        data->distance = vDistance;
+                                        data->gridPos.x = vcurGridX;
+                                        data->gridPos.y = vcurGridY;
+                                        data->idHit = currentMap.wallMap[vcurGridY][vcurGridX];
+                                        data->isVertical = true;
+                                        
+                                        // Add it to the drawables
+                                        allDrawables[allDrawablesLength].type = DRWB_WALL;
+                                        allDrawables[allDrawablesLength].wallPtr = &currentThinWalls[visibleThinWallsLength];
+                                        // Quick variable access
+                                        allDrawables[allDrawablesLength].dist = data->distance;
+
+                                        allDrawablesLength++;
+                                        visibleThinWallsLength++;
+
+                                        vcurx -= (Xa/2);
+                                        vcury -= (Ya/2);
+
+                                        thinWallDepth++;
+                                        // break; don't break, keep casting the ray
                                     }
-                                    else // otherwise it's visible, revert the point and keep scanning
+                                    else // otherwise it's not visible, revert the point and keep scanning
                                     {
                                         vcurx -= (Xa/2);
                                         vcury -= (Ya/2);
@@ -663,12 +750,96 @@ void R_Raycast(void)
 
             R_FloorCastingAndCeiling(end, rayAngle, x);
         }
-        
+
         // Check next ray
         rayAngle += (RADIAN * PLAYER_FOV) / PROJECTION_PLANE_WIDTH;
     }
 }
 
+//-------------------------------------
+// Draw the passed thin wall
+//-------------------------------------
+void R_DrawThinWall(walldata_t* cur)
+{
+    // Fix fisheye 
+    float fixedAngle = cur->rayAngle - player.angle;
+    float finalDistance = cur->distance * cos(fixedAngle);
+
+    // DRAW WALL
+    float wallHeight = (TILE_SIZE  / finalDistance) * DISTANCE_TO_PROJECTION;
+    float wallHeightUncapped = wallHeight;
+
+    if(wallHeight < wallHeights[cur->x])
+        return;
+
+    float wallOffset = (PROJECTION_PLANE_CENTER) - (wallHeight / 2.0f);    // Wall Y offset to draw them in the middle of the screen
+
+    // Prevent from going off projection plane
+    if(wallOffset < 0)
+        wallOffset = 0;
+
+    if(wallOffset > PROJECTION_PLANE_HEIGHT)
+        wallOffset = PROJECTION_PLANE_HEIGHT;
+
+    if(wallHeight > PROJECTION_PLANE_HEIGHT)
+        wallHeight = PROJECTION_PLANE_HEIGHT;
+
+    // Don't draw outside of the Projection Plane Height
+    float end = wallOffset+wallHeight;
+    end = SDL_clamp(end, 0, PROJECTION_PLANE_HEIGHT);
+
+    // Calculate lighting intensity
+    float wallLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.wallLight)  / finalDistance;
+    wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
+
+    object_t* curObject = tomentdatapack.walls[cur->idHit];
+    // Check if object is null
+    if(curObject->texture == NULL)
+    {
+        printf("WARNING! Trying to load an object with ID: %d in thin wall loop, but it was never set in the objects\n", cur->idHit);
+        return;
+    }
+
+    // Draw the walls as column of pixels
+    if(!cur->isVertical) 
+    {
+        // Texture offset (shifted if it's a door)
+        // Note:
+        // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
+        // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
+        // but this calculation lets us slide the texture offset too for the doors
+        int offset = (int)(cur->curX - (doorpositions[cur->gridPos.y][cur->gridPos.x])) % TILE_SIZE;
+
+        // If looking down, flip the texture offset
+        if(cur->rayAngle < M_PI)
+            offset = (TILE_SIZE-1) - offset;
+            
+        R_DrawColumnTexturedShaded((cur->x), wallOffset+1, end+1, curObject->texture, offset, wallHeightUncapped, wallLighting);
+    }
+    else
+    {
+        // Texture offset (shifted if it's a door)
+        // Note:
+        // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
+        // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
+        // but this calculation lets us slide the texture offse too for the doors
+        int offset = (int)(cur->curY - (doorpositions[cur->gridPos.y][cur->gridPos.x])) % TILE_SIZE;
+
+        // If looking left, flip the texture offset
+        if(cur->rayAngle > M_PI / 2 && cur->rayAngle < (3*M_PI) / 2)
+            offset = (TILE_SIZE-1) - offset;
+
+        R_DrawColumnTexturedShaded((cur->x), wallOffset+1, end+1, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
+    }
+}
+
+//-------------------------------------
+// Floorcast and ceilingcast
+// Params:
+// - end = the end of the wall that states where to start to floorcast
+// - rayAngle = the current rayangle
+// - x = the x coordinate on the screen for this specific floor cast call
+//-------------------------------------
 void R_FloorCastingAndCeiling(float end, float rayAngle, int x)
 {
     // Floor Casting & Ceiling
@@ -725,73 +896,87 @@ void R_FloorCastingAndCeiling(float end, float rayAngle, int x)
 }
 
 //-------------------------------------
-// Draws the visible sprites
+// Draws the passed sprite
 //-------------------------------------
-void R_DrawSprites(void)
+void R_DrawSprite(sprite_t* sprite)
 {
-    if(!visibleSpritesLength)
+    // Done in degrees to avoid computations (even if I could cache radians values and stuff)
+    // Calculate angle and convert to degrees (*-1 makes sure it uses SDL screen space coordinates for unit circle and quadrants)
+    float angle = ((atan2(-sprite->pSpacePos.y, sprite->pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
+    FIX_ANGLES_DEGREES(angle);
+
+    float playerAngle = player.angle * RADIAN_TO_DEGREE;
+    float yTemp = playerAngle + (PLAYER_FOV / 2) - angle;
+
+    if(angle > 270 && playerAngle < 90)
+        yTemp = playerAngle + (PLAYER_FOV / 2) - angle + 360;
+
+    if(playerAngle > 270 && angle < 90)
+        yTemp = playerAngle + (PLAYER_FOV / 2) - angle - 360;
+
+    float spriteX = yTemp * (PROJECTION_PLANE_WIDTH / PLAYER_FOV_F);
+    float spriteY = PROJECTION_PLANE_HEIGHT / 2;
+    
+    // Calculate distance and fix fisheye
+    float fixedAngle = ((angle*RADIAN) - player.angle);
+    float dist = (sprite->dist * cos(fixedAngle));
+
+    sprite->height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
+
+    if(sprite->height <= 0)
         return;
 
-    U_QuicksortSprites(visibleSprites, 0, visibleSpritesLength-1);
+    if(sprite->height > MAX_SPRITE_HEIGHT)
+        sprite->height = MAX_SPRITE_HEIGHT;
 
-    // Done in degrees to avoid computations (even if I could cache radians values and stuff)
-    for(int i = 0; i < visibleSpritesLength; i++)
+    // Calculate lighting intensity
+    float lighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / dist;
+    lighting = SDL_clamp(lighting, 0, 1.0f);
+
+    // Draw
+    int offset, drawX, drawYStart, drawYEnd;
+    for(int j = 0; j < sprite->height; j++)
     {
-        // Calculate angle and convert to degrees (*-1 makes sure it uses SDL screen space coordinates for unit circle and quadrants)
-        float angle = ((atan2(-visibleSprites[i].pSpacePos.y, visibleSprites[i].pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
-        FIX_ANGLES_DEGREES(angle);
+        offset = j*TILE_SIZE/sprite->height;
+        drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(sprite->height/2);
 
-        float playerAngle = player.angle * RADIAN_TO_DEGREE;
-        float yTemp = playerAngle + (PLAYER_FOV / 2) - angle;
-
-        if(angle > 270 && playerAngle < 90)
-            yTemp = playerAngle + (PLAYER_FOV / 2) - angle + 360;
-
-        if(playerAngle > 270 && angle < 90)
-            yTemp = playerAngle + (PLAYER_FOV / 2) - angle - 360;
-
-        float spriteX = yTemp * (PROJECTION_PLANE_WIDTH / PLAYER_FOV_F);
-        float spriteY = PROJECTION_PLANE_HEIGHT / 2;
-        
-        // Calculate distance and fix fisheye
-        float fixedAngle = ((angle*RADIAN) - player.angle);
-        float dist = (visibleSprites[i].dist * cos(fixedAngle));
-
-        visibleSprites[i].height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
-
-        if(visibleSprites[i].height <= 0)
+        // Check clipping with wall
+        if(wallHeights[drawX] >= sprite->height)
             continue;
 
-        if(visibleSprites[i].height > MAX_SPRITE_HEIGHT)
-            visibleSprites[i].height = MAX_SPRITE_HEIGHT;
+        drawYStart = (SCREEN_HEIGHT / 2)-(sprite->height/2);
+        drawYEnd = SCREEN_HEIGHT / 2 + sprite->height-(sprite->height/2);
 
-        // Calculate lighting intensity
-        float lighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / dist;
-        lighting = SDL_clamp(lighting, 0, 1.0f);
+        // Prevent overflow that causes sprites to lift up when too close
+        if(drawYStart < 0) 
+            drawYStart = 0;
 
-        // Draw
-        int offset, drawX, drawYStart, drawYEnd;
-        for(int j = 0; j < visibleSprites[i].height; j++)
+        R_DrawColumnTexturedShaded(drawX, drawYStart, drawYEnd, tomentdatapack.sprites[sprite->spriteID]->texture,offset, sprite->height, lighting);
+    }
+
+    // Draws the center of the sprite
+    //R_DrawPixel(PROJECTION_PLANE_WIDTH-spriteX, spriteY, SDL_MapRGB(win_surface->format, 255, 0, 0));
+}
+
+//-------------------------------------
+// Drawables routine, sort and render drawables
+//-------------------------------------
+void R_DrawDrawables(void)
+{
+    U_QuicksortDrawables(allDrawables, 0, allDrawablesLength-1);
+
+    for(int i = 0; i < allDrawablesLength; i++)
+    {
+        switch(allDrawables[i].type)
         {
-            offset = j*TILE_SIZE/visibleSprites[i].height;
-            drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(visibleSprites[i].height/2);
+            case DRWB_WALL:
+                R_DrawThinWall(allDrawables[i].wallPtr);
+                break;
 
-            // Check clipping with wall
-            if(wallHeights[drawX] >= visibleSprites[i].height)
-                continue;
-
-            drawYStart = (SCREEN_HEIGHT / 2)-(visibleSprites[i].height/2);
-            drawYEnd = SCREEN_HEIGHT / 2 + visibleSprites[i].height-(visibleSprites[i].height/2);
-
-            // Prevent overflow that causes sprites to lift up when too close
-            if(drawYStart < 0) 
-                drawYStart = 0;
-
-            R_DrawColumnTexturedShaded(drawX, drawYStart, drawYEnd, tomentdatapack.sprites[visibleSprites[i].spriteID]->texture,offset, visibleSprites[i].height, lighting);
+            case DRWB_SPRITE:
+                R_DrawSprite(allDrawables[i].spritePtr);
+                break;
         }
-
-        // Draws the center of the sprite
-        //R_DrawPixel(PROJECTION_PLANE_WIDTH-spriteX, spriteY, SDL_MapRGB(win_surface->format, 255, 0, 0));
     }
 }
 

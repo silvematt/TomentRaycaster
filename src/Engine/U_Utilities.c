@@ -22,41 +22,33 @@ float U_GetDistanceSquared(float x1, float y1, float x2, float y2)
     return sqrt(dx*dx + dy*dy);
 }
 
-void I_SwapSprites(sprite_t* x, sprite_t* y)
+// -------------------------------
+// Perform quicksorts before drawing drawables to draw from farther to nearest
+// -------------------------------
+void U_QuicksortDrawables(drawabledata_t a[], int left, int right)
 {
-    sprite_t temp;
-    temp = *x;
-    *x = *y;
-    *y = temp;
-}
+    int i = left;
+    int j = right;
+    
+    drawabledata_t temp = a[i]; // temp and pivot
 
-int I_QuicksortSpritesPartition(sprite_t visibleSprites[], int l, int h)
-{
-    float pivot = visibleSprites[l].dist; // pivot
-    int i = l;
-    int j = h;
-
-    while (i < j) 
+    if( left < right)
     {
-        while (visibleSprites[i].dist > pivot)
-            i++;
+        while(i < j)
+        {
+            while(a[j].dist <= temp.dist && i < j)
+                j--;
 
-        while (visibleSprites[j].dist < pivot)
-            j--;
+            a[i] = a[j];
 
-        if (i < j) 
-            I_SwapSprites(&visibleSprites[i], &visibleSprites[j]);
-    }
+            while(a[i].dist >= temp.dist && i < j)
+                i++;
+            
+            a[j] = a[i];
+        }
+        a[i] = temp;
 
-    return j;
-}
-
-void U_QuicksortSprites(sprite_t visibleSprites[], int first, int last)
-{
-    if(first < last)
-    {
-        int pivot = I_QuicksortSpritesPartition(visibleSprites, first, last);
-        U_QuicksortSprites(visibleSprites, first, pivot);
-        U_QuicksortSprites(visibleSprites, pivot+1, last);
+        U_QuicksortDrawables(a, left, i - 1);
+        U_QuicksortDrawables(a, j + 1, right);
     }
 }

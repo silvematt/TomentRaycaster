@@ -7,6 +7,9 @@
 #ifndef TIMER_H_INCLUDED
 #define TIMER_H_INCLUDED
 
+// -------------------------------
+// Timer
+// -------------------------------
 typedef struct Timer
 {
     unsigned int timerTicks;
@@ -29,8 +32,12 @@ typedef struct Timer
 
 } Timer;
 
+// -------------------------------
+// Allocates and creates a Timer
+// -------------------------------
 Timer* U_TimerCreateNew(void);
 
+// Timer functions
 static void U_TimerInit(Timer* timer);
 static void U_TimerStart(Timer* timer);
 static void U_TimerStop(Timer* timer);
@@ -39,6 +46,7 @@ static void U_TimerResume(Timer* timer);
 
 static unsigned int U_TimerGetTicks(Timer* timer);
 
+// Timer checks
 static bool U_TimerIsStarted(Timer* timer);
 static bool U_TimerIsPaused(Timer* timer);
 

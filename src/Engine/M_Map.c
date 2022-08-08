@@ -1,9 +1,10 @@
 #include "M_Map.h"
 
-bool mapInFrameBuffer = false;
-
 map_t currentMap;
 
+// -------------------------------
+// Loads the map from the file named mapID
+// -------------------------------
 void M_LoadMapAsCurrent(char* mapID)
 {
       FILE* fp;
@@ -346,6 +347,9 @@ void M_LoadMapAsCurrent(char* mapID)
       M_LoadCollisionMap();
 }
 
+// -------------------------------
+// Loads the object map
+// -------------------------------
 void M_LoadObjectTMap(void)
 {
       for(int y = 0; y < MAP_HEIGHT; y++)
@@ -374,6 +378,9 @@ void M_LoadObjectTMap(void)
                   }
 }
 
+// -------------------------------
+// Loads the collision map
+// -------------------------------
 void M_LoadCollisionMap(void)
 {
       for(int y = 0; y < MAP_HEIGHT; y++)

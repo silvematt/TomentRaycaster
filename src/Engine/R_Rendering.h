@@ -33,6 +33,22 @@
 #define MAXVISABLE 50
 #define MAX_SPRITE_HEIGHT 1000
 
+// Visible Sprite Determination
+extern bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];
+extern sprite_t visibleSprites[MAXVISABLE];
+extern int visibleSpritesLength;
+
+// =========================================
+// Thin wall Transparency
+// =========================================
+
+// Max amounts of times the ray can ignore and save a thin wall (see through a see through wall)
+#define MAX_THIN_WALL_TRANSPARENCY_RECURSION 4
+
+// Found thin walls to draw
+extern walldata_t currentThinWalls[PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
+extern unsigned visibleThinWallsLength;
+
 // =========================================
 // Debug
 // =========================================
@@ -46,17 +62,14 @@ extern uint32_t r_transparencyColor;    // Color marked as "transparency", rende
 extern unsigned int* screenBuffers[5];  // Buffers for the screen renderer
 extern SDL_Rect dirtybox;               // Marks the dirty pixels, used for optimization
 
-// Wall height
+// Wall heights, saved for each x
 extern float wallHeights[PROJECTION_PLANE_WIDTH];
 
-// Visible Sprite Determination
-extern bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];
-extern sprite_t visibleSprites[MAXVISABLE];
-extern int visibleSpritesLength;
+// Drawables
+#define MAX_DRAWABLES PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION + MAXVISABLE
+extern drawabledata_t allDrawables[MAX_DRAWABLES];
+extern int allDrawablesLength;
 
-// Doors
-extern int doorstate[MAP_HEIGHT][MAP_WIDTH];
-extern float doorpositions[MAP_HEIGHT][MAP_WIDTH];
 
 //-------------------------------------
 // Initializes the rendering 
@@ -69,7 +82,7 @@ void R_InitRendering(void);
 void R_ComposeFrame(void);
 
 //-------------------------------------
-// Reads the framebuffer with the dirtybox and transfer to win_surface
+// Reads the framebuffer transfers to win_surface
 //-------------------------------------
 void R_UpdateNoBlit(void);
 
@@ -93,11 +106,24 @@ void R_BlitIntoBuffer(int buffer, SDL_Surface* sur, SDL_Rect* pos);
 //-------------------------------------
 void R_BlitColorIntoBuffer(int buffer, int color, SDL_Rect* pos);
 
+//-------------------------------------
+// Draw lines using Bresenham's 
+//-------------------------------------
 void R_DrawLine(int x0, int y0, int x1, int y1, int color);
 
+//-------------------------------------
+// Draw a single pixel
+//-------------------------------------
 void R_DrawPixel(int x, int y, int color);
+
+//-------------------------------------
+// Draw a single pixel with shading
+//-------------------------------------
 void R_DrawPixelShaded(int x, int y, int color, float intensity);
 
+//-------------------------------------
+// Draw a column of pixel
+//-------------------------------------
 void R_DrawColumn(int x, int y, int endY, int color);
 
 //-------------------------------------
@@ -120,7 +146,15 @@ void R_DrawBackground(void);
 //-------------------------------------
 void R_Raycast(void);
 
-void R_DrawWall(void);
+//-------------------------------------
+// Drawables routine, sort and render drawables
+//-------------------------------------
+void R_DrawDrawables(void);
+
+//-------------------------------------
+// Draw the passed thin wall
+//-------------------------------------
+void R_DrawThinWall(walldata_t* wall);
 
 //-------------------------------------
 // Floorcast and ceilingcast
@@ -134,10 +168,16 @@ void R_FloorCastingAndCeiling(float end, float rayAngle, int x);
 //-------------------------------------
 // Draws the visible sprites
 //-------------------------------------
-void R_DrawSprites(void);
+void R_DrawSprite(sprite_t* sprite);
 
+//-------------------------------------
+// Draws a column of pixels with texture mapping
+//-------------------------------------
 void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight);
 
+//-------------------------------------
+// Draws a column of pixels with texture mapping and shading
+//-------------------------------------
 void R_DrawColumnTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity);
 
 #endif
