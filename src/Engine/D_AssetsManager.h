@@ -9,6 +9,13 @@
 // --------------------------------------------
 #define OBJECTARRAY_DEFAULT_SIZE 256
 
+
+// All Floors
+typedef enum enginesDefaultsID_e
+{
+    EDEFAULT_1 = 0
+} enginesDefaultsID_t;
+
 // --------------------------------------------
 // All Walls and doors
 // 
@@ -89,26 +96,45 @@ typedef struct object_s
 // The whole datapack of the game
 typedef struct tomentdatapack_s
 {
-    // All the walls in the game
+    // Default Engine's Objects
+    object_t* enginesDefaults[OBJECTARRAY_DEFAULT_SIZE];
+    unsigned enginesDefaultsLength;
+
+    // Object in the game
     object_t* walls[OBJECTARRAY_DEFAULT_SIZE];
+    unsigned wallsLength;
+
     object_t* floors[OBJECTARRAY_DEFAULT_SIZE];
+    unsigned floorsLength;
+
     object_t* ceilings[OBJECTARRAY_DEFAULT_SIZE];
+    unsigned ceilingsLength;
+
     object_t* sprites[OBJECTARRAY_DEFAULT_SIZE];
+    unsigned spritesLength;
 } tomentdatapack_t;
 
     
 extern tomentdatapack_t tomentdatapack;
 
 //-------------------------------------
+// Returns true if the texture has correctly loaded, otherwise false and an error
+//-------------------------------------
+bool D_CheckTextureLoaded(SDL_Surface* ptr, char* str);
+
+//-------------------------------------
 // Initializes defauls for an object
 //-------------------------------------
 void D_InitObject(object_t* obj);
 
+void D_InitEnginesDefaults(void);
 void D_InitAssetManager(void);
 void D_InitLoadWalls(void);
 void D_InitLoadFloors(void);
 void D_InitLoadCeilings(void);
 void D_InitLoadSprites(void);
+
+
 
 //-------------------------------------
 // Sets the object for the given parameters

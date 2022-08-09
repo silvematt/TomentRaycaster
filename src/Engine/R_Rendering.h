@@ -23,7 +23,7 @@
 // =========================================
 // Minimap
 // =========================================
-#define MINIMAP_DIVIDER 16               // Divider for making the minimap smaller
+#define MINIMAP_DIVIDER 32               // Divider for making the minimap smaller
 #define MINIMAP_PLAYER_WIDTH 4          // Dividers for making the player in the minimap smaller
 #define MINIMAP_PLAYER_HEIGHT 4
 
@@ -164,6 +164,13 @@ void R_DrawThinWall(walldata_t* wall);
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
 void R_FloorCastingAndCeiling(float end, float rayAngle, int x);
+
+
+//-------------------------------------
+// Adds a sprite to the visible sprite array and adds its corresponding drawable
+//-------------------------------------
+void R_AddToVisibleSprite(int gridX, int gridY);
+
 
 //-------------------------------------
 // Draws the visible sprites

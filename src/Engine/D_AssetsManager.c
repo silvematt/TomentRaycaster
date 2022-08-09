@@ -22,10 +22,21 @@ void D_SetObject(object_t* obj, int id, SDL_Surface* texture, object_t* alt)
     obj->ID = id;
     
     if(texture == NULL)
-        printf("FATAL ERROR! Could not load texture with ID: %d\n", id);
+        printf("FATAL ERROR! Setting Object: Could not load texture with ID: %d\n", id);
 
     obj->texture = texture;
     obj->alt = alt;
+}
+
+bool D_CheckTextureLoaded(SDL_Surface* ptr, char* str)
+{
+    if(ptr == NULL)
+    {
+        printf("ERROR! Could not load \"%s\", the file could not exist or could be corrupted. Attempting to fall back to Engines Defaults...\n", str);
+        return false;
+    }
+
+    return true;
 }
 
 //-------------------------------------
@@ -33,10 +44,42 @@ void D_SetObject(object_t* obj, int id, SDL_Surface* texture, object_t* alt)
 //-------------------------------------
 void D_InitAssetManager(void)
 {
+    printf("Initializing Assets Manager...\n");
+
+    D_InitEnginesDefaults();
     D_InitLoadWalls();
     D_InitLoadFloors();
     D_InitLoadCeilings();
     D_InitLoadSprites();
+}
+
+void D_InitEnginesDefaults(void)
+{    
+    // Create Objects
+    object_t* texturefallback = (object_t*)malloc(sizeof(object_t));
+    tomentdatapack.enginesDefaultsLength = 1; // Set length
+
+    D_InitObject(texturefallback);
+
+    // Put objects in the datapack
+    tomentdatapack.enginesDefaults[EDEFAULT_1] = texturefallback;
+
+    // Fill objects
+    // Convert all the surfaces that we will load in the same format as the win_surface
+    SDL_Surface *temp1;
+    char* path;
+
+    path = "Data/texturefallback.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.enginesDefaults[EDEFAULT_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", path);
+        
+    SDL_FreeSurface(temp1);
+
+    // Final sets
+    D_SetObject(texturefallback, EDEFAULT_1, tomentdatapack.enginesDefaults[EDEFAULT_1]->texture, NULL);
 }
 
 void D_InitLoadWalls(void)
@@ -47,6 +90,7 @@ void D_InitLoadWalls(void)
     object_t* wall2 = (object_t*)malloc(sizeof(object_t));
     object_t* gate1 = (object_t*)malloc(sizeof(object_t));
     object_t* gate1Alt = (object_t*)malloc(sizeof(object_t));
+    tomentdatapack.wallsLength = 5; // Set length
 
     D_InitObject(wall1);
     D_InitObject(wall1Alt);
@@ -64,27 +108,53 @@ void D_InitLoadWalls(void)
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
     SDL_Surface *temp1;
+    char* path;
 
-    temp1 = SDL_LoadBMP("Data/wall1.bmp");
-    tomentdatapack.walls[W_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    // W_1
+    path = "Data/wall1.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.walls[W_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.walls[W_1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
-    temp1 = SDL_LoadBMP("Data/wall1alt.bmp");
-    tomentdatapack.walls[W_1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    // W_1Alt
+    path = "Data/wall1alt.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.walls[W_1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.walls[W_1Alt]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
-    temp1 = SDL_LoadBMP("Data/wall2.bmp");
-    tomentdatapack.walls[W_2]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    // W_2
+    path = "Data/wall2.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.walls[W_2]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.walls[W_2]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
-    temp1 = SDL_LoadBMP("Data/gate.bmp");
-    tomentdatapack.walls[WD_Gate1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    // WD_Gate1
+    path = "Data/gate.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.walls[WD_Gate1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.walls[WD_Gate1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
     U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 2); // Set Door bit flag to 1
     SDL_FreeSurface(temp1);
 
-    temp1 = SDL_LoadBMP("Data/gate.bmp");
-    tomentdatapack.walls[WD_Gate1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    // WD_Gate1Alt
+    path = "Data/gate.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.walls[WD_Gate1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.walls[WD_Gate1Alt]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 0); // Set Thin Wall bit flag to 1,
     U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 1); // Set Vertical bit flag to 1
     U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 2); // Set Door bit flag to 1
@@ -102,6 +172,7 @@ void D_InitLoadFloors(void)
 {
     // Create Objects
     object_t* floor1 = (object_t*)malloc(sizeof(object_t));
+    tomentdatapack.floorsLength = 1; // Set length
 
     D_InitObject(floor1);
 
@@ -111,9 +182,14 @@ void D_InitLoadFloors(void)
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
     SDL_Surface *temp1;
+    char* path;
 
-    temp1 = SDL_LoadBMP("Data/floor.bmp");
-    tomentdatapack.floors[F_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    path = "Data/floor.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.floors[F_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.floors[F_1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
     // Final sets
@@ -124,6 +200,7 @@ void D_InitLoadCeilings(void)
 {
     // Create Objects
     object_t* ceiling1 = (object_t*)malloc(sizeof(object_t));
+    tomentdatapack.ceilingsLength = 1; // Set length
 
     D_InitObject(ceiling1);
 
@@ -133,9 +210,14 @@ void D_InitLoadCeilings(void)
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
     SDL_Surface *temp1;
+    char* path;
 
-    temp1 = SDL_LoadBMP("Data/ceiling1.bmp");
-    tomentdatapack.ceilings[C_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    path = "Data/ceiling1.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.ceilings[C_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.ceilings[C_1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
     // Final sets
@@ -146,6 +228,7 @@ void D_InitLoadSprites(void)
 {
     // Create Objects
     object_t* spritesBarrel1 = (object_t*)malloc(sizeof(object_t));
+    tomentdatapack.spritesLength = 1; // Set length
 
     D_InitObject(spritesBarrel1);
 
@@ -155,9 +238,14 @@ void D_InitLoadSprites(void)
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
     SDL_Surface *temp1;
+    char* path;
 
-    temp1 = SDL_LoadBMP("Data/barrel.bmp");
-    tomentdatapack.sprites[S_Barrel1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    path = "Data/barrel.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.sprites[S_Barrel1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.sprites[S_Barrel1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     U_SetBit(&tomentdatapack.sprites[S_Barrel1]->flags, 0); // Set collision bit flag to 1
     SDL_FreeSurface(temp1);
 

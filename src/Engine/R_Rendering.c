@@ -297,40 +297,11 @@ void R_Raycast(void)
                 if(hcurGridX >= 0 && hcurGridY >= 0 && hcurGridX < MAP_WIDTH && hcurGridY < MAP_HEIGHT)
                 {
                     // Check for sprites
+                    // If the current tile wasn't already marked as a visible sprite && there is a sprite in that tile
                     if(!visibleTiles[hcurGridY][hcurGridX] && currentMap.spritesMap[hcurGridY][hcurGridX] >= 1)
                     {
                         // Add sprite and data in the array
-
-                        // Get Grid Pos
-                        visibleSprites[visibleSpritesLength].gridPos.x = hcurGridX;
-                        visibleSprites[visibleSpritesLength].gridPos.y = hcurGridY;
-
-                        // Get World Pos
-                        visibleSprites[visibleSpritesLength].pos.x = hcurGridX * TILE_SIZE;
-                        visibleSprites[visibleSpritesLength].pos.y = hcurGridY * TILE_SIZE;
-
-                        // Get Player Space pos
-                        visibleSprites[visibleSpritesLength].pSpacePos.x = (visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
-                        visibleSprites[visibleSpritesLength].pSpacePos.y = (visibleSprites[visibleSpritesLength].pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
-
-                        // Calculate the distance to player
-                        visibleSprites[visibleSpritesLength].dist = sqrt(visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x + visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y);
-
-                        // Get ID
-                        visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[hcurGridY][hcurGridX];
-                        
-                        // Add it to the drawables
-                        allDrawables[allDrawablesLength].type = DRWB_SPRITE;
-                        allDrawables[allDrawablesLength].spritePtr = &visibleSprites[visibleSpritesLength];
-                        
-                        // Quick variable access
-                        allDrawables[allDrawablesLength].dist = visibleSprites[visibleSpritesLength].dist;
-                        
-                        allDrawablesLength++;
-                        visibleSpritesLength++;
-
-                        // Mark this sprite as added so we don't get duplicates
-                        visibleTiles[hcurGridY][hcurGridX] = true;
+                        R_AddToVisibleSprite(hcurGridX, hcurGridY);
                     }
                     
                     int idHit = currentMap.wallMap[hcurGridY][hcurGridX];
@@ -474,38 +445,7 @@ void R_Raycast(void)
                     if(!visibleTiles[vcurGridY][vcurGridX] && currentMap.spritesMap[vcurGridY][vcurGridX] >= 1)
                     {
                         // Add sprite and data in the array
-
-                        // Get Grid Pos
-                        visibleSprites[visibleSpritesLength].gridPos.x = vcurGridX;
-                        visibleSprites[visibleSpritesLength].gridPos.y = vcurGridY;
-
-                        // Get World Pos
-                        visibleSprites[visibleSpritesLength].pos.x = vcurGridX * TILE_SIZE;
-                        visibleSprites[visibleSpritesLength].pos.y = vcurGridY * TILE_SIZE;
-
-                        // Get Player Space pos
-                        visibleSprites[visibleSpritesLength].pSpacePos.x = (visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
-                        visibleSprites[visibleSpritesLength].pSpacePos.y = (visibleSprites[visibleSpritesLength].pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
-
-                        // Calculate the distance to player
-                        visibleSprites[visibleSpritesLength].dist = sqrt((visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x) + (visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y));
-
-                        // Get ID
-                        visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[vcurGridY][vcurGridX];
-                        
-                        // Add it to the drawables
-                        allDrawables[allDrawablesLength].type = DRWB_SPRITE;
-                        allDrawables[allDrawablesLength].spritePtr = &visibleSprites[visibleSpritesLength];
-                       
-                        // Quick variable access
-                        allDrawables[allDrawablesLength].dist = visibleSprites[visibleSpritesLength].dist;
-                       
-                        allDrawablesLength++;
-                        
-                        visibleSpritesLength++;
-
-                        // Mark this sprite as added so we don't get duplicates
-                        visibleTiles[vcurGridY][vcurGridX] = true;
+                        R_AddToVisibleSprite(vcurGridX, vcurGridY);
                     }
 
                     int idHit = currentMap.wallMap[vcurGridY][vcurGridX];
@@ -708,13 +648,6 @@ void R_Raycast(void)
             wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
 
             object_t* curObject = tomentdatapack.walls[objectIDHit];
-            // Check if object is null
-            if(curObject->texture == NULL)
-            {
-                printf("WARNING! Trying to load an object with ID: %d, but it was never set in the objects\n", objectIDHit);
-                rayAngle += (RADIAN * PLAYER_FOV) / PROJECTION_PLANE_WIDTH;
-                return;
-            }
 
             // Draw the walls as column of pixels
             if(horizontal) 
@@ -793,12 +726,6 @@ void R_DrawThinWall(walldata_t* cur)
     wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
 
     object_t* curObject = tomentdatapack.walls[cur->idHit];
-    // Check if object is null
-    if(curObject->texture == NULL)
-    {
-        printf("WARNING! Trying to load an object with ID: %d in thin wall loop, but it was never set in the objects\n", cur->idHit);
-        return;
-    }
 
     // Draw the walls as column of pixels
     if(!cur->isVertical) 
@@ -893,6 +820,45 @@ void R_FloorCastingAndCeiling(float end, float rayAngle, int x)
             }
         }
     }
+}
+
+//-------------------------------------
+// Adds a sprite to the visible sprite array and adds its corresponding drawable
+//-------------------------------------
+void R_AddToVisibleSprite(int gridX, int gridY)
+{
+    // Save Grid Pos
+    visibleSprites[visibleSpritesLength].gridPos.x = gridX;
+    visibleSprites[visibleSpritesLength].gridPos.y = gridY;
+
+    // Get World Pos
+    visibleSprites[visibleSpritesLength].pos.x = gridX * TILE_SIZE;
+    visibleSprites[visibleSpritesLength].pos.y = gridY * TILE_SIZE;
+
+    // Get Player Space pos
+    visibleSprites[visibleSpritesLength].pSpacePos.x = (visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
+    visibleSprites[visibleSpritesLength].pSpacePos.y = (visibleSprites[visibleSpritesLength].pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
+
+    // Calculate the distance to player
+    visibleSprites[visibleSpritesLength].dist = sqrt(visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x + visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y);
+
+    // Get ID
+    visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[gridY][gridX];
+    
+    // Sprite is also a drawable
+    // Add it to the drawables
+    allDrawables[allDrawablesLength].type = DRWB_SPRITE;
+    allDrawables[allDrawablesLength].spritePtr = &visibleSprites[visibleSpritesLength];
+    
+    // Quick variable access
+    allDrawables[allDrawablesLength].dist = visibleSprites[visibleSpritesLength].dist;
+    
+    // Increment indexes
+    allDrawablesLength++;
+    visibleSpritesLength++;
+
+    // Mark this sprite as added so we don't get duplicates
+    visibleTiles[gridY][gridX] = true;
 }
 
 //-------------------------------------
