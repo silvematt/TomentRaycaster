@@ -29,7 +29,7 @@ typedef struct sprite_s
     vector2_t pSpacePos;    // position in player space        
 
     int spriteID;
-    byte flags;
+    int sheetLength;        // For Animated objects
 
     float dist;     // distance from player
     float height;   // how big the sprite will be drawn

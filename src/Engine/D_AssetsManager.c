@@ -5,7 +5,6 @@
 
 tomentdatapack_t tomentdatapack;
 
-
 //-------------------------------------
 // Sets defauls for an object
 //-------------------------------------
@@ -228,18 +227,23 @@ void D_InitLoadSprites(void)
 {
     // Create Objects
     object_t* spritesBarrel1 = (object_t*)malloc(sizeof(object_t));
-    tomentdatapack.spritesLength = 1; // Set length
+    object_t* spritesCampfire = (object_t*)malloc(sizeof(object_t));
+
+    tomentdatapack.spritesLength = 2; // Set length
 
     D_InitObject(spritesBarrel1);
+    D_InitObject(spritesCampfire);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
+    tomentdatapack.sprites[S_Campfire] = spritesCampfire;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
     SDL_Surface *temp1;
     char* path;
 
+    // Barrel
     path = "Data/barrel.bmp";
     temp1 = SDL_LoadBMP(path);
     if(D_CheckTextureLoaded(temp1, path))
@@ -247,8 +251,24 @@ void D_InitLoadSprites(void)
     else
         tomentdatapack.sprites[S_Barrel1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     U_SetBit(&tomentdatapack.sprites[S_Barrel1]->flags, 0); // Set collision bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_Barrel1] = 0;
     SDL_FreeSurface(temp1);
+
+    path = "Data/campfire.bmp";
+    temp1 = SDL_LoadBMP(path);
+    if(D_CheckTextureLoaded(temp1, path))
+        tomentdatapack.sprites[S_Campfire]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.sprites[S_Campfire]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[S_Campfire]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[S_Campfire]->flags, 1); // Set animated sprite bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_Campfire] = 4;
+    SDL_FreeSurface(temp1);
+
 
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
+    D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
 }

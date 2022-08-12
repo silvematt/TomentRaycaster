@@ -325,7 +325,7 @@ void R_Raycast(void)
                                 int newGridY = floor(hcury / TILE_SIZE);
 
                                 // If the ray intersects with the door
-                                if((hcurx - (64*newGridX)) < doorpositions[newGridY][newGridX])
+                                if((hcurx - (UNIT_SIZE*newGridX)) < doorpositions[newGridY][newGridX])
                                 {
                                     // If they're in the same tile, the door is visible
                                     if(newGridX == hcurGridX && newGridY == hcurGridY && thinWallDepth < MAX_THIN_WALL_TRANSPARENCY_RECURSION)
@@ -843,8 +843,10 @@ void R_AddToVisibleSprite(int gridX, int gridY)
     visibleSprites[visibleSpritesLength].dist = sqrt(visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x + visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y);
 
     // Get ID
-    visibleSprites[visibleSpritesLength].spriteID = currentMap.spritesMap[gridY][gridX];
-    
+    int spriteID = currentMap.spritesMap[gridY][gridX];
+    visibleSprites[visibleSpritesLength].spriteID = spriteID;
+    visibleSprites[visibleSpritesLength].sheetLength = tomentdatapack.spritesSheetsLenghtTable[spriteID];
+
     // Sprite is also a drawable
     // Add it to the drawables
     allDrawables[allDrawablesLength].type = DRWB_SPRITE;
@@ -900,10 +902,14 @@ void R_DrawSprite(sprite_t* sprite)
     lighting = SDL_clamp(lighting, 0, 1.0f);
 
     // Draw
-    int offset, drawX, drawYStart, drawYEnd;
+    int offset, drawX, drawYStart, drawYEnd, currentFrame = 0;
+
+    if(sprite->sheetLength > 0)
+        currentFrame = ((int)floor(curTime / ANIMATION_SPEED_DIVIDER) % sprite->sheetLength);
+
     for(int j = 0; j < sprite->height; j++)
     {
-        offset = j*TILE_SIZE/sprite->height;
+        offset = j*TILE_SIZE/sprite->height + (UNIT_SIZE*currentFrame);
         drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(sprite->height/2);
 
         // Check clipping with wall

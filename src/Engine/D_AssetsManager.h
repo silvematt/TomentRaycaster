@@ -51,6 +51,7 @@ typedef enum spritesObjectID_e
 {
     // 0 = Empty
     S_Barrel1 = 1,
+    S_Campfire
 } spritesObjectID_t;
 
 typedef enum doorsObjectID_e
@@ -91,6 +92,10 @@ typedef struct object_s
     // 0000000 0
     //          \
     //           1 = solid (used for collision checking)
+
+    // 000000 0 0
+    //         \
+    //          1 = Animated sprite (uses horizontal sheet)
 */
 
 // The whole datapack of the game
@@ -112,6 +117,10 @@ typedef struct tomentdatapack_s
 
     object_t* sprites[OBJECTARRAY_DEFAULT_SIZE];
     unsigned spritesLength;
+
+    // Contains the value of the length of the spreadsheet for each sprite delcared
+    // Access by spritesObjectID_e
+    int spritesSheetsLenghtTable[OBJECTARRAY_DEFAULT_SIZE]; 
 } tomentdatapack_t;
 
     

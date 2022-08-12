@@ -13,6 +13,7 @@
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
 #define TILE_SIZE 64
+#define UNIT_SIZE 64
 
 // Types of object
 typedef enum objectType_e

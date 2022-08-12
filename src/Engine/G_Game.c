@@ -3,6 +3,9 @@
 #include "G_Physics.h"
 #include "M_Map.h"
 
+// Game Timer
+Timer* gameTimer;
+
 // Current Game Time
 double curTime = 0;
 
@@ -18,11 +21,18 @@ float doorpositions[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the
 //-------------------------------------
 void G_InitGame(void)
 {
+    // Initialize game
+    gameTimer = U_TimerCreateNew();
+    gameTimer->Init(gameTimer);
+
+    // Initialize the rest
     G_PhysicsInit();
 
     M_LoadMapAsCurrent("devmap");
 
     G_InitPlayer();
+
+    gameTimer->Start(gameTimer);
 }
 
 //-------------------------------------
@@ -30,6 +40,8 @@ void G_InitGame(void)
 //-------------------------------------
 void G_GameLoop(void)
 {
+    curTime = gameTimer->GetTicks(gameTimer);
+    
     // Handle input
     I_HandleInput();
 
@@ -51,6 +63,8 @@ void G_GameLoop(void)
 
     // Displays it on the screen
     R_FinishUpdate();
+
+    oldTime = curTime;
 }
 
 //-------------------------------------

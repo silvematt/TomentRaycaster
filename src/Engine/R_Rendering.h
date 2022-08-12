@@ -11,7 +11,7 @@
 // =========================================
 #define PLAYER_FOV 60                   // FOV of the player for raycasting
 #define PLAYER_FOV_F 60.0f              // FOV of the player for raycasting (as float)
-#define PROJECTION_PLANE_WIDTH 640      // Projection Plane
+#define PROJECTION_PLANE_WIDTH 640     // Projection Plane
 #define PROJECTION_PLANE_HEIGHT 480
 #define PROJECTION_PLANE_CENTER 240
 //#define DISTANCE_TO_PROJECTION ((PROJECTION_PLANE_WIDTH / 2) / tan(PLAYER_FOV /2))
@@ -32,6 +32,7 @@
 // =========================================
 #define MAXVISABLE 50
 #define MAX_SPRITE_HEIGHT 1000
+#define ANIMATION_SPEED_DIVIDER 200
 
 // Visible Sprite Determination
 extern bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];

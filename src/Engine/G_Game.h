@@ -3,12 +3,16 @@
 
 #include "G_Player.h"
 #include "R_Rendering.h"
+#include "U_Timer.h"
 
 // DOOR DEFINE
 #define DOOR_FULLY_CLOSED 64.0f
 #define DOOR_FULLY_OPENED 2.0f
 #define DOOR_OPEN_SPEED 100.0f
 #define DOOR_CLOSE_SPEED 100.0f
+
+// Game Timer
+extern Timer* gameTimer;
 
 // Current Game Time
 extern double curTime;
