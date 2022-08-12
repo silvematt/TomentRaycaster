@@ -15,6 +15,7 @@ Features:
 - Sliding Doors
 - Transparent (see through) doors and thin walls
 - Sprites Rendering & Physics (Sprites can be solid or not)
+- Support for Animated Sprites
 - Shading and Map Lighting
 - Load map from file
 - Assets Manager (different values in the map files are different walls/floors/ceilings)
