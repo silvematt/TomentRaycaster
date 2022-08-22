@@ -8,7 +8,7 @@
 // DEFINES
 // --------------------------------------------
 #define OBJECTARRAY_DEFAULT_SIZE 256
-
+#define MAX_TOC_LENGTH 256
 
 // All Floors
 typedef enum enginesDefaultsID_e
@@ -54,11 +54,6 @@ typedef enum spritesObjectID_e
     S_Campfire
 } spritesObjectID_t;
 
-typedef enum doorsObjectID_e
-{
-    // 0 = Empty
-    D_Gate1 = 1
-} doorsObjectID_t;
 
 typedef struct object_s
 {
@@ -98,6 +93,40 @@ typedef struct object_s
     //          1 = Animated sprite (uses horizontal sheet)
 */
 
+// Table of Content elements for opening archives (MUST BE IN SYNCH WITH ARCH)
+typedef struct tocElement_s
+{
+    uint32_t id;
+    uint32_t startingOffset;
+    uint32_t size;
+} tocElement_t;
+
+// IDs of the Images in the IMGArchive (MUST BE IN SYNCH WITH ARCH)
+typedef enum imgIDs_e
+{
+    IMG_ID_EDEFAULT_1 = 0,
+    IMG_ID_W_1,
+    IMG_ID_W_1Alt,
+    IMG_ID_W_2,
+    IMG_ID_WD_Gate1,
+    IMG_ID_WD_Gate1Alt,
+    IMG_ID_F_1,
+    IMG_ID_C_1,
+    IMG_ID_S_Barrel1,
+    IMG_ID_S_Campfire,
+} imgIDs_e;
+
+typedef struct archt_s
+{
+    FILE* file;
+    uint32_t fileLength;
+    tocElement_t toc[MAX_TOC_LENGTH];
+    uint32_t tocSize;
+    uint32_t tocElementsLenght;
+    uint32_t tocOffset; // how many bytes (fileLength included) to skip the ToC and access the data
+    byte* buffer;
+} archt_t;
+
 // The whole datapack of the game
 typedef struct tomentdatapack_s
 {
@@ -120,21 +149,33 @@ typedef struct tomentdatapack_s
 
     // Contains the value of the length of the spreadsheet for each sprite delcared
     // Access by spritesObjectID_e
-    int spritesSheetsLenghtTable[OBJECTARRAY_DEFAULT_SIZE]; 
-} tomentdatapack_t;
+    int spritesSheetsLenghtTable[OBJECTARRAY_DEFAULT_SIZE];
 
+    // img.archt
+    archt_t IMGArch;
+} tomentdatapack_t;
     
 extern tomentdatapack_t tomentdatapack;
 
 //-------------------------------------
 // Returns true if the texture has correctly loaded, otherwise false and an error
 //-------------------------------------
-bool D_CheckTextureLoaded(SDL_Surface* ptr, char* str);
+bool D_CheckTextureLoaded(SDL_Surface* ptr, int ID);
 
 //-------------------------------------
 // Initializes defauls for an object
 //-------------------------------------
 void D_InitObject(object_t* obj);
+
+//-------------------------------------
+// Opens the archives to allow objects initializations
+//-------------------------------------
+void D_OpenArchs(void);
+
+//-------------------------------------
+// Closes the archives to and frees buffers
+//-------------------------------------
+void D_CloseArchs(void);
 
 void D_InitEnginesDefaults(void);
 void D_InitAssetManager(void);

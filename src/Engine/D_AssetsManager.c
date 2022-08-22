@@ -27,16 +27,61 @@ void D_SetObject(object_t* obj, int id, SDL_Surface* texture, object_t* alt)
     obj->alt = alt;
 }
 
-bool D_CheckTextureLoaded(SDL_Surface* ptr, char* str)
+bool D_CheckTextureLoaded(SDL_Surface* ptr, int ID)
 {
     if(ptr == NULL)
     {
-        printf("ERROR! Could not load \"%s\", the file could not exist or could be corrupted. Attempting to fall back to Engines Defaults...\n", str);
+        printf("ERROR! Could not load IMG_ID:\"%d\", the file could not exist or could be corrupted. Attempting to fall back to Engines Defaults...\n", ID);
         return false;
     }
 
     return true;
 }
+
+//-------------------------------------
+// Opens the archives to allow objects initializations
+//-------------------------------------
+void D_OpenArchs(void)
+{
+    archt_t* curArch;
+
+    //-------------------------------------
+    // Open IMG Arch
+    //-------------------------------------
+    curArch = &tomentdatapack.IMGArch;
+    curArch->file = fopen("Data/img.archt", "rb");
+
+    // Get file lenght
+    fseek(curArch->file, 0, SEEK_END);
+    curArch->fileLength = ftell(curArch->file);
+    rewind(curArch->file);
+
+    // Read TOC size in bytes
+    // First 4 bytes are TOC length
+    fread(&(curArch->tocSize), sizeof(curArch->tocSize), 1, curArch->file);
+    printf("AAA: %d\n", curArch->tocSize);
+
+    // Get number of elements
+    curArch->tocElementsLenght = curArch->tocSize / sizeof(tocElement_t);
+
+    // Calculate base offset
+    curArch->tocOffset = sizeof(curArch->tocSize) + sizeof(tocElement_t) * tomentdatapack.IMGArch.tocElementsLenght;
+
+    // Fill the ToC
+    for(int i = 0; i < curArch->tocElementsLenght; i++)
+    {
+        fread(&curArch->toc[i].id, sizeof(curArch->toc[i].id), 1, curArch->file);
+        fread(&curArch->toc[i].startingOffset, sizeof(curArch->toc[i].startingOffset), 1, curArch->file);
+        fread(&curArch->toc[i].size, sizeof(curArch->toc[i].size), 1, curArch->file);
+    }
+    rewind(curArch->file);
+
+    // Allocate the buffer to allow reading the file and fill it
+    curArch->buffer = (byte *)malloc((curArch->fileLength) * sizeof(byte));
+    fread(tomentdatapack.IMGArch.buffer, (tomentdatapack.IMGArch.fileLength), 1, tomentdatapack.IMGArch.file);
+}
+
+
 
 //-------------------------------------
 // Initializes the Assets and datapacks 
@@ -45,11 +90,15 @@ void D_InitAssetManager(void)
 {
     printf("Initializing Assets Manager...\n");
 
+    D_OpenArchs();
+
     D_InitEnginesDefaults();
     D_InitLoadWalls();
     D_InitLoadFloors();
     D_InitLoadCeilings();
     D_InitLoadSprites();
+
+    D_CloseArchs();
 }
 
 void D_InitEnginesDefaults(void)
@@ -65,15 +114,18 @@ void D_InitEnginesDefaults(void)
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
-    SDL_Surface *temp1;
-    char* path;
+    SDL_Surface *temp1;     // Surface
+    SDL_RWops* sdlWops;     // Structure to read bytes
+    int offset;             // Offset in the img.archt
 
-    path = "Data/texturefallback.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    // E_1
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_EDEFAULT_1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_EDEFAULT_1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_EDEFAULT_1))
         tomentdatapack.enginesDefaults[EDEFAULT_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", path);
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
         
     SDL_FreeSurface(temp1);
 
@@ -106,40 +158,45 @@ void D_InitLoadWalls(void)
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
-    SDL_Surface *temp1;
-    char* path;
+    SDL_Surface *temp1;     // Surface
+    SDL_RWops* sdlWops;     // Structure to read bytes
+    int offset;             // Offset in the img.archt
 
     // W_1
-    path = "Data/wall1.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_W_1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_W_1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_W_1))
         tomentdatapack.walls[W_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         tomentdatapack.walls[W_1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
     // W_1Alt
-    path = "Data/wall1alt.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_W_1Alt].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_W_1Alt].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_W_1Alt))
         tomentdatapack.walls[W_1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         tomentdatapack.walls[W_1Alt]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
     // W_2
-    path = "Data/wall2.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_W_2].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_W_2].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_W_2))
         tomentdatapack.walls[W_2]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         tomentdatapack.walls[W_2]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
     // WD_Gate1
-    path = "Data/gate.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_WD_Gate1))
         tomentdatapack.walls[WD_Gate1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         tomentdatapack.walls[WD_Gate1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
@@ -148,9 +205,10 @@ void D_InitLoadWalls(void)
     SDL_FreeSurface(temp1);
 
     // WD_Gate1Alt
-    path = "Data/gate.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1Alt].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1Alt].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_WD_Gate1Alt))
         tomentdatapack.walls[WD_Gate1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         tomentdatapack.walls[WD_Gate1Alt]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
@@ -180,12 +238,15 @@ void D_InitLoadFloors(void)
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
-    SDL_Surface *temp1;
-    char* path;
+    SDL_Surface *temp1;     // Surface
+    SDL_RWops* sdlWops;     // Structure to read bytes
+    int offset;             // Offset in the img.archt
 
-    path = "Data/floor.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    // Floor 1
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_F_1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_F_1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_F_1))
         tomentdatapack.floors[F_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         tomentdatapack.floors[F_1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
@@ -208,12 +269,15 @@ void D_InitLoadCeilings(void)
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
-    SDL_Surface *temp1;
-    char* path;
+    SDL_Surface *temp1;     // Surface
+    SDL_RWops* sdlWops;     // Structure to read bytes
+    int offset;             // Offset in the img.archt
 
-    path = "Data/ceiling1.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    // Ceiling 1
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_C_1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_C_1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_C_1))
         tomentdatapack.ceilings[C_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         tomentdatapack.ceilings[C_1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
@@ -240,13 +304,15 @@ void D_InitLoadSprites(void)
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
-    SDL_Surface *temp1;
-    char* path;
-
+    SDL_Surface *temp1;     // Surface
+    SDL_RWops* sdlWops;     // Structure to read bytes
+    int offset;             // Offset in the img.archt
+    
     // Barrel
-    path = "Data/barrel.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_S_Barrel1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_S_Barrel1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_S_Barrel1))
         tomentdatapack.sprites[S_Barrel1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         tomentdatapack.sprites[S_Barrel1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
@@ -255,9 +321,11 @@ void D_InitLoadSprites(void)
     tomentdatapack.spritesSheetsLenghtTable[S_Barrel1] = 0;
     SDL_FreeSurface(temp1);
 
-    path = "Data/campfire.bmp";
-    temp1 = SDL_LoadBMP(path);
-    if(D_CheckTextureLoaded(temp1, path))
+    // Campfire
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_S_Campfire].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_S_Campfire].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_S_Campfire))
         tomentdatapack.sprites[S_Campfire]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         tomentdatapack.sprites[S_Campfire]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
@@ -271,4 +339,13 @@ void D_InitLoadSprites(void)
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
+}
+
+//-------------------------------------
+// Closes the archives to and frees buffers
+//-------------------------------------
+void D_CloseArchs(void)
+{
+    fclose(tomentdatapack.IMGArch.file);
+    free(tomentdatapack.IMGArch.buffer);
 }
