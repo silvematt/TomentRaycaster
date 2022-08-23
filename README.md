@@ -18,6 +18,7 @@ Features:
 - Support for Animated Sprites
 - Shading and Map Lighting
 - Load map from file
-- Assets Manager (different values in the map files are different walls/floors/ceilings)
+- Assets Manager
+- Packed data in custom files (.archt) format [GENERATED WITH: [TomentARCH](https://github.com/silvematt/TomentARCH)]
 - Minimap
 - Fixed Time Step
