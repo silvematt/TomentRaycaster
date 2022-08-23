@@ -662,8 +662,10 @@ void R_Raycast(void)
                 // If looking down, flip the texture offset
                 if(rayAngle < M_PI)
                     offset = (TILE_SIZE-1) - offset;
-                    
-                R_DrawColumnTexturedShaded((x), wallOffset+1, end+1, curObject->texture, offset, wallHeightUncapped, wallLighting);
+                
+                // Draw as many walls as the current ceiling height
+                for(int cHeight = 0; cHeight < currentMap.ceilingHeight; cHeight++)
+                    R_DrawColumnTexturedShaded((x), wallOffset-(wallHeight*cHeight)+1, end-(wallHeight*cHeight)+1, curObject->texture, offset, wallHeightUncapped, wallLighting);
             }
             else
             {
@@ -678,10 +680,12 @@ void R_Raycast(void)
                 if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
                     offset = (TILE_SIZE-1) - offset;
 
-                R_DrawColumnTexturedShaded( (x), wallOffset+1, end+1, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
+                for(int cHeight = 0; cHeight < currentMap.ceilingHeight; cHeight++)
+                    R_DrawColumnTexturedShaded( (x), wallOffset-(wallHeight*cHeight)+1, end-(wallHeight*cHeight)+1, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
+                
             }
 
-            R_FloorCastingAndCeiling(end, rayAngle, x);
+            R_FloorCastingAndCeiling(end, rayAngle, x, wallHeight);
         }
 
         // Check next ray
@@ -767,7 +771,7 @@ void R_DrawThinWall(walldata_t* cur)
 // - rayAngle = the current rayangle
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
-void R_FloorCastingAndCeiling(float end, float rayAngle, int x)
+void R_FloorCastingAndCeiling(float end, float rayAngle, int x, float wallHeight)
 {
     // Floor Casting & Ceiling
     float beta = (player.angle - rayAngle);
@@ -811,15 +815,59 @@ void R_FloorCastingAndCeiling(float end, float rayAngle, int x)
             }
 
             // Check the ceiling texture at that point
-            if(currentMap.ceilingMap[curGridY][curGridX] >= 1)
-            {
-                ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
+            if(currentMap.ceilingHeight == 1) // If the current ceiling height is 1, use optimized code to run both the floor and ceiling at the same time
+                if(currentMap.ceilingMap[curGridY][curGridX] >= 1)
+                {
+                    ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
 
-                // Draw ceiling
-                R_DrawPixelShaded(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting);
+                    // Draw ceiling
+                    R_DrawPixelShaded(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting);
+                }
+        }
+    }
+
+    // If the current ceiling height is greater than 1, ceiling needs to be calculated on its own
+    if(currentMap.ceilingHeight > 1)
+    {
+        for(int y = floor(end+(wallHeight * (currentMap.ceilingHeight-1))); y < PROJECTION_PLANE_HEIGHT; y++)
+        {
+            // Get distance
+            float straightlinedist = (RENDERING_PLAYER_HEIGHT + (TILE_SIZE* (currentMap.ceilingHeight-1)) * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
+            float d = straightlinedist / cos(beta);
+
+            // Calculate lighting intensity
+            float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
+            floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
+
+            // Get coordinates
+            float floorx = player.centeredPos.x + (cos(rayAngle) * d);
+            float floory = player.centeredPos.y + (sin(rayAngle) * d);
+
+            // Get textels
+            int textureX = (int)floorx % TILE_SIZE;
+            int textureY = (int)floory % TILE_SIZE;
+
+            // Get map coordinates
+            int curGridX = floor(floorx / TILE_SIZE);
+            int curGridY = floor(floory / TILE_SIZE);
+
+            int floorObjectID = -1;
+            int ceilingObjectID = -1;
+
+            // If the ray is in a grid that is inside the map
+            if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
+            {
+                if(currentMap.ceilingMap[curGridY][curGridX] >= 1)
+                {
+                    ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
+
+                    // Draw ceiling
+                    R_DrawPixelShaded(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting);
+                }
             }
         }
     }
+
 }
 
 //-------------------------------------

@@ -71,7 +71,6 @@ extern float wallHeights[PROJECTION_PLANE_WIDTH];
 extern drawabledata_t allDrawables[MAX_DRAWABLES];
 extern int allDrawablesLength;
 
-
 //-------------------------------------
 // Initializes the rendering 
 //-------------------------------------
@@ -164,7 +163,7 @@ void R_DrawThinWall(walldata_t* wall);
 // - rayAngle = the current rayangle
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
-void R_FloorCastingAndCeiling(float end, float rayAngle, int x);
+void R_FloorCastingAndCeiling(float end, float rayAngle, int x, float wallHeight);
 
 
 //-------------------------------------

@@ -106,4 +106,5 @@ spritesMap=
 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}];
 wallLighting=70.0f
 floorLighting=50.0f
+ceilingHeightMap=1
 ;

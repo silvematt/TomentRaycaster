@@ -337,6 +337,31 @@ void M_LoadMapAsCurrent(char* mapID)
       // Convert to float
       currentMap.floorLight = atof(tempStr);
 
+      // --------------------
+      // Read Ceiling Height
+      // --------------------
+      fgets(curLine, MAX_STRLEN, fp); // Layout =
+
+      // Find index for reading
+      str = strchr(curLine, '=');
+      indx = (int)(str - curLine) + 1;
+
+      // Init index for writing
+      i = 0;
+      
+      // Write
+      while(curLine[indx] != ';' && curLine[indx] != '\n' && curLine[indx] != EOF)
+      {
+            tempStr[i] = curLine[indx];
+            i++;
+            indx++;
+      }
+      tempStr[i] = '\0';
+
+      // Convert to float
+      currentMap.ceilingHeight = atoi(tempStr);
+      
+
       printf("Map loaded successfully!\n");
       fclose(fp);
 

@@ -27,6 +27,7 @@ typedef enum objectType_e
 // Map info
 typedef struct map_s
 {
+    // Map static
     char id[MAX_STRLEN];
     char name[MAX_STRLEN];
     int wallMap[MAP_HEIGHT][MAP_WIDTH];
@@ -35,7 +36,9 @@ typedef struct map_s
     int spritesMap[MAP_HEIGHT][MAP_WIDTH];
     float wallLight;
     float floorLight;
+    int ceilingHeight;
 
+    // Map Dynamic
     int objectTMap[MAP_HEIGHT][MAP_WIDTH];      // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
     int collisionMap[MAP_HEIGHT][MAP_WIDTH];    // Collision data
 } map_t;
