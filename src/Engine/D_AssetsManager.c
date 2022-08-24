@@ -59,7 +59,6 @@ void D_OpenArchs(void)
     // Read TOC size in bytes
     // First 4 bytes are TOC length
     fread(&(curArch->tocSize), sizeof(curArch->tocSize), 1, curArch->file);
-    printf("AAA: %d\n", curArch->tocSize);
 
     // Get number of elements
     curArch->tocElementsLenght = curArch->tocSize / sizeof(tocElement_t);
@@ -141,13 +140,15 @@ void D_InitLoadWalls(void)
     object_t* wall2 = (object_t*)malloc(sizeof(object_t));
     object_t* gate1 = (object_t*)malloc(sizeof(object_t));
     object_t* gate1Alt = (object_t*)malloc(sizeof(object_t));
-    tomentdatapack.wallsLength = 5; // Set length
+    object_t* pillarWall1 = (object_t*)malloc(sizeof(object_t));
+    tomentdatapack.wallsLength = 6; // Set length
 
     D_InitObject(wall1);
     D_InitObject(wall1Alt);
     D_InitObject(wall2);
     D_InitObject(gate1);
     D_InitObject(gate1Alt);
+    D_InitObject(pillarWall1);
 
     // Put objects in the datapack
     tomentdatapack.walls[W_1] = wall1;
@@ -155,6 +156,7 @@ void D_InitLoadWalls(void)
     tomentdatapack.walls[W_2] = wall2;
     tomentdatapack.walls[WD_Gate1] = gate1;
     tomentdatapack.walls[WD_Gate1Alt] = gate1Alt;
+    tomentdatapack.walls[WP_PillarW1] = pillarWall1;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -202,6 +204,7 @@ void D_InitLoadWalls(void)
         tomentdatapack.walls[WD_Gate1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
     U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 2); // Set Door bit flag to 1
+    U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 3); // Set Pillar bit flag to 1
     SDL_FreeSurface(temp1);
 
     // WD_Gate1Alt
@@ -215,6 +218,18 @@ void D_InitLoadWalls(void)
     U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 0); // Set Thin Wall bit flag to 1,
     U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 1); // Set Vertical bit flag to 1
     U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 2); // Set Door bit flag to 1
+    U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 3); // Set Pillar bit flag to 1
+    SDL_FreeSurface(temp1);
+
+    // WD_Gate1Alt
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_W_1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_W_1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_W_1))
+        tomentdatapack.walls[WP_PillarW1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        tomentdatapack.walls[WP_PillarW1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.walls[WP_PillarW1]->flags, 3); // Set Pillar bit flag to 1
     SDL_FreeSurface(temp1);
 
     // Final sets
@@ -223,6 +238,7 @@ void D_InitLoadWalls(void)
     D_SetObject(wall2, W_2, tomentdatapack.walls[W_2]->texture, NULL);
     D_SetObject(gate1, WD_Gate1, tomentdatapack.walls[WD_Gate1]->texture, NULL);
     D_SetObject(gate1Alt, WD_Gate1Alt, tomentdatapack.walls[WD_Gate1Alt]->texture, NULL);
+    D_SetObject(pillarWall1, WP_PillarW1, tomentdatapack.walls[WP_PillarW1]->texture, NULL);
 }
 
 void D_InitLoadFloors(void)

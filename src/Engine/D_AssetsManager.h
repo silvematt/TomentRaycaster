@@ -30,6 +30,7 @@ typedef enum wallObjectID_e
     W_2 = 3,
     WD_Gate1 = 4,
     WD_Gate1Alt = 5,
+    WP_PillarW1 = 6
 } wallObjectID_t;
 
 // All Floors
@@ -79,6 +80,10 @@ typedef struct object_s
     // 00000  0 00
     //         \
     //          1 = Is Door
+
+    // 0000   0  000
+    //         \
+    //          1 = Is Pillar
 
     // ============
     // For sprites

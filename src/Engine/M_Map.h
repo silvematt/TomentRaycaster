@@ -36,11 +36,14 @@ typedef struct map_s
     int spritesMap[MAP_HEIGHT][MAP_WIDTH];
     float wallLight;
     float floorLight;
-    int ceilingHeight;
+    int ceilingHeightMap[MAP_HEIGHT][MAP_WIDTH];
+    int maxCeilingHeight;
 
     // Map Dynamic
     int objectTMap[MAP_HEIGHT][MAP_WIDTH];      // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
     int collisionMap[MAP_HEIGHT][MAP_WIDTH];    // Collision data
+    int orientationMap[MAP_HEIGHT][MAP_WIDTH];  // Orientation data
+
 } map_t;
 
 // The currently loaded map

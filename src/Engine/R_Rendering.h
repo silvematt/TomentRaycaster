@@ -50,6 +50,11 @@ extern int visibleSpritesLength;
 extern walldata_t currentThinWalls[PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
 extern unsigned visibleThinWallsLength;
 
+// Found Pillars to draw
+#define MAX_VISIBLE_PILLARS PROJECTION_PLANE_WIDTH
+extern walldata_t currentPillars[MAX_VISIBLE_PILLARS];
+extern unsigned visiblePillarsLength;
+
 // =========================================
 // Debug
 // =========================================
@@ -67,7 +72,7 @@ extern SDL_Rect dirtybox;               // Marks the dirty pixels, used for opti
 extern float wallHeights[PROJECTION_PLANE_WIDTH];
 
 // Drawables
-#define MAX_DRAWABLES PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION + MAXVISABLE
+#define MAX_DRAWABLES PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION + MAXVISABLE + MAX_VISIBLE_PILLARS
 extern drawabledata_t allDrawables[MAX_DRAWABLES];
 extern int allDrawablesLength;
 
@@ -163,8 +168,7 @@ void R_DrawThinWall(walldata_t* wall);
 // - rayAngle = the current rayangle
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
-void R_FloorCastingAndCeiling(float end, float rayAngle, int x, float wallHeight);
-
+void R_FloorCastingAndCeiling(float start, float end, float rayAngle, int x, float wallHeight);
 
 //-------------------------------------
 // Adds a sprite to the visible sprite array and adds its corresponding drawable

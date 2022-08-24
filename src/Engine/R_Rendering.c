@@ -35,6 +35,10 @@ int visibleSpritesLength;
 walldata_t currentThinWalls[PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
 unsigned visibleThinWallsLength;
 
+// Found Pillars to draw
+walldata_t currentPillars[MAX_VISIBLE_PILLARS];
+unsigned visiblePillarsLength;
+
 // Drawables
 drawabledata_t allDrawables[MAX_DRAWABLES];
 int allDrawablesLength;
@@ -191,6 +195,7 @@ void R_Raycast(void)
     memset(visibleTiles, false, (MAP_HEIGHT*MAP_WIDTH));
     visibleSpritesLength = 0;
     visibleThinWallsLength = 0;
+    visiblePillarsLength = 0;
     allDrawablesLength = 0;
     
     // Thin wall recursion depth counter
@@ -315,6 +320,52 @@ void R_Raycast(void)
                             if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 0)
                             {
                                 // This is a thin wall, check if we hit it or if it was occluded by the wall
+
+                                // Check if this thin wall is also a pillar, if it is, thin walls (and doors) are filled with the right/down adiacent wall
+                                if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 3) == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
+                                {
+                                    bool facing = false;
+
+                                    int outerCeilingHeight;
+                                    // Check for orientation
+                                    if(rayAngle < M_PI && (currentMap.orientationMap[hcurGridY-1][hcurGridX] == NORTH || currentMap.orientationMap[hcurGridY-1][hcurGridX] == NORTH_WEST || currentMap.orientationMap[hcurGridY-1][hcurGridX] == NORTH_EAST))
+                                    {
+                                        facing = true;
+                                        outerCeilingHeight = currentMap.ceilingHeightMap[hcurGridY-1][hcurGridX];
+
+                                    }
+                                    if(rayAngle > M_PI && (currentMap.orientationMap[hcurGridY-1][hcurGridX] == SOUTH || currentMap.orientationMap[hcurGridY-1][hcurGridX] == SOUTH_WEST || currentMap.orientationMap[hcurGridY-1][hcurGridX] == SOUTH_EAST))
+                                    {
+                                        facing = true;
+                                        outerCeilingHeight = currentMap.ceilingHeightMap[hcurGridY+1][hcurGridX];
+                                    }
+
+                                    if(facing)
+                                    {
+                                        hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));;
+
+                                        // Save the information about this hit, it will be drawn later after this ray draws a wall
+                                        walldata_t* data = &currentPillars[visiblePillarsLength];
+                                        data->rayAngle = rayAngle;
+                                        data->x = x;
+                                        data->curX = (hcurx);
+                                        data->curY = (hcury);
+                                        data->distance = hDistance-0.01f;
+                                        data->gridPos.x = hcurGridX;
+                                        data->gridPos.y = hcurGridY;
+                                        data->idHit = currentMap.wallMap[hcurGridY][hcurGridX+1];
+                                        data->isVertical = false;
+                                        
+                                        // Add it to the drawables
+                                        allDrawables[allDrawablesLength].type = DRWB_PILLAR;
+                                        allDrawables[allDrawablesLength].wallPtr = &currentPillars[visiblePillarsLength];
+                                        // Quick variable access
+                                        allDrawables[allDrawablesLength].dist = data->distance;
+
+                                        allDrawablesLength++;
+                                        visiblePillarsLength++;
+                                    }
+                                }
 
                                 // Add half a tile to the current point
                                 hcurx += (Xa/2);
@@ -459,6 +510,58 @@ void R_Raycast(void)
                              // Check if this is an Vertical thin wall (if it is an horizontal, just ignore it)
                             if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 1)
                             {
+                                // Check if we hit a pillar, if we did, save it as a drawable and draw it later
+                                if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 3) == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
+                                {
+                                    bool facing = false;
+
+                                    int outerCeilingHeight;
+                                    // Check for orientation
+                                    // facing right
+                                    if((rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)) 
+                                    {
+                                        if(currentMap.orientationMap[vcurGridY-1][vcurGridX] == EAST || currentMap.orientationMap[vcurGridY-1][vcurGridX] == NORTH_EAST || currentMap.orientationMap[vcurGridY-1][vcurGridX] == SOUTH_EAST)
+                                        {
+                                            facing = true;
+                                            outerCeilingHeight = currentMap.ceilingHeightMap[vcurGridY-1][vcurGridX-1];
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if(currentMap.orientationMap[vcurGridY-1][vcurGridX] == WEST || currentMap.orientationMap[vcurGridY-1][vcurGridX] == NORTH_WEST || currentMap.orientationMap[vcurGridY-1][vcurGridX] == SOUTH_WEST)
+                                        {
+                                            facing = true;
+                                            outerCeilingHeight = currentMap.ceilingHeightMap[vcurGridY-1][vcurGridX+1];
+                                        }
+                                    }
+
+                                    if(facing)
+                                    {
+                                        vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));;
+
+                                        // Save the information about this hit, it will be drawn later after this ray draws a wall
+                                        walldata_t* data = &currentPillars[visiblePillarsLength];
+                                        data->rayAngle = rayAngle;
+                                        data->x = x;
+                                        data->curX = vcurx;
+                                        data->curY = vcury;
+                                        data->distance = vDistance-0.01f; // zfighting
+                                        data->gridPos.x = vcurGridX;
+                                        data->gridPos.y = vcurGridY;
+                                        data->idHit = currentMap.wallMap[vcurGridY+1][vcurGridX];
+                                        data->isVertical = true;
+                                        data->extraData = outerCeilingHeight;
+                                        
+                                        // Add it to the drawables
+                                        allDrawables[allDrawablesLength].type = DRWB_PILLAR;
+                                        allDrawables[allDrawablesLength].wallPtr = &currentPillars[visiblePillarsLength];
+                                        // Quick variable access
+                                        allDrawables[allDrawablesLength].dist = data->distance;
+
+                                        allDrawablesLength++;
+                                        visiblePillarsLength++;
+                                    }
+                                }
                                 // This is a thin wall, check if we hit it or if it was occluded by the wall
 
                                 // Add half a tile to the current point
@@ -615,7 +718,104 @@ void R_Raycast(void)
                     R_DrawLine((player.centeredPos.x) / MINIMAP_DIVIDER, (player.centeredPos.y) / MINIMAP_DIVIDER, vcurx / MINIMAP_DIVIDER, vcury / MINIMAP_DIVIDER, r_debugColor);
             }
 
-        
+            // Check if we hit a pillar, if we did, save it as a drawable and draw it later
+            if(U_GetBit(&tomentdatapack.walls[objectIDHit]->flags, 3) == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
+            {
+                bool facing = false;
+
+                // The ceiling height of the tile that is immediatly above, below, left or right this pillar
+                // As a rule, rooms must reside in a space where, for at least the out adiacent tiles of the pillars, the ceiling height is constant
+                /*
+                    Example:
+
+                    Wall Map: (6 = pillar, 0 = empty, 4 = door)
+                    0 0 0 0 0 0 0 
+                    0 0 6 6 6 0 0
+                    0 0 6 0 6 0 0
+                    0 0 6 4 6 0 0
+                    0 0 0 0 0 0 0
+
+                    This is a valid ceiling height map:
+                    Ceiling Height Map: (Note how, outside of the pillars, the height is constant)
+                    2 2 2 2 2 2 2 
+                    2 2 1 1 1 2 2
+                    2 2 1 1 1 2 2
+                    2 2 1 1 1 2 2
+                    2 2 2 2 2 2 2
+
+                    This would have been invalid:
+                    Ceiling Height Map: (Note how, this time, outside of the pillars the height is not constant)
+                    2 2 2 2 2 2 2 
+                    2 2 1 1 1 2 2
+                    2 2 1 1 1 3 2  // ERROR! 3 is not constant for the outer tiles of the pillars
+                    2 2 1 1 1 2 2
+                    2 2 2 2 2 2 2
+
+                    outerCeilingHeight is needed to fill the empty spaces a difference of ceiling causes
+                */
+                int outerCeilingHeight;
+                // Check for orientation
+                if(horizontal)
+                {   
+                    if(rayAngle < M_PI && (currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH || currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH_WEST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH_EAST))
+                    {
+                        facing = true;
+                        outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY-1][fcurGridX];
+
+                    }
+                    if(rayAngle > M_PI && (currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH || currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH_WEST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH_EAST))
+                    {
+                        facing = true;
+                        outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY+1][fcurGridX];
+                    }
+                }
+                else
+                {
+                    // facing right
+                    if((rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)) 
+                    {
+                        if(currentMap.orientationMap[fcurGridY-1][fcurGridX] == EAST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH_EAST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH_EAST)
+                        {
+                            facing = true;
+                            outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY-1][fcurGridX-1];
+                        }
+                    }
+                    else
+                    {
+                        if(currentMap.orientationMap[fcurGridY-1][fcurGridX] == WEST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH_WEST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH_WEST)
+                        {
+                            facing = true;
+                            outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY-1][fcurGridX+1];
+                        }
+                    }
+                }
+
+                if(facing)
+                {
+                    // Save the information about this hit, it will be drawn later after this ray draws a wall
+                    walldata_t* data = &currentPillars[visiblePillarsLength];
+                    data->rayAngle = rayAngle;
+                    data->x = x;
+                    data->curX = wallPoint.x;
+                    data->curY = wallPoint.y;
+                    data->distance = correctDistance-0.01f; // zfighting
+                    data->gridPos.x = fcurGridX;
+                    data->gridPos.y = fcurGridY;
+                    data->idHit = currentMap.wallMap[fcurGridY][fcurGridX];
+                    data->isVertical = !horizontal;
+                    data->extraData = outerCeilingHeight;
+                    
+                    // Add it to the drawables
+                    allDrawables[allDrawablesLength].type = DRWB_PILLAR;
+                    allDrawables[allDrawablesLength].wallPtr = &currentPillars[visiblePillarsLength];
+                    // Quick variable access
+                    allDrawables[allDrawablesLength].dist = data->distance;
+
+                    allDrawablesLength++;
+                    visiblePillarsLength++;
+                }
+            }
+
             // Fix fisheye 
             float fixedAngle = rayAngle - player.angle;
             float finalDistance = correctDistance * cos(fixedAngle);
@@ -643,11 +843,15 @@ void R_Raycast(void)
             float end = wallOffset+wallHeight;
             end = SDL_clamp(end, 0, PROJECTION_PLANE_HEIGHT);
 
+            float start = wallOffset-(wallHeight*(currentMap.ceilingHeightMap[fcurGridY][fcurGridX]-1))+1;
+            start = SDL_clamp(start, 0, PROJECTION_PLANE_HEIGHT);
+
             // Calculate lighting intensity
             float wallLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.wallLight)  / finalDistance;
             wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
 
             object_t* curObject = tomentdatapack.walls[objectIDHit];
+
 
             // Draw the walls as column of pixels
             if(horizontal) 
@@ -664,7 +868,7 @@ void R_Raycast(void)
                     offset = (TILE_SIZE-1) - offset;
                 
                 // Draw as many walls as the current ceiling height
-                for(int cHeight = 0; cHeight < currentMap.ceilingHeight; cHeight++)
+                for(int cHeight = 0; cHeight < currentMap.ceilingHeightMap[fcurGridY][fcurGridX]; cHeight++)
                     R_DrawColumnTexturedShaded((x), wallOffset-(wallHeight*cHeight)+1, end-(wallHeight*cHeight)+1, curObject->texture, offset, wallHeightUncapped, wallLighting);
             }
             else
@@ -680,17 +884,125 @@ void R_Raycast(void)
                 if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
                     offset = (TILE_SIZE-1) - offset;
 
-                for(int cHeight = 0; cHeight < currentMap.ceilingHeight; cHeight++)
+                for(int cHeight = 0; cHeight < currentMap.ceilingHeightMap[fcurGridY][fcurGridX]; cHeight++)
                     R_DrawColumnTexturedShaded( (x), wallOffset-(wallHeight*cHeight)+1, end-(wallHeight*cHeight)+1, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
                 
             }
 
-            R_FloorCastingAndCeiling(end, rayAngle, x, wallHeight);
+            R_FloorCastingAndCeiling(start, end, rayAngle, x, wallHeight);
+
+            //R_DrawPixel(x, start, r_debugColor);
         }
 
         // Check next ray
         rayAngle += (RADIAN * PLAYER_FOV) / PROJECTION_PLANE_WIDTH;
     }
+}
+
+//-------------------------------------
+// Floorcast and ceilingcast
+// Params:
+// - end = the end of the wall that states where to start to floorcast
+// - rayAngle = the current rayangle
+// - x = the x coordinate on the screen for this specific floor cast call
+//-------------------------------------
+void R_FloorCastingAndCeiling(float start, float end, float rayAngle, int x, float wallHeight)
+{
+    // Floor Casting & Ceiling
+    float beta = (player.angle - rayAngle);
+    FIX_ANGLES(beta);
+
+    for(int y = floor(end); y < PROJECTION_PLANE_HEIGHT; y++)
+    {
+        // Get distance
+        float straightlinedist = (RENDERING_PLAYER_HEIGHT * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
+        float d = straightlinedist / cos(beta);
+
+        // Calculate lighting intensity
+        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
+        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
+
+        // Get coordinates
+        float floorx = player.centeredPos.x + (cos(rayAngle) * d);
+        float floory = player.centeredPos.y + (sin(rayAngle) * d);
+
+        // Get textels
+        int textureX = (int)floorx % TILE_SIZE;
+        int textureY = (int)floory % TILE_SIZE;
+
+        // Get map coordinates
+        int curGridX = floor(floorx / TILE_SIZE);
+        int curGridY = floor(floory / TILE_SIZE);
+
+        int floorObjectID = -1;
+        int ceilingObjectID = -1;
+
+        // If the ray is in a grid that is inside the map
+        if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
+        {
+            // Check the floor texture at that point
+            if(currentMap.floorMap[curGridY][curGridX] >= 1)
+            {
+                floorObjectID = currentMap.floorMap[curGridY][curGridX];
+                
+                // Draw floor
+                R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.floors[floorObjectID]->texture, textureX, textureY), floorLighting);
+            }
+        }
+    }
+
+    // If the current ceiling height is greater than 1, ceiling needs to be calculated on its own
+    for(int y = floor(start); y >= 0; y--)
+    {
+        // Get distance
+        float straightlinedist = ((RENDERING_PLAYER_HEIGHT * DISTANCE_TO_PROJECTION) / (PROJECTION_PLANE_CENTER-y));
+        float d = straightlinedist / cos(beta);
+
+        // Get coordinates
+        float floorx = player.centeredPos.x + (cos(rayAngle) * d);
+        float floory = player.centeredPos.y + (sin(rayAngle) * d);
+
+        // Get map coordinates
+        int curGridX = floor(floorx / TILE_SIZE);
+        int curGridY = floor(floory / TILE_SIZE);
+
+        int ceilingHeight = currentMap.ceilingHeightMap[curGridY][curGridX];
+
+        straightlinedist = (((RENDERING_PLAYER_HEIGHT + (TILE_SIZE*(ceilingHeight-1))) * DISTANCE_TO_PROJECTION) / (PROJECTION_PLANE_CENTER-y));
+        d = straightlinedist / cos(beta);
+
+        // Calculate lighting intensity
+        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
+        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
+
+        // Get coordinates
+        floorx = player.centeredPos.x + (cos(rayAngle) * d);
+        floory = player.centeredPos.y + (sin(rayAngle) * d);
+
+        // Get textels
+        int textureX = (int)floorx % TILE_SIZE;
+        int textureY = (int)floory % TILE_SIZE;
+
+        // Get map coordinates
+        curGridX = floor(floorx / TILE_SIZE);
+        curGridY = floor(floory / TILE_SIZE);
+
+        int floorObjectID = -1;
+        int ceilingObjectID = -1;
+
+        // If the ray is in a grid that is inside the map
+        if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
+        {
+            if(currentMap.ceilingMap[curGridY][curGridX] >= 1)
+            {
+                ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
+
+                // Draw ceiling
+                R_DrawPixelShaded(x, (y), R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting);
+            }
+        }
+    }
+
 }
 
 //-------------------------------------
@@ -765,109 +1077,77 @@ void R_DrawThinWall(walldata_t* cur)
 }
 
 //-------------------------------------
-// Floorcast and ceilingcast
-// Params:
-// - end = the end of the wall that states where to start to floorcast
-// - rayAngle = the current rayangle
-// - x = the x coordinate on the screen for this specific floor cast call
+// Draw the passed thin wall
 //-------------------------------------
-void R_FloorCastingAndCeiling(float end, float rayAngle, int x, float wallHeight)
+void R_DrawPillar(walldata_t* cur)
 {
-    // Floor Casting & Ceiling
-    float beta = (player.angle - rayAngle);
-    FIX_ANGLES(beta);
+    // Fix fisheye 
+    float fixedAngle = cur->rayAngle - player.angle;
+    float finalDistance = cur->distance * cos(fixedAngle);
 
-    for(int y = floor(end); y < PROJECTION_PLANE_HEIGHT; y++)
+    // DRAW WALL
+    float wallHeight = (TILE_SIZE  / finalDistance) * DISTANCE_TO_PROJECTION;
+    float wallHeightUncapped = wallHeight;
+
+    if(wallHeight < wallHeights[cur->x])
+        return;
+
+    float wallOffset = (PROJECTION_PLANE_CENTER) - (wallHeight / 2.0f);    // Wall Y offset to draw them in the middle of the screen
+
+    // Prevent from going off projection plane
+    if(wallOffset < 0)
+        wallOffset = 0;
+
+    if(wallOffset > PROJECTION_PLANE_HEIGHT)
+        wallOffset = PROJECTION_PLANE_HEIGHT;
+
+    if(wallHeight > PROJECTION_PLANE_HEIGHT)
+        wallHeight = PROJECTION_PLANE_HEIGHT;
+
+    // Don't draw outside of the Projection Plane Height
+    float end = wallOffset+wallHeight;
+    end = SDL_clamp(end, 0, PROJECTION_PLANE_HEIGHT);
+
+    // Calculate lighting intensity
+    float wallLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.wallLight)  / finalDistance;
+    wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
+
+    object_t* curObject = tomentdatapack.walls[cur->idHit];
+
+    // Draw the walls as column of pixels
+    if(!cur->isVertical) 
     {
-        // Get distance
-        float straightlinedist = (RENDERING_PLAYER_HEIGHT * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
-        float d = straightlinedist / cos(beta);
+        // Texture offset (shifted if it's a door)
+        // Note:
+        // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
+        // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
+        // but this calculation lets us slide the texture offset too for the doors
+        int offset = (int)(cur->curX) % TILE_SIZE;
 
-        // Calculate lighting intensity
-        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
-        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
-
-        // Get coordinates
-        float floorx = player.centeredPos.x + (cos(rayAngle) * d);
-        float floory = player.centeredPos.y + (sin(rayAngle) * d);
-
-        // Get textels
-        int textureX = (int)floorx % TILE_SIZE;
-        int textureY = (int)floory % TILE_SIZE;
-
-        // Get map coordinates
-        int curGridX = floor(floorx / TILE_SIZE);
-        int curGridY = floor(floory / TILE_SIZE);
-
-        int floorObjectID = -1;
-        int ceilingObjectID = -1;
-
-        // If the ray is in a grid that is inside the map
-        if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
-        {
-            // Check the floor texture at that point
-            if(currentMap.floorMap[curGridY][curGridX] >= 1)
-            {
-                floorObjectID = currentMap.floorMap[curGridY][curGridX];
-                
-                // Draw floor
-                R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.floors[floorObjectID]->texture, textureX, textureY), floorLighting);
-            }
-
-            // Check the ceiling texture at that point
-            if(currentMap.ceilingHeight == 1) // If the current ceiling height is 1, use optimized code to run both the floor and ceiling at the same time
-                if(currentMap.ceilingMap[curGridY][curGridX] >= 1)
-                {
-                    ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
-
-                    // Draw ceiling
-                    R_DrawPixelShaded(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting);
-                }
-        }
+        // If looking down, flip the texture offset
+        if(cur->rayAngle < M_PI)
+            offset = (TILE_SIZE-1) - offset;
+            
+        // extraData is outerCeilingHeight
+        for(int cH = 1; cH < cur->extraData; cH++) // 2 = max height in this map
+            R_DrawColumnTexturedShaded((cur->x), wallOffset-(wallHeight*cH)+2, end-(wallHeight*cH)+2, curObject->texture, offset, wallHeightUncapped, wallLighting);
     }
-
-    // If the current ceiling height is greater than 1, ceiling needs to be calculated on its own
-    if(currentMap.ceilingHeight > 1)
+    else
     {
-        for(int y = floor(end+(wallHeight * (currentMap.ceilingHeight-1))); y < PROJECTION_PLANE_HEIGHT; y++)
-        {
-            // Get distance
-            float straightlinedist = (RENDERING_PLAYER_HEIGHT + (TILE_SIZE* (currentMap.ceilingHeight-1)) * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
-            float d = straightlinedist / cos(beta);
+        // Texture offset (shifted if it's a door)
+        // Note:
+        // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
+        // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
+        // but this calculation lets us slide the texture offse too for the doors
+        int offset = (int)(cur->curY) % TILE_SIZE;
 
-            // Calculate lighting intensity
-            float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
-            floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
+        // If looking left, flip the texture offset
+        if(cur->rayAngle > M_PI / 2 && cur->rayAngle < (3*M_PI) / 2)
+            offset = (TILE_SIZE-1) - offset;
 
-            // Get coordinates
-            float floorx = player.centeredPos.x + (cos(rayAngle) * d);
-            float floory = player.centeredPos.y + (sin(rayAngle) * d);
-
-            // Get textels
-            int textureX = (int)floorx % TILE_SIZE;
-            int textureY = (int)floory % TILE_SIZE;
-
-            // Get map coordinates
-            int curGridX = floor(floorx / TILE_SIZE);
-            int curGridY = floor(floory / TILE_SIZE);
-
-            int floorObjectID = -1;
-            int ceilingObjectID = -1;
-
-            // If the ray is in a grid that is inside the map
-            if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
-            {
-                if(currentMap.ceilingMap[curGridY][curGridX] >= 1)
-                {
-                    ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
-
-                    // Draw ceiling
-                    R_DrawPixelShaded(x, PROJECTION_PLANE_HEIGHT-y, R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting);
-                }
-            }
-        }
+        for(int cH = 1; cH < cur->extraData; cH++) // 2 = max height in this map
+            R_DrawColumnTexturedShaded((cur->x), wallOffset-(wallHeight*cH)+2, end-(wallHeight*cH)+2, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
     }
-
 }
 
 //-------------------------------------
@@ -995,6 +1275,10 @@ void R_DrawDrawables(void)
 
             case DRWB_SPRITE:
                 R_DrawSprite(allDrawables[i].spritePtr);
+                break;
+
+            case DRWB_PILLAR:
+                R_DrawPillar(allDrawables[i].wallPtr);
                 break;
         }
     }

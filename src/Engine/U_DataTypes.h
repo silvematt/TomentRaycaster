@@ -59,6 +59,8 @@ typedef struct walldata_s
     vector2Int_t gridPos;
     float distance;
     int idHit;
+    
+    int extraData;  // extra data for stuff (outerCeilingHeight for Pillars)
 } walldata_t;
 
 // -------------------------------
@@ -67,7 +69,8 @@ typedef struct walldata_s
 typedef enum drawabletype_e
 {
     DRWB_WALL = 0,
-    DRWB_SPRITE
+    DRWB_SPRITE,
+    DRWB_PILLAR
 } drawabletype_e;
 
 // -------------------------------
@@ -85,5 +88,22 @@ typedef struct drawabledata_s
     // Quick access varaibles
     float dist;
 } drawabledata_t;
+
+typedef enum orientation_e
+{
+    NORTH = 0,
+    NORTH_WEST,
+    WEST,
+    SOUTH_WEST,
+    SOUTH,
+    SOUTH_EAST,
+    EAST,
+    NORTH_EAST,
+    NO_ORIENTATION,
+    NORTH_SOUTH,    // Specials
+    WEST_EAST,
+    ALL_FOUR_DIR,
+} orientation_e;
+
 
 #endif
