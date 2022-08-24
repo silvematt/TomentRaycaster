@@ -1,7 +1,7 @@
 # TomentRaycaster
 A Software Rendering Raycaster Engine written in C and SDL2.
 
-![alt text](https://i.ibb.co/0ML6n8d/raycasterz.png)
+![alt text](https://i.imgur.com/c2uSgeR.png)
 
 I've written this raycaster following Permadi's paper and Wolfenstein 3D code (and Black Book), as a pilgrimage to my God John Carmack.
 
@@ -15,6 +15,7 @@ Features:
 - Sliding Doors
 - Transparent (see through) doors and thin walls
 - Variable Ceiling Height for each map
+- Variable Ceiling Height for each tile of the map, allowing the creation of smaller rooms and sectors in the same map.
 - Sprites Rendering & Physics (Sprites can be solid or not)
 - Support for Animated Sprites
 - Shading and Map Lighting
