@@ -38,6 +38,7 @@ typedef struct map_s
     float floorLight;
     int ceilingHeightMap[MAP_HEIGHT][MAP_WIDTH];
     int orientationMap[MAP_HEIGHT][MAP_WIDTH];  // Orientation data
+    int pillarsMap[MAP_HEIGHT][MAP_WIDTH];      // Orientation data
 
     int maxCeilingHeight;
 

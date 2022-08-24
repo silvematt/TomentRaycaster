@@ -320,7 +320,7 @@ void R_Raycast(void)
                             if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 0)
                             {
                                 // Check if this thin wall is also a pillar, if it is, thin walls (and doors) are filled with the right/down adiacent wall
-                                if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 3) == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
+                                if(currentMap.pillarsMap[hcurGridY][hcurGridX] == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
                                 {
                                     bool facing = false;
 
@@ -502,7 +502,7 @@ void R_Raycast(void)
                             if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 1)
                             {
                                 // Check if we hit a pillar, if we did, save it as a drawable and draw it later
-                                if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 3) == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
+                                if(currentMap.pillarsMap[vcurGridY][vcurGridX] == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
                                 {
                                     bool facing = false;
 
@@ -703,7 +703,7 @@ void R_Raycast(void)
             }
 
             // Check if we hit a pillar, if we did, save it as a drawable and draw it later
-            if(U_GetBit(&tomentdatapack.walls[objectIDHit]->flags, 3) == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
+            if(currentMap.pillarsMap[fcurGridY][fcurGridX] == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
             {
                 bool facing = false;
 
@@ -1052,7 +1052,7 @@ void R_DrawThinWall(walldata_t* cur)
         if(cur->extraData == 1)
             R_DrawColumnTexturedShaded((cur->x), wallOffset+1, end+1, curObject->texture, offset, wallHeightUncapped, wallLighting);
 
-        if(U_GetBit(&curObject->flags, 3)) // if this is a pillar
+        if(currentMap.pillarsMap[cur->gridPos.y][cur->gridPos.x] == 1) // if this is a pillar
             R_CeilingCasting(wallOffset+1, cur->rayAngle, cur->x, wallHeight);
     }
     else
@@ -1071,7 +1071,7 @@ void R_DrawThinWall(walldata_t* cur)
         if(cur->extraData == 1)
             R_DrawColumnTexturedShaded((cur->x), wallOffset+1, end+1, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
         
-        if(U_GetBit(&curObject->flags, 3)) // if this is a pillar
+        if(currentMap.pillarsMap[cur->gridPos.y][cur->gridPos.x]) // if this is a pillar
             R_CeilingCasting(wallOffset+1, cur->rayAngle, cur->x, wallHeight);
     }
 }
