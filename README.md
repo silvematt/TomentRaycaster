@@ -15,6 +15,7 @@ Features:
 - Sliding Doors
 - Transparent (see through) doors and thin walls
 - Variable Ceiling Height for each map
+- Variable Ceiling Height for each tile of the map, allowing the creation of smaller rooms and sectors in the same map.
 - Sprites Rendering & Physics (Sprites can be solid or not)
 - Support for Animated Sprites
 - Shading and Map Lighting
