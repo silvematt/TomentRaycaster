@@ -60,7 +60,10 @@ typedef struct walldata_s
     float distance;
     int idHit;
     
-    int extraData;  // extra data for stuff (outerCeilingHeight for Pillars)
+    // Extra Data
+    // For Thin Wall Extra data is 0 = should draw this column of pixel because it is visible 1 = should not draw this column of pixel because the door is open
+    // For Pillars Extra data is (outerCeilingHeight)
+    int extraData;  
 } walldata_t;
 
 // -------------------------------

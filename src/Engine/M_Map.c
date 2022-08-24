@@ -2,6 +2,8 @@
 
 map_t currentMap;
 
+static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp);
+
 // -------------------------------
 // Loads the map from the file named mapID
 // -------------------------------
@@ -73,222 +75,29 @@ void M_LoadMapAsCurrent(char* mapID)
       }
       currentMap.name[i] = '\0';
 
-      // --------------------
-      // Read Walls Map Layout
-      // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // Layout =
-      fgets(curLine, MAX_STRLEN, fp); // [ start of map
+      // Load Wall Map
+      I_LoadMapFromFile(currentMap.wallMap, fp);
 
-      fgets(curLine, MAX_STRLEN, fp); // First Row
+      // Load Floor Map
+      I_LoadMapFromFile(currentMap.floorMap, fp);
 
-      // Find the first row
-      str = strchr(curLine, '{');
-      indx = (int)(str - curLine) + 1;
-
-      bool mapDone = false;
-      int column = 0;
-      int row = 0;
-      bool rowEnded = false;
-
-      while(!mapDone)
-      {
-            // Read columns
-            while(curLine[indx] != '}')
-            {
-                  currentMap.wallMap[column][row] = curLine[indx] - '0'; // Set int value
-                  indx++;  
-
-                  // If next is comma, continue and get next number
-                  if(curLine[indx] == ',')
-                  {
-                        indx++;
-                        row++;
-                  }
-
-                  //printf("%c!\n", curLine[indx]);
-            }
-
-            // Row end, check if there's a next row or if it is finished
-            if(curLine[indx + 1] == ',')
-            {
-                  // There is a next column
-                  column++;
-                  indx = 1; // Move at the start of the next column
-                  row = 0;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  continue;
-            }
-            else if(curLine[indx + 1] == ']')
-            {
-                  // Map has finished loading
-                  mapDone = true;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  break;
-            }
-      }
+      // Load Ceiling Map
+      I_LoadMapFromFile(currentMap.ceilingMap, fp);
       
-      // --------------------
-      // Read Floor Map Layout
-      // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // Layout =
-      fgets(curLine, MAX_STRLEN, fp); // [ start of map
+      // Load Ceiling Map
+      I_LoadMapFromFile(currentMap.spritesMap, fp);
 
-      fgets(curLine, MAX_STRLEN, fp); // First Row
+      // Load Ceiling Height Map
+      I_LoadMapFromFile(currentMap.ceilingHeightMap, fp);
 
-            // Find the first row
-      str = strchr(curLine, '{');
-      indx = (int)(str - curLine) + 1;
+      // Load Orientation Height Map
+      I_LoadMapFromFile(currentMap.orientationMap, fp);
 
-      mapDone = false;
-      column = 0;
-      row = 0;
-      rowEnded = false;
+      // Load Orientation Height Map
+      I_LoadMapFromFile(currentMap.pillarsMap, fp);
 
-      while(!mapDone)
-      {
-            // Read columns
-            while(curLine[indx] != '}')
-            {
-                  currentMap.floorMap[column][row] = curLine[indx] - '0'; // Set int value
-                  indx++;  
-
-                  // If next is comma, continue and get next number
-                  if(curLine[indx] == ',')
-                  {
-                        indx++;
-                        row++;
-                  }
-
-                  //printf("%c!\n", curLine[indx]);
-            }
-
-            // Row end, check if there's a next row or if it is finished
-            if(curLine[indx + 1] == ',')
-            {
-                  // There is a next column
-                  column++;
-                  indx = 1; // Move at the start of the next column
-                  row = 0;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  continue;
-            }
-            else if(curLine[indx + 1] == ']')
-            {
-                  // Map has finished loading
-                  mapDone = true;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  break;
-            }
-      }
-
-      // --------------------
-      // Read Ceiling Map Layout
-      // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // Layout =
-      fgets(curLine, MAX_STRLEN, fp); // [ start of map
-
-      fgets(curLine, MAX_STRLEN, fp); // First Row
-
-      // Find the first row
-      str = strchr(curLine, '{');
-      indx = (int)(str - curLine) + 1;
-
-      mapDone = false;
-      column = 0;
-      row = 0;
-      rowEnded = false;
-
-      while(!mapDone)
-      {
-            // Read columns
-            while(curLine[indx] != '}')
-            {
-                  currentMap.ceilingMap[column][row] = curLine[indx] - '0'; // Set int value
-                  indx++;  
-
-                  // If next is comma, continue and get next number
-                  if(curLine[indx] == ',')
-                  {
-                        indx++;
-                        row++;
-                  }
-
-                  //printf("%c!\n", curLine[indx]);
-            }
-
-            // Row end, check if there's a next row or if it is finished
-            if(curLine[indx + 1] == ',')
-            {
-                  // There is a next column
-                  column++;
-                  indx = 1; // Move at the start of the next column
-                  row = 0;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  continue;
-            }
-            else if(curLine[indx + 1] == ']')
-            {
-                  // Map has finished loading
-                  mapDone = true;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  break;
-            }
-      }
-
-      // --------------------
-      // Read Sprites Map Layout
-      // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // Layout =
-      fgets(curLine, MAX_STRLEN, fp); // [ start of map
-
-      fgets(curLine, MAX_STRLEN, fp); // First Row
-
-      // Find the first row
-      str = strchr(curLine, '{');
-      indx = (int)(str - curLine) + 1;
-
-      mapDone = false;
-      column = 0;
-      row = 0;
-      rowEnded = false;
-
-      while(!mapDone)
-      {
-            // Read columns
-            while(curLine[indx] != '}')
-            {
-                  currentMap.spritesMap[column][row] = curLine[indx] - '0'; // Set int value
-                  indx++;  
-
-                  // If next is comma, continue and get next number
-                  if(curLine[indx] == ',')
-                  {
-                        indx++;
-                        row++;
-                  }
-
-                  //printf("%c!\n", curLine[indx]);
-            }
-
-            // Row end, check if there's a next row or if it is finished
-            if(curLine[indx + 1] == ',')
-            {
-                  // There is a next column
-                  column++;
-                  indx = 1; // Move at the start of the next column
-                  row = 0;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  continue;
-            }
-            else if(curLine[indx + 1] == ']')
-            {
-                  // Map has finished loading
-                  mapDone = true;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  break;
-            }
-      }
-
+      fgets(curLine, MAX_STRLEN, fp); // Get next line
+      
       // --------------------
       // Read Wall Lighting
       // --------------------
@@ -336,168 +145,6 @@ void M_LoadMapAsCurrent(char* mapID)
 
       // Convert to float
       currentMap.floorLight = atof(tempStr);
-
-      // --------------------
-      // Read Ceiling Height Map Layout
-      // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // Layout =
-      fgets(curLine, MAX_STRLEN, fp); // [ start of map
-      fgets(curLine, MAX_STRLEN, fp); // First Row
-
-      // Find the first row
-      str = strchr(curLine, '{');
-      indx = (int)(str - curLine) + 1;
-
-      mapDone = false;
-      column = 0;
-      row = 0;
-      rowEnded = false;
-
-      currentMap.maxCeilingHeight = 0;
-      while(!mapDone)
-      {
-            // Read columns
-            while(curLine[indx] != '}')
-            {
-                  currentMap.ceilingHeightMap[column][row] = curLine[indx] - '0'; // Set int value
-                  if(currentMap.ceilingHeightMap[column][row] > currentMap.maxCeilingHeight)
-                        currentMap.maxCeilingHeight = currentMap.ceilingHeightMap[column][row];
-                  indx++;  
-
-                  // If next is comma, continue and get next number
-                  if(curLine[indx] == ',')
-                  {
-                        indx++;
-                        row++;
-                  }
-
-                  //printf("%c!\n", curLine[indx]);
-            }
-
-            // Row end, check if there's a next row or if it is finished
-            if(curLine[indx + 1] == ',')
-            {
-                  // There is a next column
-                  column++;
-                  indx = 1; // Move at the start of the next column
-                  row = 0;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  continue;
-            }
-            else if(curLine[indx + 1] == ']')
-            {
-                  // Map has finished loading
-                  mapDone = true;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  break;
-            }
-      }
-      
-      // --------------------
-      // Read Orientation Map Layout
-      // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // [ start of map
-
-      fgets(curLine, MAX_STRLEN, fp); // First Row
-
-      // Find the first row
-      str = strchr(curLine, '{');
-      indx = (int)(str - curLine) + 1;
-
-      mapDone = false;
-      column = 0;
-      row = 0;
-      rowEnded = false;
-      
-      while(!mapDone)
-      {
-            // Read columns
-            while(curLine[indx] != '}')
-            {
-                  currentMap.orientationMap[column][row] = curLine[indx] - '0'; // Set int value
-                  indx++;  
-
-                  // If next is comma, continue and get next number
-                  if(curLine[indx] == ',')
-                  {
-                        indx++;
-                        row++;
-                  }
-
-                  //printf("%c!\n", curLine[indx]);
-            }
-
-            // Row end, check if there's a next row or if it is finished
-            if(curLine[indx + 1] == ',')
-            {
-                  // There is a next column
-                  column++;
-                  indx = 1; // Move at the start of the next column
-                  row = 0;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  continue;
-            }
-            else if(curLine[indx + 1] == ']')
-            {
-                  // Map has finished loading
-                  mapDone = true;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  break;
-            }
-      }
-
-      // --------------------
-      // Read Pillar Map Layout
-      // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // [ start of map
-
-      fgets(curLine, MAX_STRLEN, fp); // First Row
-
-      // Find the first row
-      str = strchr(curLine, '{');
-      indx = (int)(str - curLine) + 1;
-
-      mapDone = false;
-      column = 0;
-      row = 0;
-      rowEnded = false;
-      
-      while(!mapDone)
-      {
-            // Read columns
-            while(curLine[indx] != '}')
-            {
-                  currentMap.pillarsMap[column][row] = curLine[indx] - '0'; // Set int value
-                  indx++;  
-
-                  // If next is comma, continue and get next number
-                  if(curLine[indx] == ',')
-                  {
-                        indx++;
-                        row++;
-                  }
-
-                  //printf("%c!\n", curLine[indx]);
-            }
-
-            // Row end, check if there's a next row or if it is finished
-            if(curLine[indx + 1] == ',')
-            {
-                  // There is a next column
-                  column++;
-                  indx = 1; // Move at the start of the next column
-                  row = 0;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  continue;
-            }
-            else if(curLine[indx + 1] == ']')
-            {
-                  // Map has finished loading
-                  mapDone = true;
-                  fgets(curLine, MAX_STRLEN, fp); // Get next line
-                  break;
-            }
-      }
       
       printf("Map loaded successfully!\n");
       fclose(fp);
@@ -561,4 +208,62 @@ void M_LoadCollisionMap(void)
                         if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1)
                               currentMap.collisionMap[y][x] = 1;
                   }
+}
+
+static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp)
+{
+      // Load Map
+      char curLine[MAX_STRL_R];   // Current line we're reading
+      char* str;                  // Used to strchr
+      int indx;                   // Index of the =
+      int i;                      // Index for writing in new string
+
+      fgets(curLine, MAX_STRLEN, fp); // Layout =
+      fgets(curLine, MAX_STRLEN, fp); // [ start of map
+      fgets(curLine, MAX_STRLEN, fp); // First Row
+
+      // Find the first row
+      str = strchr(curLine, '{');
+      indx = (int)(str - curLine) + 1;
+
+      bool mapDone = false;
+      int column = 0;
+      int row = 0;
+      bool rowEnded = false;
+
+      while(!mapDone)
+      {
+            // Read columns
+            while(curLine[indx] != '}')
+            {
+                  map[column][row] = curLine[indx] - '0'; // Set int value
+                  indx++;  
+
+                  // If next is comma, continue and get next number
+                  if(curLine[indx] == ',')
+                  {
+                        indx++;
+                        row++;
+                  }
+
+                  //printf("%c!\n", curLine[indx]);
+            }
+
+            // Row end, check if there's a next row or if it is finished
+            if(curLine[indx + 1] == ',')
+            {
+                  // There is a next column
+                  column++;
+                  indx = 1; // Move at the start of the next column
+                  row = 0;
+                  fgets(curLine, MAX_STRLEN, fp); // Get next line
+                  continue;
+            }
+            else if(curLine[indx + 1] == ']')
+            {
+                  // Map has finished loading
+                  mapDone = true;
+                  break;
+            }
+      }
 }

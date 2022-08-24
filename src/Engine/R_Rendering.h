@@ -162,6 +162,11 @@ void R_DrawDrawables(void);
 void R_DrawThinWall(walldata_t* wall);
 
 //-------------------------------------
+// Draw the passed pillar
+//-------------------------------------
+void R_DrawPillar(walldata_t* wall);
+
+//-------------------------------------
 // Floorcast and ceilingcast
 // Params:
 // - end = the end of the wall that states where to start to floorcast
@@ -183,7 +188,6 @@ void R_CeilingCasting(float start, float rayAngle, int x, float wallHeight);
 // Adds a sprite to the visible sprite array and adds its corresponding drawable
 //-------------------------------------
 void R_AddToVisibleSprite(int gridX, int gridY);
-
 
 //-------------------------------------
 // Draws the visible sprites

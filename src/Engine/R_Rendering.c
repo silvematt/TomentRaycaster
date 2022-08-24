@@ -43,6 +43,15 @@ unsigned visiblePillarsLength;
 drawabledata_t allDrawables[MAX_DRAWABLES];
 int allDrawablesLength;
 
+
+// =========================================
+// Static functions
+// =========================================
+static void I_CheckForPillar(bool horizontal, float rayAngle, int gridY, int gridX, int x, float curX, float curY, bool checkingThinWall);
+
+// Save the information about this hit, it will be drawn later after this ray draws a wall
+static void I_AddThinWall(bool horizontal, float rayAngle, int x, float curX, float curY, int gridX, int gridY, float distance);
+
 //-------------------------------------
 // Initializes the rendering 
 //-------------------------------------
@@ -319,51 +328,7 @@ void R_Raycast(void)
                             // Check if this is an Horzintal thin wall (if it is a vertical, just ignore it)
                             if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 0)
                             {
-                                // Check if this thin wall is also a pillar, if it is, thin walls (and doors) are filled with the right/down adiacent wall
-                                if(currentMap.pillarsMap[hcurGridY][hcurGridX] == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
-                                {
-                                    bool facing = false;
-
-                                    int outerCeilingHeight;
-                                    // Check for orientation
-                                    if(rayAngle < M_PI && (currentMap.orientationMap[hcurGridY][hcurGridX] == NORTH || currentMap.orientationMap[hcurGridY][hcurGridX] == NORTH_WEST || currentMap.orientationMap[hcurGridY][hcurGridX] == NORTH_EAST))
-                                    {
-                                        facing = true;
-                                        outerCeilingHeight = currentMap.ceilingHeightMap[hcurGridY-1][hcurGridX];
-                                    }
-                                    if(rayAngle > M_PI && (currentMap.orientationMap[hcurGridY][hcurGridX] == SOUTH || currentMap.orientationMap[hcurGridY][hcurGridX] == SOUTH_WEST || currentMap.orientationMap[hcurGridY][hcurGridX] == SOUTH_EAST))
-                                    {
-                                        facing = true;
-                                        outerCeilingHeight = currentMap.ceilingHeightMap[hcurGridY+1][hcurGridX];
-                                    }
-
-                                    if(facing)
-                                    {
-                                        hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));;
-
-                                        // Save the information about this hit, it will be drawn later after this ray draws a wall
-                                        walldata_t* data = &currentPillars[visiblePillarsLength];
-                                        data->rayAngle = rayAngle;
-                                        data->x = x;
-                                        data->curX = (hcurx);
-                                        data->curY = (hcury);
-                                        data->distance = hDistance-0.01f;
-                                        data->gridPos.x = hcurGridX;
-                                        data->gridPos.y = hcurGridY;
-                                        data->idHit = currentMap.wallMap[hcurGridY][hcurGridX+1];
-                                        data->isVertical = false;
-                                        data->extraData = outerCeilingHeight;
-                                        
-                                        // Add it to the drawables
-                                        allDrawables[allDrawablesLength].type = DRWB_PILLAR;
-                                        allDrawables[allDrawablesLength].wallPtr = &currentPillars[visiblePillarsLength];
-                                        // Quick variable access
-                                        allDrawables[allDrawablesLength].dist = data->distance;
-
-                                        allDrawablesLength++;
-                                        visiblePillarsLength++;
-                                    }
-                                }
+                                I_CheckForPillar(true, rayAngle, hcurGridY, hcurGridX, x, hcurx, hcury, true);
 
                                 // Add half a tile to the current point
                                 hcurx += (Xa/2);
@@ -380,26 +345,7 @@ void R_Raycast(void)
                                         hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));;
                                         
                                         // Save the information about this hit, it will be drawn later after this ray draws a wall
-                                        walldata_t* data = &currentThinWalls[visibleThinWallsLength];
-                                        data->rayAngle = rayAngle;
-                                        data->x = x;
-                                        data->curX = hcurx;
-                                        data->curY = hcury;
-                                        data->distance = hDistance;
-                                        data->gridPos.x = hcurGridX;
-                                        data->gridPos.y = hcurGridY;
-                                        data->idHit = currentMap.wallMap[hcurGridY][hcurGridX];
-                                        data->isVertical = false;
-                                        data->extraData = (hcurx - (UNIT_SIZE*newGridX)) < doorpositions[newGridY][newGridX]; // Is Door Visible (we have to ceil cast even if the door is closed, but we don't have to show the actual door if it is closed)
-                                        
-                                        // Add it to the drawables
-                                        allDrawables[allDrawablesLength].type = DRWB_WALL;
-                                        allDrawables[allDrawablesLength].wallPtr = &currentThinWalls[visibleThinWallsLength];
-                                        // Quick variable access
-                                        allDrawables[allDrawablesLength].dist = data->distance;
-
-                                        allDrawablesLength++;
-                                        visibleThinWallsLength++;
+                                        I_AddThinWall(true, rayAngle, x, hcurx, hcury, hcurGridX, hcurGridY, hDistance);
 
                                         hcurx -= (Xa/2);
                                         hcury -= (Ya/2);
@@ -501,58 +447,8 @@ void R_Raycast(void)
                              // Check if this is an Vertical thin wall (if it is an horizontal, just ignore it)
                             if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 1)
                             {
-                                // Check if we hit a pillar, if we did, save it as a drawable and draw it later
-                                if(currentMap.pillarsMap[vcurGridY][vcurGridX] == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
-                                {
-                                    bool facing = false;
+                                I_CheckForPillar(false, rayAngle, vcurGridY, vcurGridX, x, vcurx, vcury, true);
 
-                                    int outerCeilingHeight;
-                                    // Check for orientation
-                                    // facing right
-                                    if((rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)) 
-                                    {
-                                        if(currentMap.orientationMap[vcurGridY][vcurGridX] == EAST || currentMap.orientationMap[vcurGridY][vcurGridX] == NORTH_EAST || currentMap.orientationMap[vcurGridY][vcurGridX] == SOUTH_EAST)
-                                        {
-                                            facing = true;
-                                            outerCeilingHeight = currentMap.ceilingHeightMap[vcurGridY][vcurGridX-1];
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if(currentMap.orientationMap[vcurGridY-1][vcurGridX] == WEST || currentMap.orientationMap[vcurGridY][vcurGridX] == NORTH_WEST || currentMap.orientationMap[vcurGridY][vcurGridX] == SOUTH_WEST)
-                                        {
-                                            facing = true;
-                                            outerCeilingHeight = currentMap.ceilingHeightMap[vcurGridY][vcurGridX+1];
-                                        }
-                                    }
-
-                                    if(facing)
-                                    {
-                                        vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));;
-
-                                        // Save the information about this hit, it will be drawn later after this ray draws a wall
-                                        walldata_t* data = &currentPillars[visiblePillarsLength];
-                                        data->rayAngle = rayAngle;
-                                        data->x = x;
-                                        data->curX = vcurx;
-                                        data->curY = vcury;
-                                        data->distance = vDistance-0.01f; // zfighting
-                                        data->gridPos.x = vcurGridX;
-                                        data->gridPos.y = vcurGridY;
-                                        data->idHit = currentMap.wallMap[vcurGridY+1][vcurGridX];
-                                        data->isVertical = true;
-                                        data->extraData = outerCeilingHeight;
-                                        
-                                        // Add it to the drawables
-                                        allDrawables[allDrawablesLength].type = DRWB_PILLAR;
-                                        allDrawables[allDrawablesLength].wallPtr = &currentPillars[visiblePillarsLength];
-                                        // Quick variable access
-                                        allDrawables[allDrawablesLength].dist = data->distance;
-
-                                        allDrawablesLength++;
-                                        visiblePillarsLength++;
-                                    }
-                                }
                                 // This is a thin wall, check if we hit it or if it was occluded by the wall
 
                                 // Add half a tile to the current point
@@ -570,26 +466,7 @@ void R_Raycast(void)
                                         vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));;
                                         
                                         // Save the information about this hit, it will be drawn later after this ray draws a wall
-                                        walldata_t* data = &currentThinWalls[visibleThinWallsLength];
-                                        data->rayAngle = rayAngle;
-                                        data->x = x;
-                                        data->curX = vcurx;
-                                        data->curY = vcury;
-                                        data->distance = vDistance;
-                                        data->gridPos.x = vcurGridX;
-                                        data->gridPos.y = vcurGridY;
-                                        data->idHit = currentMap.wallMap[vcurGridY][vcurGridX];
-                                        data->isVertical = true;
-                                        data->extraData = (vcury - (64*newGridY)) < doorpositions[newGridY][newGridX];
-                                        
-                                        // Add it to the drawables
-                                        allDrawables[allDrawablesLength].type = DRWB_WALL;
-                                        allDrawables[allDrawablesLength].wallPtr = &currentThinWalls[visibleThinWallsLength];
-                                        // Quick variable access
-                                        allDrawables[allDrawablesLength].dist = data->distance;
-
-                                        allDrawablesLength++;
-                                        visibleThinWallsLength++;
+                                        I_AddThinWall(false, rayAngle, x, vcurx, vcury, vcurGridX, vcurGridY, vDistance);
 
                                         vcurx -= (Xa/2);
                                         vcury -= (Ya/2);
@@ -702,103 +579,8 @@ void R_Raycast(void)
                     R_DrawLine((player.centeredPos.x) / MINIMAP_DIVIDER, (player.centeredPos.y) / MINIMAP_DIVIDER, vcurx / MINIMAP_DIVIDER, vcury / MINIMAP_DIVIDER, r_debugColor);
             }
 
-            // Check if we hit a pillar, if we did, save it as a drawable and draw it later
-            if(currentMap.pillarsMap[fcurGridY][fcurGridX] == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
-            {
-                bool facing = false;
-
-                // The ceiling height of the tile that is immediatly above, below, left or right this pillar
-                // As a rule, rooms must reside in a space where, for at least the out adiacent tiles of the pillars, the ceiling height is constant
-                /*
-                    Example:
-
-                    Wall Map: (6 = pillar, 0 = empty, 4 = door)
-                    0 0 0 0 0 0 0 
-                    0 0 6 6 6 0 0
-                    0 0 6 0 6 0 0
-                    0 0 6 4 6 0 0
-                    0 0 0 0 0 0 0
-
-                    This is a valid ceiling height map:
-                    Ceiling Height Map: (Note how, outside of the pillars, the height is constant)
-                    2 2 2 2 2 2 2 
-                    2 2 1 1 1 2 2
-                    2 2 1 1 1 2 2
-                    2 2 1 1 1 2 2
-                    2 2 2 2 2 2 2
-
-                    This would have been invalid:
-                    Ceiling Height Map: (Note how, this time, outside of the pillars the height is not constant)
-                    2 2 2 2 2 2 2 
-                    2 2 1 1 1 2 2
-                    2 2 1 1 1 3 2  // ERROR! 3 is not constant for the outer tiles of the pillars
-                    2 2 1 1 1 2 2
-                    2 2 2 2 2 2 2
-
-                    outerCeilingHeight is needed to fill the empty spaces a difference of ceiling causes
-                */
-                int outerCeilingHeight;
-                // Check for orientation
-                if(horizontal)
-                {   
-                    if(rayAngle < M_PI && (currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH || currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH_WEST || currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH_EAST))
-                    {
-                        facing = true;
-                        outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY-1][fcurGridX];
-
-                    }
-                    if(rayAngle > M_PI && (currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH || currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH_WEST || currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH_EAST))
-                    {
-                        facing = true;
-                        outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY+1][fcurGridX];
-                    }
-                }
-                else
-                {
-                    // facing right
-                    if((rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)) 
-                    {
-                        if(currentMap.orientationMap[fcurGridY][fcurGridX] == EAST || currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH_EAST || currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH_EAST)
-                        {
-                            facing = true;
-                            outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY][fcurGridX-1];
-                        }
-                    }
-                    else
-                    {
-                        if(currentMap.orientationMap[fcurGridY][fcurGridX] == WEST || currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH_WEST || currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH_WEST)
-                        {
-                            facing = true;
-                            outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY][fcurGridX+1];
-                        }
-                    }
-                }
-
-                if(facing)
-                {
-                    // Save the information about this hit, it will be drawn later after this ray draws a wall
-                    walldata_t* data = &currentPillars[visiblePillarsLength];
-                    data->rayAngle = rayAngle;
-                    data->x = x;
-                    data->curX = wallPoint.x;
-                    data->curY = wallPoint.y;
-                    data->distance = correctDistance-0.01f; // zfighting
-                    data->gridPos.x = fcurGridX;
-                    data->gridPos.y = fcurGridY;
-                    data->idHit = currentMap.wallMap[fcurGridY][fcurGridX];
-                    data->isVertical = !horizontal;
-                    data->extraData = outerCeilingHeight;
-                    
-                    // Add it to the drawables
-                    allDrawables[allDrawablesLength].type = DRWB_PILLAR;
-                    allDrawables[allDrawablesLength].wallPtr = &currentPillars[visiblePillarsLength];
-                    // Quick variable access
-                    allDrawables[allDrawablesLength].dist = data->distance;
-
-                    allDrawablesLength++;
-                    visiblePillarsLength++;
-                }
-            }
+            // Check if the hit wall (it is a normal wall, not thin or anything) is a pillar, if it is, fill it
+            I_CheckForPillar(horizontal, rayAngle, fcurGridY, fcurGridX, x, wallPoint.x, wallPoint.y, false);
 
             // Fix fisheye 
             float fixedAngle = rayAngle - player.angle;
@@ -1568,4 +1350,153 @@ void R_DrawColumnTexturedShaded(int x, int y, int endY, SDL_Surface* texture, in
         // Go forward
         textureY+= offset;
     }
+}
+
+// =========================================
+// Static functions
+// =========================================
+void I_CheckForPillar(bool horizontal, float rayAngle, int gridY, int gridX, int x, float curX, float curY, bool checkingThinWall)
+{
+    // Check if this thin wall is also a pillar, if it is, thin walls (and doors) are filled with the right/down adiacent wall
+    if(currentMap.pillarsMap[gridY][gridX] == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
+    {
+        // If the player is facing the right direction for this pillar to show up
+        bool facing = false;
+
+        // See explaination about outer ceiling rules
+        // The ceiling height of the tile that is immediatly above, below, left or right this pillar
+        // As a rule, rooms must reside in a space where, for at least the out adiacent tiles of the pillars, the ceiling height is constant
+        /*
+            Example:
+
+            Wall Map: (6 = pillar, 0 = empty, 4 = door)
+            0 0 0 0 0 0 0 
+            0 0 6 6 6 0 0
+            0 0 6 0 6 0 0
+            0 0 6 4 6 0 0
+            0 0 0 0 0 0 0
+
+            This is a valid ceiling height map:
+            Ceiling Height Map: (Note how, outside of the pillars, the height is constant)
+            2 2 2 2 2 2 2 
+            2 2 1 1 1 2 2
+            2 2 1 1 1 2 2
+            2 2 1 1 1 2 2
+            2 2 2 2 2 2 2
+
+            This would have been invalid:
+            Ceiling Height Map: (Note how, this time, outside of the pillars the height is not constant)
+            2 2 2 2 2 2 2 
+            2 2 1 1 1 2 2
+            2 2 1 1 1 3 2  // ERROR! 3 is not constant for the outer tiles of the pillars
+            2 2 1 1 1 2 2
+            2 2 2 2 2 2 2
+
+            outerCeilingHeight is needed to fill the empty spaces a difference of ceiling causes
+        */
+        int outerCeilingHeight;
+
+        if(horizontal)
+        {
+            // Check for orientation
+            if(rayAngle < M_PI && (currentMap.orientationMap[gridY][gridX] == NORTH || currentMap.orientationMap[gridY][gridX] == NORTH_WEST || currentMap.orientationMap[gridY][gridX] == NORTH_EAST))
+            {
+                facing = true;
+                outerCeilingHeight = currentMap.ceilingHeightMap[gridY-1][gridX];
+            }
+            if(rayAngle > M_PI && (currentMap.orientationMap[gridY][gridX] == SOUTH || currentMap.orientationMap[gridY][gridX] == SOUTH_WEST || currentMap.orientationMap[gridY][gridX] == SOUTH_EAST))
+            {
+                facing = true;
+                outerCeilingHeight = currentMap.ceilingHeightMap[gridY+1][gridX];
+            }
+        }
+        else
+        {
+            if((rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)) 
+            {
+                if(currentMap.orientationMap[gridY][gridX] == EAST || currentMap.orientationMap[gridY][gridX] == NORTH_EAST || currentMap.orientationMap[gridY][gridX] == SOUTH_EAST)
+                {
+                    facing = true;
+                    outerCeilingHeight = currentMap.ceilingHeightMap[gridY][gridX-1];
+                }
+            }
+            else
+            {
+                if(currentMap.orientationMap[gridY][gridX] == WEST || currentMap.orientationMap[gridY][gridX] == NORTH_WEST || currentMap.orientationMap[gridY][gridX] == SOUTH_WEST)
+                {
+                    facing = true;
+                    outerCeilingHeight = currentMap.ceilingHeightMap[gridY][gridX+1];
+                }
+            }
+        }
+
+        if(facing)
+        {
+            float distance = fabs(sqrt((((player.centeredPos.x) - curX) * ((player.centeredPos.x) - curX)) + (((player.centeredPos.y) - curY) * ((player.centeredPos.y) - curY))));;
+
+            // Save the information about this hit, it will be drawn later after this ray draws a wall
+            walldata_t* data = &currentPillars[visiblePillarsLength];
+            data->rayAngle = rayAngle;
+            data->x = x;
+            data->curX = (curX);
+            data->curY = (curY);
+            data->distance = distance-0.01f;
+            data->gridPos.x = gridX;
+            data->gridPos.y = gridY;
+
+            // Thin walls should take the right/down adiacent wall as the filling object
+            if(checkingThinWall)
+            {
+                if(horizontal)
+                    data->idHit = currentMap.wallMap[gridY][gridX+1];
+                else
+                    data->idHit = currentMap.wallMap[gridY+1][gridX];
+            }
+            else // normal walls should take the same object instead
+            {
+                data->idHit = currentMap.wallMap[gridY][gridX];
+            }
+
+            data->isVertical = !horizontal;
+            data->extraData = outerCeilingHeight;
+            
+            // Add it to the drawables
+            allDrawables[allDrawablesLength].type = DRWB_PILLAR;
+            allDrawables[allDrawablesLength].wallPtr = &currentPillars[visiblePillarsLength];
+            // Quick variable access
+            allDrawables[allDrawablesLength].dist = data->distance;
+
+            allDrawablesLength++;
+            visiblePillarsLength++;
+        }
+    }
+}
+
+// Save the information about this hit, it will be drawn later after this ray draws a wall
+void I_AddThinWall(bool horizontal, float rayAngle, int x, float curX, float curY, int gridX, int gridY, float distance)
+{
+        walldata_t* data = &currentThinWalls[visibleThinWallsLength];
+        data->rayAngle = rayAngle;
+        data->x = x;
+        data->curX = curX;
+        data->curY = curY;
+        data->distance = distance;
+        data->gridPos.x = gridX;
+        data->gridPos.y = gridY;
+        data->idHit = currentMap.wallMap[gridY][gridX];
+        data->isVertical = !horizontal;
+
+        if(horizontal)
+            data->extraData = (curX - (UNIT_SIZE*gridX)) < doorpositions[gridY][gridX]; // Is Door Visible (we have to ceil cast even if the door is closed, but we don't have to show the actual door if it is closed)
+        else
+            data->extraData = (curY - (64*gridY)) < doorpositions[gridY][gridX];
+
+        // Add it to the drawables
+        allDrawables[allDrawablesLength].type = DRWB_WALL;
+        allDrawables[allDrawablesLength].wallPtr = &currentThinWalls[visibleThinWallsLength];
+        // Quick variable access
+        allDrawables[allDrawablesLength].dist = data->distance;
+
+        allDrawablesLength++;
+        visibleThinWallsLength++;
 }
