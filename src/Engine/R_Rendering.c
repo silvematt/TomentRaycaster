@@ -319,8 +319,6 @@ void R_Raycast(void)
                             // Check if this is an Horzintal thin wall (if it is a vertical, just ignore it)
                             if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 0)
                             {
-                                // This is a thin wall, check if we hit it or if it was occluded by the wall
-
                                 // Check if this thin wall is also a pillar, if it is, thin walls (and doors) are filled with the right/down adiacent wall
                                 if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 3) == 1 && visiblePillarsLength < MAX_VISIBLE_PILLARS)
                                 {
@@ -328,13 +326,12 @@ void R_Raycast(void)
 
                                     int outerCeilingHeight;
                                     // Check for orientation
-                                    if(rayAngle < M_PI && (currentMap.orientationMap[hcurGridY-1][hcurGridX] == NORTH || currentMap.orientationMap[hcurGridY-1][hcurGridX] == NORTH_WEST || currentMap.orientationMap[hcurGridY-1][hcurGridX] == NORTH_EAST))
+                                    if(rayAngle < M_PI && (currentMap.orientationMap[hcurGridY][hcurGridX] == NORTH || currentMap.orientationMap[hcurGridY][hcurGridX] == NORTH_WEST || currentMap.orientationMap[hcurGridY][hcurGridX] == NORTH_EAST))
                                     {
                                         facing = true;
                                         outerCeilingHeight = currentMap.ceilingHeightMap[hcurGridY-1][hcurGridX];
-
                                     }
-                                    if(rayAngle > M_PI && (currentMap.orientationMap[hcurGridY-1][hcurGridX] == SOUTH || currentMap.orientationMap[hcurGridY-1][hcurGridX] == SOUTH_WEST || currentMap.orientationMap[hcurGridY-1][hcurGridX] == SOUTH_EAST))
+                                    if(rayAngle > M_PI && (currentMap.orientationMap[hcurGridY][hcurGridX] == SOUTH || currentMap.orientationMap[hcurGridY][hcurGridX] == SOUTH_WEST || currentMap.orientationMap[hcurGridY][hcurGridX] == SOUTH_EAST))
                                     {
                                         facing = true;
                                         outerCeilingHeight = currentMap.ceilingHeightMap[hcurGridY+1][hcurGridX];
@@ -355,6 +352,7 @@ void R_Raycast(void)
                                         data->gridPos.y = hcurGridY;
                                         data->idHit = currentMap.wallMap[hcurGridY][hcurGridX+1];
                                         data->isVertical = false;
+                                        data->extraData = outerCeilingHeight;
                                         
                                         // Add it to the drawables
                                         allDrawables[allDrawablesLength].type = DRWB_PILLAR;
@@ -376,8 +374,6 @@ void R_Raycast(void)
                                 int newGridY = floor(hcury / TILE_SIZE);
 
                                 // If the ray intersects with the door
-                                if((hcurx - (UNIT_SIZE*newGridX)) < doorpositions[newGridY][newGridX])
-                                {
                                     // If they're in the same tile, the door is visible
                                     if(newGridX == hcurGridX && newGridY == hcurGridY && thinWallDepth < MAX_THIN_WALL_TRANSPARENCY_RECURSION)
                                     {   
@@ -394,6 +390,7 @@ void R_Raycast(void)
                                         data->gridPos.y = hcurGridY;
                                         data->idHit = currentMap.wallMap[hcurGridY][hcurGridX];
                                         data->isVertical = false;
+                                        data->extraData = (hcurx - (UNIT_SIZE*newGridX)) < doorpositions[newGridY][newGridX]; // Is Door Visible (we have to ceil cast even if the door is closed, but we don't have to show the actual door if it is closed)
                                         
                                         // Add it to the drawables
                                         allDrawables[allDrawablesLength].type = DRWB_WALL;
@@ -409,12 +406,6 @@ void R_Raycast(void)
 
                                         thinWallDepth++;
                                         // break; don't break, keep casting the ray
-                                    }
-                                    else // otherwise it's not visible, revert the point and keep scanning
-                                    {
-                                        hcurx -= (Xa/2);
-                                        hcury -= (Ya/2);
-                                    }
                                 }
                                 else // otherwise the ray passes through the door (it's opening/closing)
                                 {
@@ -520,18 +511,18 @@ void R_Raycast(void)
                                     // facing right
                                     if((rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)) 
                                     {
-                                        if(currentMap.orientationMap[vcurGridY-1][vcurGridX] == EAST || currentMap.orientationMap[vcurGridY-1][vcurGridX] == NORTH_EAST || currentMap.orientationMap[vcurGridY-1][vcurGridX] == SOUTH_EAST)
+                                        if(currentMap.orientationMap[vcurGridY][vcurGridX] == EAST || currentMap.orientationMap[vcurGridY][vcurGridX] == NORTH_EAST || currentMap.orientationMap[vcurGridY][vcurGridX] == SOUTH_EAST)
                                         {
                                             facing = true;
-                                            outerCeilingHeight = currentMap.ceilingHeightMap[vcurGridY-1][vcurGridX-1];
+                                            outerCeilingHeight = currentMap.ceilingHeightMap[vcurGridY][vcurGridX-1];
                                         }
                                     }
                                     else
                                     {
-                                        if(currentMap.orientationMap[vcurGridY-1][vcurGridX] == WEST || currentMap.orientationMap[vcurGridY-1][vcurGridX] == NORTH_WEST || currentMap.orientationMap[vcurGridY-1][vcurGridX] == SOUTH_WEST)
+                                        if(currentMap.orientationMap[vcurGridY-1][vcurGridX] == WEST || currentMap.orientationMap[vcurGridY][vcurGridX] == NORTH_WEST || currentMap.orientationMap[vcurGridY][vcurGridX] == SOUTH_WEST)
                                         {
                                             facing = true;
-                                            outerCeilingHeight = currentMap.ceilingHeightMap[vcurGridY-1][vcurGridX+1];
+                                            outerCeilingHeight = currentMap.ceilingHeightMap[vcurGridY][vcurGridX+1];
                                         }
                                     }
 
@@ -573,8 +564,6 @@ void R_Raycast(void)
                                 int newGridY = floor(vcury / TILE_SIZE);
 
                                 // If the ray intersects with the door
-                                if((vcury - (64*newGridY)) < doorpositions[newGridY][newGridX])
-                                {
                                     // If they're in the same tile, the door is visible
                                     if(newGridX == vcurGridX && newGridY == vcurGridY)
                                     {
@@ -591,6 +580,7 @@ void R_Raycast(void)
                                         data->gridPos.y = vcurGridY;
                                         data->idHit = currentMap.wallMap[vcurGridY][vcurGridX];
                                         data->isVertical = true;
+                                        data->extraData = (vcury - (64*newGridY)) < doorpositions[newGridY][newGridX];
                                         
                                         // Add it to the drawables
                                         allDrawables[allDrawablesLength].type = DRWB_WALL;
@@ -612,12 +602,6 @@ void R_Raycast(void)
                                         vcurx -= (Xa/2);
                                         vcury -= (Ya/2);
                                     }
-                                }
-                                else // otherwise the ray passes through the door (it's opening/closing)
-                                {
-                                    vcurx -= (Xa/2);
-                                    vcury -= (Ya/2);
-                                }
                             }
                         }
                         else
@@ -757,13 +741,13 @@ void R_Raycast(void)
                 // Check for orientation
                 if(horizontal)
                 {   
-                    if(rayAngle < M_PI && (currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH || currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH_WEST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH_EAST))
+                    if(rayAngle < M_PI && (currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH || currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH_WEST || currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH_EAST))
                     {
                         facing = true;
                         outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY-1][fcurGridX];
 
                     }
-                    if(rayAngle > M_PI && (currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH || currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH_WEST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH_EAST))
+                    if(rayAngle > M_PI && (currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH || currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH_WEST || currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH_EAST))
                     {
                         facing = true;
                         outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY+1][fcurGridX];
@@ -774,18 +758,18 @@ void R_Raycast(void)
                     // facing right
                     if((rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)) 
                     {
-                        if(currentMap.orientationMap[fcurGridY-1][fcurGridX] == EAST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH_EAST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH_EAST)
+                        if(currentMap.orientationMap[fcurGridY][fcurGridX] == EAST || currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH_EAST || currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH_EAST)
                         {
                             facing = true;
-                            outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY-1][fcurGridX-1];
+                            outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY][fcurGridX-1];
                         }
                     }
                     else
                     {
-                        if(currentMap.orientationMap[fcurGridY-1][fcurGridX] == WEST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == NORTH_WEST || currentMap.orientationMap[fcurGridY-1][fcurGridX] == SOUTH_WEST)
+                        if(currentMap.orientationMap[fcurGridY][fcurGridX] == WEST || currentMap.orientationMap[fcurGridY][fcurGridX] == NORTH_WEST || currentMap.orientationMap[fcurGridY][fcurGridX] == SOUTH_WEST)
                         {
                             facing = true;
-                            outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY-1][fcurGridX+1];
+                            outerCeilingHeight = currentMap.ceilingHeightMap[fcurGridY][fcurGridX+1];
                         }
                     }
                 }
@@ -889,7 +873,8 @@ void R_Raycast(void)
                 
             }
 
-            R_FloorCastingAndCeiling(start, end, rayAngle, x, wallHeight);
+            R_FloorCasting(end, rayAngle, x, wallHeight);
+            R_CeilingCasting(start, rayAngle, x, wallHeight);
 
             //R_DrawPixel(x, start, r_debugColor);
         }
@@ -906,7 +891,7 @@ void R_Raycast(void)
 // - rayAngle = the current rayangle
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
-void R_FloorCastingAndCeiling(float start, float end, float rayAngle, int x, float wallHeight)
+void R_FloorCasting(float end, float rayAngle, int x, float wallHeight)
 {
     // Floor Casting & Ceiling
     float beta = (player.angle - rayAngle);
@@ -950,6 +935,13 @@ void R_FloorCastingAndCeiling(float start, float end, float rayAngle, int x, flo
             }
         }
     }
+}
+
+void R_CeilingCasting(float start, float rayAngle, int x, float wallHeight)
+{
+    // Floor Casting & Ceiling
+    float beta = (player.angle - rayAngle);
+    FIX_ANGLES(beta);
 
     // If the current ceiling height is greater than 1, ceiling needs to be calculated on its own
     for(int y = floor(start); y >= 0; y--)
@@ -1056,8 +1048,12 @@ void R_DrawThinWall(walldata_t* cur)
         // If looking down, flip the texture offset
         if(cur->rayAngle < M_PI)
             offset = (TILE_SIZE-1) - offset;
-            
-        R_DrawColumnTexturedShaded((cur->x), wallOffset+1, end+1, curObject->texture, offset, wallHeightUncapped, wallLighting);
+        
+        if(cur->extraData == 1)
+            R_DrawColumnTexturedShaded((cur->x), wallOffset+1, end+1, curObject->texture, offset, wallHeightUncapped, wallLighting);
+
+        if(U_GetBit(&curObject->flags, 3)) // if this is a pillar
+            R_CeilingCasting(wallOffset+1, cur->rayAngle, cur->x, wallHeight);
     }
     else
     {
@@ -1072,7 +1068,11 @@ void R_DrawThinWall(walldata_t* cur)
         if(cur->rayAngle > M_PI / 2 && cur->rayAngle < (3*M_PI) / 2)
             offset = (TILE_SIZE-1) - offset;
 
-        R_DrawColumnTexturedShaded((cur->x), wallOffset+1, end+1, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
+        if(cur->extraData == 1)
+            R_DrawColumnTexturedShaded((cur->x), wallOffset+1, end+1, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting);
+        
+        if(U_GetBit(&curObject->flags, 3)) // if this is a pillar
+            R_CeilingCasting(wallOffset+1, cur->rayAngle, cur->x, wallHeight);
     }
 }
 

@@ -342,7 +342,6 @@ void M_LoadMapAsCurrent(char* mapID)
       // --------------------
       fgets(curLine, MAX_STRLEN, fp); // Layout =
       fgets(curLine, MAX_STRLEN, fp); // [ start of map
-
       fgets(curLine, MAX_STRLEN, fp); // First Row
 
       // Find the first row
@@ -397,7 +396,6 @@ void M_LoadMapAsCurrent(char* mapID)
       // --------------------
       // Read Orientation Map Layout
       // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // Layout =
       fgets(curLine, MAX_STRLEN, fp); // [ start of map
 
       fgets(curLine, MAX_STRLEN, fp); // First Row
@@ -447,7 +445,7 @@ void M_LoadMapAsCurrent(char* mapID)
                   break;
             }
       }
-
+      
       printf("Map loaded successfully!\n");
       fclose(fp);
 
