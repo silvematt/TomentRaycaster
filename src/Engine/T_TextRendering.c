@@ -39,6 +39,42 @@ void T_DisplayText(int fontID, char* text, int x, int y)
 }
 
 // ----------------------------------------------------------------------
+// Displays the given text
+// ----------------------------------------------------------------------
+void T_DisplayTextScaled(int fontID, char* text, int x, int y, float scaleFactor)
+{
+    // The X we're currently drawing to
+    int curDrawingX = x;
+
+    // Current char in the text
+    int curCIndex = 0;
+    char curC = 0;
+
+    // Width of the font
+    int width = tomentdatapack.fontsheets[fontID].width;
+
+    // While we're not finished drawing
+    while(text[curCIndex] != '\0')
+    {
+        // Get the char we have to draw
+        curC = text[curCIndex];
+
+        // Translate to the sprite sheet coords to get the correct texture
+        int texX, texY;
+        T_TranslateASCIIToSpriteSheetCoords(curC, &texX, &texY);
+
+        // Blit it on the screen
+        SDL_Rect screenPos = {curDrawingX, y, width * scaleFactor, width* scaleFactor};
+        SDL_Rect size = {(texX * width), (texY * width), width, width};
+        R_BlitIntoScreenScaled(&size, tomentdatapack.fontsheets[fontID].texture, &screenPos);
+
+        // Next
+        curCIndex++;
+        curDrawingX += tomentdatapack.fontsheets[fontID].glyphsWidth[texY][texX] * scaleFactor;
+    }
+}
+
+// ----------------------------------------------------------------------
 // Given a char, returns the sprite sheet coords, most naive approach ever
 //
 // This translation also kills the universality of the Text Renderer by forcing the font sheet to be 16x6

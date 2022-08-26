@@ -79,7 +79,7 @@ void R_RenderDev(void)
     R_DrawMinimap();
     
     // Debug text
-    T_DisplayText(FONT_BLKCRY, "This is an alert  message!", 360, 10);
+    T_DisplayTextScaled(FONT_BLKCRY, "This is an alert  message!", 360, 10, 1.0f);
 }
 
 //-------------------------------------
@@ -1071,6 +1071,14 @@ void R_FinishUpdate(void)
 void R_BlitIntoScreen(SDL_Rect* size, SDL_Surface* sur, SDL_Rect* pos)
 {
     SDL_BlitSurface(sur, size, win_surface, pos);
+}
+
+//-------------------------------------
+// Given an SDL_Surface, extracts the pixels of it and puts them in the selected framebuffer
+//-------------------------------------
+void R_BlitIntoScreenScaled(SDL_Rect* size, SDL_Surface* sur, SDL_Rect* pos)
+{
+    SDL_BlitScaled(sur, size, win_surface, pos);
 }
 
 //-------------------------------------

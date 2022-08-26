@@ -100,6 +100,11 @@ Uint32 R_GetPixelFromSurface(SDL_Surface *surface, int x, int y);
 void R_BlitIntoScreen(SDL_Rect* size, SDL_Surface* sur, SDL_Rect* pos);
 
 //-------------------------------------
+// Given an SDL_Surface, extracts the pixels of it and puts them in the selected framebuffer
+//-------------------------------------
+void R_BlitIntoScreenScaled(SDL_Rect* size, SDL_Surface* sur, SDL_Rect* pos);
+
+//-------------------------------------
 // Given a color, extracts draws it in the selected framebuffer
 //-------------------------------------
 void R_BlitColorIntoScreen(int color, SDL_Rect* pos);

@@ -9,6 +9,11 @@
 void T_DisplayText(int fontID, char* text, int x, int y);
 
 // ----------------------------------------------------------------------
+// Displays the given text scaled by the scale factor
+// ----------------------------------------------------------------------
+void T_DisplayTextScaled(int fontID, char* text, int x, int y, float scaleFactor);
+
+// ----------------------------------------------------------------------
 // Given a char, returns the sprite sheet coords, most naive approach ever
 //
 // This translation also kills the universality of the Text Renderer by forcing the font sheet to be 16x6

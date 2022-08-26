@@ -429,6 +429,7 @@ void D_InitFontSheets(void)
                 SDL_FillRect(glyphSurface, NULL, r_transparencyColor);
             }
     }
+    SDL_FreeSurface(glyphSurface);
 }
 
 //-------------------------------------
