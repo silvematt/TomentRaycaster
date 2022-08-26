@@ -1,7 +1,7 @@
 # TomentRaycaster
 A Software Rendering Raycaster Engine written in C and SDL2.
 
-![alt text](https://i.imgur.com/c2uSgeR.png)
+![alt text](https://i.imgur.com/XTFXmYE.png)
 
 I've written this raycaster following Permadi's paper and Wolfenstein 3D code (and Black Book), as a pilgrimage to my God John Carmack.
 
@@ -19,6 +19,7 @@ Features:
 - Sprites Rendering & Physics (Sprites can be solid or not)
 - Support for Animated Sprites
 - Shading and Map Lighting
+- Text Rendering of Bitmap Fonts
 - Load map from file
 - Assets Manager
 - Packed data in custom files (.archt) format [GENERATED WITH: [TomentARCH](https://github.com/silvematt/TomentARCH)]
