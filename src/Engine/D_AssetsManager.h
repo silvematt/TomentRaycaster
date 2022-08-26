@@ -3,6 +3,7 @@
 
 #include "../include/SDL2/SDL.h"
 #include "U_DataTypes.h"
+#include "stdio.h"
 
 // --------------------------------------------
 // DEFINES
@@ -63,6 +64,27 @@ typedef struct object_s
     byte flags;             // Flags to diversify types of objects
 } object_t;
 
+// The Text rendering is not hardcoded to use 16x6 elements font sheets, but the translation map is, 
+// if you wish to use more character or a different map of the characters, you'll have to edit the translation code, 
+// but the system's code should work just fine
+#define FONT_MAX_ELEMENTS_WIDTH 16
+#define FONT_MAX_ELEMENTS_HEIGHT 6
+
+typedef struct fontSheet_s
+{
+    unsigned int width;             // Width of the tiles that compose the font sheet
+    int numHorElements;             // How many horizontal items this sheet has
+    int numVerElements;             // How many vertical items this sheet has
+    SDL_Surface* texture;           // The whole fontsheet as an SDL_Surface
+    int glyphsWidth[FONT_MAX_ELEMENTS_HEIGHT][FONT_MAX_ELEMENTS_WIDTH];        // The actual used width of each glyph, used for text-spacing
+} fontsheet_t;
+
+// All Fonts IDS
+typedef enum fontsID_e
+{
+    FONT_BLKCRY = 0,
+} fontsID_t;
+
 /* object_t Flags
 
     // ============
@@ -115,6 +137,7 @@ typedef enum imgIDs_e
     IMG_ID_C_1,
     IMG_ID_S_Barrel1,
     IMG_ID_S_Campfire,
+    IMG_ID_BLKCRY_TEXT_SHEET,
 } imgIDs_e;
 
 typedef struct archt_s
@@ -154,6 +177,11 @@ typedef struct tomentdatapack_s
 
     // img.archt
     archt_t IMGArch;
+
+    // Font databse
+    fontsheet_t fontsheets[OBJECTARRAY_DEFAULT_SIZE];   // All fonts
+    unsigned fontsheetsLenghth;
+
 } tomentdatapack_t;
     
 extern tomentdatapack_t tomentdatapack;
@@ -184,8 +212,7 @@ void D_InitLoadWalls(void);
 void D_InitLoadFloors(void);
 void D_InitLoadCeilings(void);
 void D_InitLoadSprites(void);
-
-
+void D_InitFontSheets(void);
 
 //-------------------------------------
 // Sets the object for the given parameters

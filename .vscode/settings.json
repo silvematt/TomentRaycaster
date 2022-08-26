@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "sdl.h": "c",
-        "cmath": "c"
+        "cmath": "c",
+        "t_textrendering.h": "c"
     }
 }

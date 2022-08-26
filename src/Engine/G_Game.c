@@ -58,9 +58,6 @@ void G_GameLoop(void)
     // Creates the frame
     R_ComposeFrame();
 
-    // Sends it to the win_surface
-    R_UpdateNoBlit();
-
     // Displays it on the screen
     R_FinishUpdate();
 

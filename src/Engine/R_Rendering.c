@@ -9,17 +9,12 @@
 #include "I_InputHandling.h"
 #include "D_AssetsManager.h"
 #include "U_Utilities.h"
+#include "T_TextRendering.h"
 
 uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
 uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
 
 uint32_t r_debugColor;
-
-// ---------------------------------------------------------
-//  SCREEN BUFFERS
-// ---------------------------------------------------------
-unsigned int* screenBuffers[5];
-SDL_Rect dirtybox;
 
 // Wall height
 float wallHeights[PROJECTION_PLANE_WIDTH];
@@ -43,7 +38,6 @@ unsigned visiblePillarsLength;
 drawabledata_t allDrawables[MAX_DRAWABLES];
 int allDrawablesLength;
 
-
 // =========================================
 // Static functions
 // =========================================
@@ -64,15 +58,6 @@ void R_InitRendering(void)
     // Clear initial render
     R_ClearRendering();
 
-    // Allocate for screen buffers
-    unsigned int* base = malloc((SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(unsigned int)) * 5);
-
-    // Set screen buffers
-    for(int i = 0; i < 5; i++)
-    {
-        screenBuffers[i] = (base + (SCREEN_WIDTH * SCREEN_HEIGHT* i));
-    }
-
     // Initialize Doors //
     memset(doorstate, 0, (MAP_HEIGHT*MAP_WIDTH));
     
@@ -92,6 +77,9 @@ void R_RenderDev(void)
     R_Raycast();
     R_DrawDrawables();
     R_DrawMinimap();
+    
+    // Debug text
+    T_DisplayText(FONT_BLKCRY, "This is an alert  message!", 360, 10);
 }
 
 //-------------------------------------
@@ -130,18 +118,18 @@ void R_DrawMinimap(void)
                 // If it is an empty space
                 if(currentMap.wallMap[y][x] == 0)
                 {
-                    R_BlitColorIntoBuffer(0, SDL_MapRGB(win_surface->format, 128, 128, 128), &curRect);
+                    R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 128, 128, 128), &curRect);
                 }
                 else
                 {
-                    R_BlitColorIntoBuffer(0, SDL_MapRGB(win_surface->format, 255, 0, 0), &curRect);
+                    R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 255, 0, 0), &curRect);
                 }
 
                 if(DEBUG_VISIBLE_TILES_MINIMAP)
                 {
                     if(visibleTiles[y][x])
                     {
-                        R_BlitColorIntoBuffer(0, SDL_MapRGB(win_surface->format, 0, 255, 0), &curRect);
+                        R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 0, 255, 0), &curRect);
                     }
                 }
             }
@@ -156,22 +144,10 @@ void R_DrawMinimap(void)
                 curRect.x = visibleSprites[i].gridPos.x * TILE_SIZE / MINIMAP_DIVIDER;
                 curRect.y = visibleSprites[i].gridPos.y * TILE_SIZE / MINIMAP_DIVIDER;
 
-                R_BlitColorIntoBuffer(0, SDL_MapRGB(win_surface->format, 0, 0, 255), &curRect);
+                R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 0, 0, 255), &curRect);
             }
         }
     }
-
-    // Blit player in the framebuffer
-    // Commented out because at this size it's too small
-    /*
-    player.surfaceRect.x = player.position.x / MINIMAP_DIVIDER;
-    player.surfaceRect.y = player.position.y / MINIMAP_DIVIDER;
-    player.surface->h = MINIMAP_PLAYER_HEIGHT;
-    player.surface->w = MINIMAP_PLAYER_WIDTH;
-    player.surfaceRect.h = MINIMAP_PLAYER_HEIGHT;
-    player.surfaceRect.w = MINIMAP_PLAYER_WIDTH;
-    R_BlitIntoBuffer(0, player.surface, &player.surfaceRect);
-    */
 
     // Draw Direction
     R_DrawLine((player.centeredPos.x) / MINIMAP_DIVIDER, (player.centeredPos.y) / MINIMAP_DIVIDER, ((player.centeredPos.x)/MINIMAP_DIVIDER)+(playerinput.dir.x/MINIMAP_DIVIDER) * 25, ((player.centeredPos.y) / MINIMAP_DIVIDER)+(playerinput.dir.y / MINIMAP_DIVIDER) * 25, r_debugColor);
@@ -1080,13 +1056,6 @@ Uint32 R_GetPixelFromSurface(SDL_Surface *surface, int x, int y)
     return *target_pixel;
 }
 
-//-------------------------------------
-// Reads the framebuffer with the dirtybox and transfer to win_surface
-//-------------------------------------
-void R_UpdateNoBlit(void)
-{
-    memcpy(pixels, screenBuffers[0], SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(unsigned int));
-}
 
 //-------------------------------------
 // Updates the screen to the win_surface
@@ -1099,37 +1068,21 @@ void R_FinishUpdate(void)
 //-------------------------------------
 // Given an SDL_Surface, extracts the pixels of it and puts them in the selected framebuffer
 //-------------------------------------
-void R_BlitIntoBuffer(int buffer, SDL_Surface* sur, SDL_Rect* pos)
+void R_BlitIntoScreen(SDL_Rect* size, SDL_Surface* sur, SDL_Rect* pos)
 {
-    unsigned int* spix = sur->pixels;
-    Uint32 * target_pixel;
-
-    for(int y = 0; y < pos->h; y++)
-        for(int x = 0; x < pos->w; x++) 
-        {
-            // Extract pixel
-            target_pixel = (Uint32 *) ((Uint8 *) sur->pixels
-                            + y * sur->pitch
-                            + x * sur->format->BytesPerPixel);
-
-            if(*target_pixel == r_transparencyColor)
-                continue; // Skip transparency
-
-            // Put it into buffer 
-            screenBuffers[buffer][(pos->x + x) + ((pos->y + y) * SCREEN_WIDTH)] = * target_pixel;
-        }
+    SDL_BlitSurface(sur, size, win_surface, pos);
 }
 
 //-------------------------------------
 // Given an SDL_Surface, extracts the pixels of it and puts them in the selected framebuffer
 //-------------------------------------
-void R_BlitColorIntoBuffer(int buffer, int color, SDL_Rect* pos)
+void R_BlitColorIntoScreen(int color, SDL_Rect* pos)
 {
     for(int y = 0; y < pos->h; y++)
         for(int x = 0; x < pos->w; x++) 
         {
             // Put it into buffer
-            screenBuffers[buffer][(pos->x + x) + ((pos->y + y) * SCREEN_WIDTH)] = color;
+            pixels[(pos->x + x) + ((pos->y + y) * SCREEN_WIDTH)] = color;
         }
 }
 
@@ -1164,7 +1117,7 @@ void R_DrawLineLow(int x0, int y0, int x1, int y1, int color)
     for (int x = x0; x < x1; x++) 
     {
         if( x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)    // To not go outside of boundaries
-            screenBuffers[0][x + y * win_width] = color;
+            pixels[x + y * win_width] = color;
         if (D > 0)
         {
             y = y + yi;
@@ -1194,7 +1147,7 @@ void R_DrawLineHigh(int x0, int y0, int x1, int y1, int color)
     for (int y = y0; y < y1; y++)
     {
         if( x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)    // To not go outside of boundaries
-            screenBuffers[0][x + y * win_width] = color;
+            pixels[x + y * win_width] = color;
         if (D > 0)
         {
             x = x + xi;
@@ -1232,7 +1185,7 @@ void R_DrawLine(int x0, int y0, int x1, int y1, int color)
 void R_DrawPixel(int x, int y, int color)
 {
     if( x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)    // To not go outside of boundaries
-            screenBuffers[0][x + y * win_width] = color;
+            pixels[x + y * win_width] = color;
 }
 
 //------------------------------------------------
@@ -1250,7 +1203,7 @@ void R_DrawPixelShaded(int x, int y, int color, float intensity)
         b*=intensity;
 
         // Put it in the framebuffer
-        screenBuffers[0][x + y * win_width] = SDL_MapRGB(win_surface->format, r,g,b);
+        pixels[x + y * win_width] = SDL_MapRGB(win_surface->format, r,g,b);
     }
 }
 
@@ -1263,7 +1216,7 @@ void R_DrawColumn(int x, int y, int endY, int color)
     for(int i = y; i < endY; i++)
     {
         if(x < PROJECTION_PLANE_WIDTH && x >= 0) // Don't overflow
-            screenBuffers[0][x + i * win_width] = color;
+            pixels[x + i * win_width] = color;
     }
 }
 
@@ -1298,7 +1251,7 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
         // Put it in the framebuffer
         if(x < PROJECTION_PLANE_WIDTH && x >= 0 && i < PROJECTION_PLANE_HEIGHT && i >= 0) // Don't overflow
             if(pixel != r_transparencyColor)
-                screenBuffers[0][x + i * win_width] = pixel;
+                pixels[x + i * win_width] = pixel;
 
         // Go forward
         textureY+= offset;
@@ -1344,7 +1297,7 @@ void R_DrawColumnTexturedShaded(int x, int y, int endY, SDL_Surface* texture, in
 
             // Put it in the framebuffer
             if(x < PROJECTION_PLANE_WIDTH && x >= 0 && i < PROJECTION_PLANE_HEIGHT && i >= 0) // Don't overflow
-                screenBuffers[0][x + i * win_width] = SDL_MapRGB(texture->format, r,g,b);
+                pixels[x + i * win_width] = SDL_MapRGB(texture->format, r,g,b);
         }
 
         // Go forward

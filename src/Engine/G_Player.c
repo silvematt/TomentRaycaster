@@ -26,8 +26,6 @@ void SDL_Rect_Set(SDL_Rect* r, int x, int y, int w, int h)
 //-------------------------------------
 void G_InitPlayer(void)
 {
-    player.surface = SDL_LoadBMP("Data/player.bmp");
-
     // Init player
     player.position.x = PLAYER_STARTING_X;
     player.position.y = PLAYER_STARTING_Y;

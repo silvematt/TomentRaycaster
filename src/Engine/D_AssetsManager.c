@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "R_Rendering.h"
 #include "A_Application.h"
 #include "D_AssetsManager.h"
 #include "U_Utilities.h"
@@ -96,6 +97,7 @@ void D_InitAssetManager(void)
     D_InitLoadFloors();
     D_InitLoadCeilings();
     D_InitLoadSprites();
+    D_InitFontSheets();
 
     D_CloseArchs();
 }
@@ -339,6 +341,94 @@ void D_InitLoadSprites(void)
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
+}
+
+
+void D_InitFontSheets(void)
+{
+    // Convert all the surfaces that we will load in the same format as the win_surface
+    SDL_Surface *temp1;     // Surface
+    SDL_RWops* sdlWops;     // Structure to read bytes
+    int offset;             // Offset in the img.archt
+
+    SDL_Surface* glyphSurface; // Contains a single glyph, used to calculate glyphWidth
+    glyphSurface = SDL_CreateRGBSurfaceWithFormat(0, 32, 32, 24, win_surface->format->format);
+    SDL_FillRect(glyphSurface, NULL, r_transparencyColor);
+
+    tomentdatapack.fontsheetsLenghth = 1; // Set length
+
+    // Load BLCKCRY font
+    int width = 32;
+    int nHorElements = 16;
+    int nVerElements = 6;
+    tomentdatapack.fontsheets[FONT_BLKCRY].width = width;
+    tomentdatapack.fontsheets[FONT_BLKCRY].numHorElements = nHorElements;
+    tomentdatapack.fontsheets[FONT_BLKCRY].numVerElements = nVerElements;
+
+    // Load sheet and put it into texture
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_BLKCRY_TEXT_SHEET].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_BLKCRY_TEXT_SHEET].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_BLKCRY_TEXT_SHEET))
+    {
+        tomentdatapack.fontsheets[FONT_BLKCRY].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.fontsheets[FONT_BLKCRY].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        tomentdatapack.fontsheets[FONT_BLKCRY].texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    SDL_FreeSurface(temp1);
+
+
+    // Calculate Glyph Width (used for spacing)
+    SDL_Rect glyphSurfaceRect = {0, 0, tomentdatapack.fontsheets[FONT_BLKCRY].width, tomentdatapack.fontsheets[FONT_BLKCRY].width};
+    // For each element
+    for(int y = 0; y < nVerElements; y++)
+    {
+        for(int x = 0; x < nHorElements; x++)
+            {
+                // Glyph to analyze
+                SDL_Rect srcRect = {x*width, y*width, width, width};
+                // Put it in the glyphSurface
+                SDL_BlitSurface(tomentdatapack.fontsheets[FONT_BLKCRY].texture, &srcRect, glyphSurface, NULL);
+
+                // Analyze the glyphSurface and calculate width by reading each line of the glyph and selecting the biggest distance of pixels between the first found and last found
+                int start = 0, end = 0, length = 0;
+                // For each column of the current glyph element
+                for(int gY = 0; gY < width; gY++)
+                {
+                    bool firstPixel = false;
+                    // For each line calculate the width
+                    for(int gX = 0; gX < width; gX++)
+                        {
+                            Uint32 pixel = R_GetPixelFromSurface(glyphSurface, gX, gY);
+                            if(pixel != r_transparencyColor)
+                            {
+                                // If it's the first time we found a non-transparent pixel
+                                if(firstPixel == false)
+                                {
+                                    start = end = gX;
+                                    firstPixel = true;
+                                }
+                                else
+                                    end = gX;
+                            }
+
+                            // Length is calculated on based on distance, +1 because we're counting the pixels 
+                            if((end - start) != 0 && length < (end - start)+1)
+                                length = (end - start)+1;
+
+                            // Save length in 
+                            tomentdatapack.fontsheets[FONT_BLKCRY].glyphsWidth[y][x] = length+1;   // +1 because for this font it looks better if each character is given an extra space
+                        }                    
+                }
+
+                // Override length of first character, it is always the space
+                tomentdatapack.fontsheets[FONT_BLKCRY].glyphsWidth[0][0] = width/4;
+
+                // Reset the glyphSurface
+                SDL_FillRect(glyphSurface, NULL, r_transparencyColor);
+            }
+    }
 }
 
 //-------------------------------------

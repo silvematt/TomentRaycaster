@@ -65,9 +65,6 @@ extern unsigned visiblePillarsLength;
 extern uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
 extern uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
 
-extern unsigned int* screenBuffers[5];  // Buffers for the screen renderer
-extern SDL_Rect dirtybox;               // Marks the dirty pixels, used for optimization
-
 // Wall heights, saved for each x
 extern float wallHeights[PROJECTION_PLANE_WIDTH];
 
@@ -86,10 +83,6 @@ void R_InitRendering(void);
 //-------------------------------------
 void R_ComposeFrame(void);
 
-//-------------------------------------
-// Reads the framebuffer transfers to win_surface
-//-------------------------------------
-void R_UpdateNoBlit(void);
 
 //-------------------------------------
 // Updates the screen to the win_surface
@@ -104,12 +97,12 @@ Uint32 R_GetPixelFromSurface(SDL_Surface *surface, int x, int y);
 //-------------------------------------
 // Given an SDL_Surface, extracts the pixels of it and puts them in the selected framebuffer
 //-------------------------------------
-void R_BlitIntoBuffer(int buffer, SDL_Surface* sur, SDL_Rect* pos);
+void R_BlitIntoScreen(SDL_Rect* size, SDL_Surface* sur, SDL_Rect* pos);
 
 //-------------------------------------
 // Given a color, extracts draws it in the selected framebuffer
 //-------------------------------------
-void R_BlitColorIntoBuffer(int buffer, int color, SDL_Rect* pos);
+void R_BlitColorIntoScreen(int color, SDL_Rect* pos);
 
 //-------------------------------------
 // Draw lines using Bresenham's 
