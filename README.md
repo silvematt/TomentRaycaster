@@ -20,6 +20,7 @@ Features:
 - Support for Animated Sprites
 - Shading and Map Lighting
 - Text Rendering of Bitmap Fonts
+- Game Menus
 - Load map from file
 - Assets Manager
 - Packed data in custom files (.archt) format [GENERATED WITH: [TomentARCH](https://github.com/silvematt/TomentARCH)]
