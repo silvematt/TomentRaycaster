@@ -9,6 +9,10 @@ SDL_Surface* win_surface;
 int win_width;
 unsigned int* pixels;
 
+// Game State
+bool isInMenu;       // True if the player is in a menu
+bool isInGame;       // True if the player is in game
+
 //-------------------------------------
 // Initializes the application and subsystems
 //-------------------------------------
@@ -29,6 +33,17 @@ void A_InitApplication(void)
     
     // Init Renderer
     R_InitRendering();
+
+    // Define entry state for the application
+    A_ChangeState(GSTATE_MENU);
+}
+
+//-------------------------------------
+// Engine tick 
+//-------------------------------------
+void A_EngineLoop(void)
+{
+    
 }
 
 //-------------------------------------
@@ -37,4 +52,12 @@ void A_InitApplication(void)
 void A_QuitApplication(void)
 {
     SDL_Quit();
+}
+
+//-------------------------------------
+// Change State 
+//-------------------------------------
+void A_ChangeState(gamestate_e newState)
+{
+    application.gamestate = newState;
 }

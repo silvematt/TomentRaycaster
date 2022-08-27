@@ -79,11 +79,24 @@ typedef struct fontSheet_s
     int glyphsWidth[FONT_MAX_ELEMENTS_HEIGHT][FONT_MAX_ELEMENTS_WIDTH];        // The actual used width of each glyph, used for text-spacing
 } fontsheet_t;
 
+typedef struct menuAssets_s
+{
+    SDL_Surface* texture;
+} menuAssets_t;
+
 // All Fonts IDS
 typedef enum fontsID_e
 {
     FONT_BLKCRY = 0,
 } fontsID_t;
+
+// Menu Assets IDS
+typedef enum menuAssetsID_e
+{
+    M_ASSET_SELECT_CURSOR = 0,
+    M_ASSET_TITLE,
+} menuAssetsID_e;
+
 
 /* object_t Flags
 
@@ -138,6 +151,8 @@ typedef enum imgIDs_e
     IMG_ID_S_Barrel1,
     IMG_ID_S_Campfire,
     IMG_ID_BLKCRY_TEXT_SHEET,
+    IMG_ID_MENU_SELECT_CURSOR,
+    IMG_ID_MENU_TITLE
 } imgIDs_e;
 
 typedef struct archt_s
@@ -154,6 +169,26 @@ typedef struct archt_s
 // The whole datapack of the game
 typedef struct tomentdatapack_s
 {
+    // -------------------------------
+    // Archives
+    // -------------------------------
+
+    // img.archt
+    archt_t IMGArch;
+
+    // Font databse
+    fontsheet_t fontsheets[OBJECTARRAY_DEFAULT_SIZE];   // All fonts
+    unsigned fontsheetsLenghth;
+
+    // -------------------------------
+    // Menu assets
+    // -------------------------------
+    menuAssets_t menuAssets[OBJECTARRAY_DEFAULT_SIZE];
+
+    // -------------------------------
+    // In Game Assets
+    // -------------------------------
+
     // Default Engine's Objects
     object_t* enginesDefaults[OBJECTARRAY_DEFAULT_SIZE];
     unsigned enginesDefaultsLength;
@@ -174,14 +209,6 @@ typedef struct tomentdatapack_s
     // Contains the value of the length of the spreadsheet for each sprite delcared
     // Access by spritesObjectID_e
     int spritesSheetsLenghtTable[OBJECTARRAY_DEFAULT_SIZE];
-
-    // img.archt
-    archt_t IMGArch;
-
-    // Font databse
-    fontsheet_t fontsheets[OBJECTARRAY_DEFAULT_SIZE];   // All fonts
-    unsigned fontsheetsLenghth;
-
 } tomentdatapack_t;
     
 extern tomentdatapack_t tomentdatapack;
@@ -206,13 +233,15 @@ void D_OpenArchs(void);
 //-------------------------------------
 void D_CloseArchs(void);
 
+void D_InitFontSheets(void);
+void D_InitMenuAssets(void);
+
 void D_InitEnginesDefaults(void);
 void D_InitAssetManager(void);
 void D_InitLoadWalls(void);
 void D_InitLoadFloors(void);
 void D_InitLoadCeilings(void);
 void D_InitLoadSprites(void);
-void D_InitFontSheets(void);
 
 //-------------------------------------
 // Sets the object for the given parameters

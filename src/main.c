@@ -26,17 +26,18 @@
 
 int main(int argc, char* argv[])
 {
+    // Absolute initializations
     A_InitApplication();
-    
     D_InitAssetManager();
-
-    G_InitGame();
-
+    
+    // Loop
     while(!application.quit)
     {
+        A_EngineLoop();
         G_GameLoop();
     }
 
+    // Exit
     A_QuitApplication();
     return 0;
 }

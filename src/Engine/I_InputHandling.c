@@ -8,6 +8,7 @@ playerinput_t playerinput;
 void I_HandleInput(void)
 {
     const Uint8* keyboard_state = SDL_GetKeyboardState(NULL);
+    const Uint32 mouse_state = SDL_GetMouseState(NULL, NULL);
 
     SDL_Event e;
     
@@ -18,12 +19,15 @@ void I_HandleInput(void)
             case SDL_QUIT:
                 application.quit = true;
             break;
-
         }
 
-        G_PlayerHandleInputEvent(&e);
+        if(application.gamestate == GSTATE_GAME)
+            G_InGameInputHandlingEvent(&e);
+        else
+            G_InMenuInputHandling(&e);
     }
 
     // Send Input event to subsystems
-    G_PlayerHandleInput(keyboard_state, &e);
+    if(application.gamestate == GSTATE_GAME)
+        G_InGameInputHandling(keyboard_state, &e);
 }

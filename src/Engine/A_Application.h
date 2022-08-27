@@ -19,15 +19,17 @@
 // Holds the current game state
 typedef enum gamestate_e
 {
-    dev = 0
-} gamestate_t;
+    dev = 0,
+    GSTATE_MENU,
+    GSTATE_GAME
+} gamestate_e;
 
 // Fundamental information about the application
 typedef struct app_s
 {
     SDL_Window* win;
     bool quit;
-    gamestate_t gamestate;
+    gamestate_e gamestate;
 } app_t;
 
 // Declarations
@@ -37,7 +39,6 @@ extern SDL_Surface* win_surface;    // the surface of the window
 extern int win_width;               // win_surface->w
 extern unsigned int* pixels;        // pixels of the surface
 
-
 //-------------------------------------
 // Initializes the application 
 //-------------------------------------
@@ -46,11 +47,16 @@ void A_InitApplication(void);
 //-------------------------------------
 // Tick 
 //-------------------------------------
-void A_GameLoop(void);
+void A_EngineLoop(void);
 
 //-------------------------------------
-// Quit Applicaiton 
+// Quit Application 
 //-------------------------------------
 void A_QuitApplication(void);
+
+//-------------------------------------
+// Change State 
+//-------------------------------------
+void A_ChangeState(gamestate_e newState);
 
 #endif

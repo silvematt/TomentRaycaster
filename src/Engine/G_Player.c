@@ -36,6 +36,9 @@ void G_InitPlayer(void)
 
     // Rect for minimap
     SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
+
+    // Do one tick
+    G_PlayerTick();
 }
 
 //-------------------------------------
@@ -131,7 +134,7 @@ void G_PlayerTick(void)
 //-------------------------------------
 // Handles Input from the player 
 //-------------------------------------
-void G_PlayerHandleInput(const uint8_t* keyboardState, SDL_Event* e)
+void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
 {
     // Left And right turn
     if(keyboardState[SDL_SCANCODE_LEFT])
@@ -164,7 +167,7 @@ void G_PlayerHandleInput(const uint8_t* keyboardState, SDL_Event* e)
 //-------------------------------------
 // Handles Input from the player while doing the Event Input Handling
 //-------------------------------------
-void G_PlayerHandleInputEvent(SDL_Event* e)
+void G_InGameInputHandlingEvent(SDL_Event* e)
 {
     switch(e->type)
     {
@@ -198,6 +201,11 @@ void G_PlayerHandleInputEvent(SDL_Event* e)
                 {
                     printf("Tapped a wall\n");
                 }
+            }
+
+            if(e->key.keysym.sym == SDLK_ESCAPE)
+            {
+                A_ChangeState(GSTATE_MENU);
             }
 
         break;

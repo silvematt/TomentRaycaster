@@ -5,7 +5,7 @@
 
 #include "A_Application.h"
 #include "G_Player.h"
-
+#include "G_MainMenu.h"
 
 // -------------------------------
 // Holds the player's input

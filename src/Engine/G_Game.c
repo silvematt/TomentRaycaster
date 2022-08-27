@@ -22,14 +22,21 @@ float doorpositions[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the
 void G_InitGame(void)
 {
     // Initialize game
-    gameTimer = U_TimerCreateNew();
+    if(gameTimer == NULL)
+        gameTimer = U_TimerCreateNew();
+
     gameTimer->Init(gameTimer);
 
-    // Initialize the rest
+    // Initialize Doors //
+    memset(doorstate, 0, MAP_HEIGHT*MAP_WIDTH*sizeof(int));
+    
+    // All doors start closed
+    for(int y = 0; y < MAP_HEIGHT; y++)
+        for(int x = 0; x < MAP_WIDTH; x++)
+            doorpositions[y][x] = DOOR_FULLY_CLOSED;
+
     G_PhysicsInit();
-
     M_LoadMapAsCurrent("devmap");
-
     G_InitPlayer();
 
     gameTimer->Start(gameTimer);
@@ -40,16 +47,30 @@ void G_InitGame(void)
 //-------------------------------------
 void G_GameLoop(void)
 {
+    switch(application.gamestate)
+    {
+        case GSTATE_MENU:
+            G_StateMenuLoop();
+            break;
+
+        case GSTATE_GAME:
+            G_StateGameLoop();
+            break;
+    }
+}
+
+
+void G_StateGameLoop(void)
+{
     curTime = gameTimer->GetTicks(gameTimer);
     
     // Handle input
     I_HandleInput();
 
     G_PhysicsTick();
-    
+
     // Do stuff
     G_PlayerTick();
-
     G_UpdateDoors();
 
     G_PhysicsEndTick();
@@ -62,6 +83,21 @@ void G_GameLoop(void)
     R_FinishUpdate();
 
     oldTime = curTime;
+}
+
+void G_StateMenuLoop(void)
+{
+    // Handles input
+    I_HandleInput();
+
+    // Clears current render
+    SDL_FillRect(win_surface, NULL, r_blankColor);
+
+    // Creates the frame
+    R_ComposeFrame();
+
+    // Displays it on the screen
+    R_FinishUpdate();
 }
 
 //-------------------------------------

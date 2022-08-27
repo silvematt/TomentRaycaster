@@ -92,15 +92,51 @@ void D_InitAssetManager(void)
 
     D_OpenArchs();
 
+    D_InitMenuAssets();
+    D_InitFontSheets();
+
     D_InitEnginesDefaults();
     D_InitLoadWalls();
     D_InitLoadFloors();
     D_InitLoadCeilings();
     D_InitLoadSprites();
-    D_InitFontSheets();
 
     D_CloseArchs();
 }
+
+void D_InitMenuAssets(void)
+{    
+    // Create Objects
+
+    // Fill objects
+    // Convert all the surfaces that we will load in the same format as the win_surface
+    SDL_Surface *temp1;     // Surface
+    SDL_RWops* sdlWops;     // Structure to read bytes
+    int offset;             // Offset in the img.archt
+
+    // MENU_SELECT_CURSOR
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_MENU_SELECT_CURSOR].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MENU_SELECT_CURSOR].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_SELECT_CURSOR))
+        tomentdatapack.menuAssets[M_ASSET_SELECT_CURSOR].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_SetColorKey(tomentdatapack.menuAssets[M_ASSET_SELECT_CURSOR].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_FreeSurface(temp1);
+
+    // MENU_TITLE
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_MENU_TITLE].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MENU_TITLE].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_TITLE))
+        tomentdatapack.menuAssets[M_ASSET_TITLE].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_SetColorKey(tomentdatapack.menuAssets[M_ASSET_TITLE].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_FreeSurface(temp1);
+}
+
 
 void D_InitEnginesDefaults(void)
 {    

@@ -17,24 +17,35 @@ void T_DisplayText(int fontID, char* text, int x, int y)
     // Width of the font
     int width = tomentdatapack.fontsheets[fontID].width;
 
+    int curY = y; // y can be affected by \n
+
     // While we're not finished drawing
     while(text[curCIndex] != '\0')
     {
-        // Get the char we have to draw
-        curC = text[curCIndex];
+        if(text[curCIndex] == '\n')
+        {
+            curY += width;
+            curDrawingX = x;
+            curCIndex++;
+        }
+        else
+        {
+            // Get the char we have to draw
+            curC = text[curCIndex];
 
-        // Translate to the sprite sheet coords to get the correct texture
-        int texX, texY;
-        T_TranslateASCIIToSpriteSheetCoords(curC, &texX, &texY);
+            // Translate to the sprite sheet coords to get the correct texture
+            int texX, texY;
+            T_TranslateASCIIToSpriteSheetCoords(curC, &texX, &texY);
 
-        // Blit it on the screen
-        SDL_Rect screenPos = {curDrawingX, y, width, width};
-        SDL_Rect size = {(texX * width), (texY * width), width, width};
-        R_BlitIntoScreen(&size, tomentdatapack.fontsheets[fontID].texture, &screenPos);
+            // Blit it on the screen
+            SDL_Rect screenPos = {curDrawingX, curY, width, width};
+            SDL_Rect size = {(texX * width), (texY * width), width, width};
+            R_BlitIntoScreen(&size, tomentdatapack.fontsheets[fontID].texture, &screenPos);
 
-        // Next
-        curCIndex++;
-        curDrawingX += tomentdatapack.fontsheets[fontID].glyphsWidth[texY][texX];
+            // Next
+            curCIndex++;
+            curDrawingX += tomentdatapack.fontsheets[fontID].glyphsWidth[texY][texX];
+        }
     }
 }
 
@@ -53,24 +64,35 @@ void T_DisplayTextScaled(int fontID, char* text, int x, int y, float scaleFactor
     // Width of the font
     int width = tomentdatapack.fontsheets[fontID].width;
 
+    int curY = y; // y can be affected by \n
+
     // While we're not finished drawing
     while(text[curCIndex] != '\0')
     {
-        // Get the char we have to draw
-        curC = text[curCIndex];
+        if(text[curCIndex] == '\n')
+        {
+            curY += width * scaleFactor;
+            curDrawingX = x;
+            curCIndex++;
+        }
+        else
+        {
+            // Get the char we have to draw
+            curC = text[curCIndex];
 
-        // Translate to the sprite sheet coords to get the correct texture
-        int texX, texY;
-        T_TranslateASCIIToSpriteSheetCoords(curC, &texX, &texY);
+            // Translate to the sprite sheet coords to get the correct texture
+            int texX, texY;
+            T_TranslateASCIIToSpriteSheetCoords(curC, &texX, &texY);
 
-        // Blit it on the screen
-        SDL_Rect screenPos = {curDrawingX, y, width * scaleFactor, width* scaleFactor};
-        SDL_Rect size = {(texX * width), (texY * width), width, width};
-        R_BlitIntoScreenScaled(&size, tomentdatapack.fontsheets[fontID].texture, &screenPos);
+            // Blit it on the screen
+            SDL_Rect screenPos = {curDrawingX, curY, width * scaleFactor, width* scaleFactor};
+            SDL_Rect size = {(texX * width), (texY * width), width, width};
+            R_BlitIntoScreenScaled(&size, tomentdatapack.fontsheets[fontID].texture, &screenPos);
 
-        // Next
-        curCIndex++;
-        curDrawingX += tomentdatapack.fontsheets[fontID].glyphsWidth[texY][texX] * scaleFactor;
+            // Next
+            curCIndex++;
+            curDrawingX += tomentdatapack.fontsheets[fontID].glyphsWidth[texY][texX] * scaleFactor;
+        }
     }
 }
 

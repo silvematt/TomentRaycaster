@@ -1,11 +1,11 @@
+// Header Guard
+#ifndef TIMER_H_INCLUDED
+#define TIMER_H_INCLUDED
+
 #include <stdio.h>
 #include <stdbool.h>
 
 #include "../include/SDL2/SDL.h"
-
-// Header Guard
-#ifndef TIMER_H_INCLUDED
-#define TIMER_H_INCLUDED
 
 // -------------------------------
 // Timer

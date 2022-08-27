@@ -10,10 +10,10 @@
 #include "D_AssetsManager.h"
 #include "U_Utilities.h"
 #include "T_TextRendering.h"
+#include "G_MainMenu.h"
 
 uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
 uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
-
 uint32_t r_debugColor;
 
 // Wall height
@@ -57,14 +57,6 @@ void R_InitRendering(void)
 
     // Clear initial render
     R_ClearRendering();
-
-    // Initialize Doors //
-    memset(doorstate, 0, (MAP_HEIGHT*MAP_WIDTH));
-    
-    // All doors start closed
-    for(int y = 0; y < MAP_HEIGHT; y++)
-        for(int x = 0; x < MAP_WIDTH; x++)
-            doorpositions[y][x] = DOOR_FULLY_CLOSED;
 }
 
 
@@ -89,7 +81,12 @@ void R_ComposeFrame(void)
 {
     switch(application.gamestate)
     {
-        case dev:
+        case GSTATE_MENU:
+            G_RenderCurrentMenuBackground();
+            G_RenderCurrentMenu();
+        break;
+
+        case GSTATE_GAME:
             R_RenderDev();
         break;
     }

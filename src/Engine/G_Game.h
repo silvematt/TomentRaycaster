@@ -30,9 +30,13 @@ extern float doorpositions[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position
 void G_InitGame(void);
 
 //-------------------------------------
-// Tick 
+// Abs Tick 
 //-------------------------------------
 void G_GameLoop(void);
+
+void G_StateMenuLoop(void);
+
+void G_StateGameLoop(void);
 
 //-------------------------------------
 // Update Doors by moving them in base of their timer
