@@ -60,4 +60,15 @@ void A_QuitApplication(void)
 void A_ChangeState(gamestate_e newState)
 {
     application.gamestate = newState;
+
+    switch(application.gamestate)
+    {
+        case GSTATE_MENU:
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+            break;
+
+        case GSTATE_GAME:
+            SDL_SetRelativeMouseMode(SDL_TRUE);
+            break;
+    }
 }

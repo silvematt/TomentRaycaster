@@ -30,7 +30,7 @@ void G_InitPlayer(void)
     player.position.x = PLAYER_STARTING_X;
     player.position.y = PLAYER_STARTING_Y;
     player.angle = 0.0f;
-
+    player.z = 32;
     player.gridPosition.x = PLAYER_STARTING_GRID_X;
     player.gridPosition.y = PLAYER_STARTING_GRID_Y;
 
@@ -51,7 +51,8 @@ void G_PlayerTick(void)
     player.gridPosition.y = ((player.position.y+PLAYER_CENTER_FIX) / TILE_SIZE);
     
     //player.angle = M_PI / 4;
-    player.angle += playerinput.input.x * PLAYER_ROT_SPEED * deltaTime;
+    player.angle += (playerinput.input.x * PLAYER_ROT_SPEED) * deltaTime;
+    playerinput.input.x = 0; // kill the mouse movement after applying rot
     
     FIX_ANGLES(player.angle);
 
@@ -90,7 +91,7 @@ void G_PlayerTick(void)
     // Collision detection (Walls and solid sprites)
     if(player.deltaPos.x > 0)
     {
-        int coll = currentMap.collisionMap[player.gridPosition.y][player.gridPosition.x+1];
+        int coll = G_CheckCollisionMap(player.level, player.gridPosition.y, player.gridPosition.x+1);
 
         // Player is moving right, check if it's too right
         if(coll != 0 && playerXCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // Wall check
@@ -98,7 +99,7 @@ void G_PlayerTick(void)
     }
     else
     {
-        int coll  = currentMap.collisionMap[player.gridPosition.y][player.gridPosition.x-1];
+        int coll  = G_CheckCollisionMap(player.level, player.gridPosition.y, player.gridPosition.x-1);
 
         // Player is moving left
         if(coll != 0 && playerXCellOffset < PLAYER_MIN_DIST_TO_WALL) // Wall check
@@ -107,7 +108,7 @@ void G_PlayerTick(void)
 
     if(player.deltaPos.y < 0)
     {
-        int coll  = currentMap.collisionMap[player.gridPosition.y-1][player.gridPosition.x];
+        int coll  = G_CheckCollisionMap(player.level, player.gridPosition.y-1, player.gridPosition.x);
 
         // Player is going up
         if(coll != 0 && playerYCellOffset < PLAYER_MIN_DIST_TO_WALL) // Wall check
@@ -115,7 +116,7 @@ void G_PlayerTick(void)
     }
     else
     {
-        int coll  = currentMap.collisionMap[player.gridPosition.y+1][player.gridPosition.x];
+        int coll  = G_CheckCollisionMap(player.level, player.gridPosition.y+1, player.gridPosition.x);
 
         // Player is going down
         if(coll != 0 && playerYCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // Wall check
@@ -125,6 +126,10 @@ void G_PlayerTick(void)
     // Move Player normally
     player.position.x += player.deltaPos.x;
     player.position.y += player.deltaPos.y;
+
+    // Clamp player in map boundaries
+    player.position.x = SDL_clamp(player.position.x, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
+    player.position.y = SDL_clamp(player.position.y, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
 
     // Compute centered pos for calculations
     player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
@@ -136,18 +141,10 @@ void G_PlayerTick(void)
 //-------------------------------------
 void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
 {
-    // Left And right turn
-    if(keyboardState[SDL_SCANCODE_LEFT])
-        playerinput.input.x -= 1.0f; 
-    else if(keyboardState[SDL_SCANCODE_RIGHT])
-        playerinput.input.x += 1.0f; 
-    else
-        playerinput.input.x = 0.0f; 
-
     // Forward / backwards
-    if(keyboardState[SDL_SCANCODE_UP])
+    if(keyboardState[SDL_SCANCODE_UP] || keyboardState[SDL_SCANCODE_W])
         playerinput.input.y += 1.0f;
-    else if(keyboardState[SDL_SCANCODE_DOWN])
+    else if(keyboardState[SDL_SCANCODE_DOWN] || keyboardState[SDL_SCANCODE_S])
         playerinput.input.y -= 1.0f;
     else
         playerinput.input.y = 0.0f;
@@ -160,7 +157,15 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
     else
         playerinput.strafe.x = 0.0f; 
 
-    playerinput.input.x = SDL_clamp(playerinput.input.x, -1.0f , 1.0f);
+    if(keyboardState[SDL_SCANCODE_LCTRL])
+        if(player.z > 1)
+            player.z -= 1.0f; 
+
+    if(keyboardState[SDL_SCANCODE_LSHIFT])
+        if(player.z < 191)
+            player.z += 1.0f; 
+
+    //playerinput.input.x = SDL_clamp(playerinput.input.x, -1.0f , 1.0f);
     playerinput.input.y = SDL_clamp(playerinput.input.y, -1.0f , 1.0f);
 }
 
@@ -171,23 +176,27 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
 {
     switch(e->type)
     {
+        case SDL_MOUSEMOTION:
+            playerinput.input.x = e->motion.xrel;
+            break;
+
         case SDL_KEYUP:
             // Space player's interacions
             if(e->key.keysym.sym == SDLK_SPACE)
             {
                 // Interactions
-                objectType_e objType = currentMap.objectTMap[player.inFrontGridPosition.y][player.inFrontGridPosition.x];
+                objectType_e objType = G_GetFromObjectTMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
 
                 if(objType == ObjT_Door)
                 {
                     printf("Tapped a door\n");
 
                     // Open/Close
-                    if(doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Closed || doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Closing)
-                        doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] = DState_Opening;
+                    if(G_GetDoorState(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Closed || G_GetDoorState(player.level,player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Closing)
+                        G_SetDoorState(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, DState_Opening);
                     
-                    else if(doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Open || doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] == DState_Opening)
-                        doorstate[player.inFrontGridPosition.y][player.inFrontGridPosition.x] = DState_Closing;
+                    else if(G_GetDoorState(player.level,player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Open || G_GetDoorState(player.level,player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Opening)
+                        G_SetDoorState(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, DState_Closing);
                 }
                 else if(objType == ObjT_Empty)
                 {
@@ -208,6 +217,104 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 A_ChangeState(GSTATE_MENU);
             }
 
+            if(e->key.keysym.sym == SDLK_F1)
+            {
+                debugRendering = !debugRendering;
+            }
+
         break;
+    }
+}
+
+//-------------------------------------
+// Checks the collision map at player's level and returns what found
+//-------------------------------------
+int G_CheckCollisionMap(int level, int y, int x)
+{
+    switch(level)
+    {
+        case 0:
+            return currentMap.collisionMapLevel0[y][x];
+
+        case 1:
+            return currentMap.collisionMapLevel1[y][x];
+
+        case 2:
+            return currentMap.collisionMapLevel2[y][x];
+    }
+}
+
+//-------------------------------------
+// Checks door state map at player's level and returns what found
+//-------------------------------------
+int G_GetDoorState(int level, int y, int x)
+{
+    switch(level)
+    {
+        case 0:
+            return doorstateLevel0[y][x];
+
+        case 1:
+            return doorstateLevel1[y][x];
+
+        case 2:
+            return doorstateLevel2[y][x];
+    }
+}
+
+//-------------------------------------
+// Checks door state map at player's level and returns what found
+//-------------------------------------
+int G_SetDoorState(int level, int y, int x, doorstate_e state)
+{
+    switch(level)
+    {
+        case 0:
+            doorstateLevel0[y][x] = state;
+            break;
+
+        case 1:
+            doorstateLevel1[y][x] = state;
+            break;
+
+        case 2:
+            doorstateLevel2[y][x] = state;
+            break;
+    }
+}
+
+//-------------------------------------
+// Checks door state map at player's level and returns what found
+//-------------------------------------
+float G_GetDoorPosition(int level, int y, int x)
+{
+    switch(level)
+    {
+        case 0:
+            return doorpositionsLevel0[y][x];
+
+        case 1:
+            return doorpositionsLevel1[y][x];
+
+        case 2:
+            return doorpositionsLevel2[y][x];
+    }
+}
+
+//-------------------------------------
+// Checks object T map at player's level and returns what found
+//-------------------------------------
+int G_GetFromObjectTMap(int level, int y, int x)
+{
+    switch(level)
+    {
+        case 0:
+            return currentMap.objectTMapLevel0[y][x];
+
+        case 1:
+            return currentMap.objectTMapLevel1[y][x];
+
+        case 2:
+            return currentMap.objectTMapLevel2[y][x];
     }
 }

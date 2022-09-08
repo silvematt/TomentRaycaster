@@ -13,8 +13,13 @@ double curTime = 0;
 double oldTime = 0;
 
 // Doors
-int doorstate[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, closed, opening, closing)
-float doorpositions[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
+int doorstateLevel0[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, closed, opening, closing)
+int doorstateLevel1[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, closed, opening, closing)
+int doorstateLevel2[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, closed, opening, closing)
+
+float doorpositionsLevel0[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
+float doorpositionsLevel1[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
+float doorpositionsLevel2[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 
 //-------------------------------------
 // Initialize game related stuff 
@@ -28,12 +33,18 @@ void G_InitGame(void)
     gameTimer->Init(gameTimer);
 
     // Initialize Doors //
-    memset(doorstate, 0, MAP_HEIGHT*MAP_WIDTH*sizeof(int));
-    
+    memset(doorstateLevel0, 0, MAP_HEIGHT*MAP_WIDTH*sizeof(int));
+    memset(doorstateLevel1, 0, MAP_HEIGHT*MAP_WIDTH*sizeof(int));
+    memset(doorstateLevel2, 0, MAP_HEIGHT*MAP_WIDTH*sizeof(int));
+
     // All doors start closed
     for(int y = 0; y < MAP_HEIGHT; y++)
         for(int x = 0; x < MAP_WIDTH; x++)
-            doorpositions[y][x] = DOOR_FULLY_CLOSED;
+        {
+            doorpositionsLevel0[y][x] = DOOR_FULLY_CLOSED;
+            doorpositionsLevel1[y][x] = DOOR_FULLY_CLOSED;
+            doorpositionsLevel2[y][x] = DOOR_FULLY_CLOSED;
+        }
 
     G_PhysicsInit();
     M_LoadMapAsCurrent("devmap");
@@ -108,40 +119,125 @@ void G_UpdateDoors(void)
     for(int y = 0; y < MAP_HEIGHT; y++)
         for(int x = 0; x < MAP_WIDTH; x++)
             {
+                // LEVEL 0 
                 // If the door is closed or open, continue
-                if(doorstate[y][x] == DState_Closed || doorstate[y][x] == DState_Open)
-                    continue;
+                if(doorstateLevel0[y][x] == DState_Closed || doorstateLevel0[y][x] == DState_Open)
+                {
+                    // continue
+                }
                 else
                 {
                     // Open the door
-                    if(doorstate[y][x] == DState_Opening)
+                    if(doorstateLevel0[y][x] == DState_Opening)
                     {
-                        if(doorpositions[y][x] > DOOR_FULLY_OPENED &&
-                            doorpositions[y][x] - DOOR_OPEN_SPEED * deltaTime > DOOR_FULLY_OPENED) // check if a step is too big
-                            doorpositions[y][x] -= DOOR_OPEN_SPEED * deltaTime;
+                        if(doorpositionsLevel0[y][x] > DOOR_FULLY_OPENED &&
+                            doorpositionsLevel0[y][x] - DOOR_OPEN_SPEED * deltaTime > DOOR_FULLY_OPENED) // check if a step is too big
+                            doorpositionsLevel0[y][x] -= DOOR_OPEN_SPEED * deltaTime;
                         else
                         {
                             // Door opened
-                            doorpositions[y][x] = DOOR_FULLY_OPENED;
-                            doorstate[y][x] = DState_Open;
+                            doorpositionsLevel0[y][x] = DOOR_FULLY_OPENED;
+                            doorstateLevel0[y][x] = DState_Open;
 
                             // Update collision map
-                            currentMap.collisionMap[y][x] = 0;
+                            currentMap.collisionMapLevel0[y][x] = 0;
                         }
                     }
-                    else if(doorstate[y][x] == DState_Closing)
+                    else if(doorstateLevel0[y][x] == DState_Closing)
                     {
-                        if(doorpositions[y][x] < DOOR_FULLY_CLOSED &&
-                            doorpositions[y][x] + DOOR_CLOSE_SPEED * deltaTime < DOOR_FULLY_CLOSED) // check if step is too big
-                            doorpositions[y][x] += DOOR_CLOSE_SPEED * deltaTime;
+                        if(doorpositionsLevel0[y][x] < DOOR_FULLY_CLOSED &&
+                            doorpositionsLevel0[y][x] + DOOR_CLOSE_SPEED * deltaTime < DOOR_FULLY_CLOSED) // check if step is too big
+                            doorpositionsLevel0[y][x] += DOOR_CLOSE_SPEED * deltaTime;
                         else
                         {
                             // Door closed
-                            doorpositions[y][x] = DOOR_FULLY_CLOSED;
-                            doorstate[y][x] = DState_Closed;
+                            doorpositionsLevel0[y][x] = DOOR_FULLY_CLOSED;
+                            doorstateLevel0[y][x] = DState_Closed;
 
                             // Update collision map
-                            currentMap.collisionMap[y][x] = 1;
+                            currentMap.collisionMapLevel0[y][x] = 1;
+                        }
+                    }
+                }
+
+                // LEVEL 1
+                // If the door is closed or open, continue
+                if(doorstateLevel1[y][x] == DState_Closed || doorstateLevel1[y][x] == DState_Open)
+                {
+                    // continue
+                }
+                else
+                {
+                    // Open the door
+                    if(doorstateLevel1[y][x] == DState_Opening)
+                    {
+                        if(doorpositionsLevel1[y][x] > DOOR_FULLY_OPENED &&
+                            doorpositionsLevel1[y][x] - DOOR_OPEN_SPEED * deltaTime > DOOR_FULLY_OPENED) // check if a step is too big
+                            doorpositionsLevel1[y][x] -= DOOR_OPEN_SPEED * deltaTime;
+                        else
+                        {
+                            // Door opened
+                            doorpositionsLevel1[y][x] = DOOR_FULLY_OPENED;
+                            doorstateLevel1[y][x] = DState_Open;
+
+                            // Update collision map
+                            currentMap.collisionMapLevel1[y][x] = 0;
+                        }
+                    }
+                    else if(doorstateLevel1[y][x] == DState_Closing)
+                    {
+                        if(doorpositionsLevel1[y][x] < DOOR_FULLY_CLOSED &&
+                            doorpositionsLevel1[y][x] + DOOR_CLOSE_SPEED * deltaTime < DOOR_FULLY_CLOSED) // check if step is too big
+                            doorpositionsLevel1[y][x] += DOOR_CLOSE_SPEED * deltaTime;
+                        else
+                        {
+                            // Door closed
+                            doorpositionsLevel1[y][x] = DOOR_FULLY_CLOSED;
+                            doorstateLevel1[y][x] = DState_Closed;
+
+                            // Update collision map
+                            currentMap.collisionMapLevel1[y][x] = 1;
+                        }
+                    }
+                }
+
+                // LEVEL 2
+                // If the door is closed or open, continue
+                if(doorstateLevel2[y][x] == DState_Closed || doorstateLevel2[y][x] == DState_Open)
+                {
+                    // continue
+                }
+                else
+                {
+                    // Open the door
+                    if(doorstateLevel2[y][x] == DState_Opening)
+                    {
+                        if(doorpositionsLevel2[y][x] > DOOR_FULLY_OPENED &&
+                            doorpositionsLevel2[y][x] - DOOR_OPEN_SPEED * deltaTime > DOOR_FULLY_OPENED) // check if a step is too big
+                            doorpositionsLevel2[y][x] -= DOOR_OPEN_SPEED * deltaTime;
+                        else
+                        {
+                            // Door opened
+                            doorpositionsLevel2[y][x] = DOOR_FULLY_OPENED;
+                            doorstateLevel2[y][x] = DState_Open;
+
+                            // Update collision map
+                            currentMap.collisionMapLevel2[y][x] = 0;
+                        }
+                    }
+                    else if(doorstateLevel2[y][x] == DState_Closing)
+                    {
+                        if(doorpositionsLevel2[y][x] < DOOR_FULLY_CLOSED &&
+                            doorpositionsLevel2[y][x] + DOOR_CLOSE_SPEED * deltaTime < DOOR_FULLY_CLOSED) // check if step is too big
+                            doorpositionsLevel2[y][x] += DOOR_CLOSE_SPEED * deltaTime;
+                        else
+                        {
+                            // Door closed
+                            doorpositionsLevel2[y][x] = DOOR_FULLY_CLOSED;
+                            doorstateLevel2[y][x] = DState_Closed;
+
+                            // Update collision map
+                            currentMap.collisionMapLevel2[y][x] = 1;
                         }
                     }
                 }

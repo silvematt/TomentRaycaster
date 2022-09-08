@@ -28,11 +28,14 @@ typedef struct sprite_s
     vector2Int_t gridPos;   // position in grid
     vector2_t pSpacePos;    // position in player space        
 
+    int level; // which level this sprite is in
+
     int spriteID;
     int sheetLength;        // For Animated objects
 
     float dist;     // distance from player
     float height;   // how big the sprite will be drawn
+
 } sprite_t;
 
 // -------------------------------
@@ -59,10 +62,10 @@ typedef struct walldata_s
     vector2Int_t gridPos;
     float distance;
     int idHit;
+    int level;
     
     // Extra Data
     // For Thin Wall Extra data is 0 = should draw this column of pixel because it is visible 1 = should not draw this column of pixel because the door is open
-    // For Pillars Extra data is (outerCeilingHeight)
     int extraData;  
 } walldata_t;
 
@@ -73,7 +76,6 @@ typedef enum drawabletype_e
 {
     DRWB_WALL = 0,
     DRWB_SPRITE,
-    DRWB_PILLAR
 } drawabletype_e;
 
 // -------------------------------

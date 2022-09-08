@@ -21,8 +21,13 @@ extern double curTime;
 extern double oldTime;
 
 // Doors
-extern int doorstate[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, closed, opening, closing)
-extern float doorpositions[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
+extern int doorstateLevel0[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, closed, opening, closing)
+extern int doorstateLevel1[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, closed, opening, closing)
+extern int doorstateLevel2[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, closed, opening, closing)
+
+extern float doorpositionsLevel0[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
+extern float doorpositionsLevel1[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
+extern float doorpositionsLevel2[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 
 //-------------------------------------
 // Initialize game related stuff 

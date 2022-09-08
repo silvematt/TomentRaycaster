@@ -76,7 +76,9 @@ void M_LoadMapAsCurrent(char* mapID)
       currentMap.name[i] = '\0';
 
       // Load Wall Map
-      I_LoadMapFromFile(currentMap.wallMap, fp);
+      I_LoadMapFromFile(currentMap.level0, fp);
+      I_LoadMapFromFile(currentMap.level1, fp);
+      I_LoadMapFromFile(currentMap.level2, fp);
 
       // Load Floor Map
       I_LoadMapFromFile(currentMap.floorMap, fp);
@@ -84,17 +86,10 @@ void M_LoadMapAsCurrent(char* mapID)
       // Load Ceiling Map
       I_LoadMapFromFile(currentMap.ceilingMap, fp);
       
-      // Load Ceiling Map
-      I_LoadMapFromFile(currentMap.spritesMap, fp);
-
-      // Load Ceiling Height Map
-      I_LoadMapFromFile(currentMap.ceilingHeightMap, fp);
-
-      // Load Orientation Height Map
-      I_LoadMapFromFile(currentMap.orientationMap, fp);
-
-      // Load Orientation Height Map
-      I_LoadMapFromFile(currentMap.pillarsMap, fp);
+      // Load Sprites Map
+      I_LoadMapFromFile(currentMap.spritesMapLevel0, fp);
+      I_LoadMapFromFile(currentMap.spritesMapLevel1, fp);
+      I_LoadMapFromFile(currentMap.spritesMapLevel2, fp);
 
       fgets(curLine, MAX_STRLEN, fp); // Get next line
       
@@ -145,6 +140,30 @@ void M_LoadMapAsCurrent(char* mapID)
 
       // Convert to float
       currentMap.floorLight = atof(tempStr);
+
+      // --------------------
+      // Read SkyID
+      // --------------------
+      fgets(curLine, MAX_STRLEN, fp); // Layout =
+
+      // Find index for reading
+      str = strchr(curLine, '=');
+      indx = (int)(str - curLine) + 1;
+
+      // Init index for writing
+      i = 0;
+      
+      // Write
+      while(curLine[indx] != ';' && curLine[indx] != '\n' && curLine[indx] != EOF)
+      {
+            tempStr[i] = curLine[indx];
+            i++;
+            indx++;
+      }
+      tempStr[i] = '\0';
+
+      // Convert to float
+      currentMap.skyID = atoi(tempStr);
       
       printf("Map loaded successfully!\n");
       fclose(fp);
@@ -153,60 +172,140 @@ void M_LoadMapAsCurrent(char* mapID)
       M_LoadObjectTMap();
 
       // Load the Collision Map
-      M_LoadCollisionMap();
+      M_LoadCollisionMaps();
 }
 
 // -------------------------------
 // Loads the object map
 // -------------------------------
+// TO DO object tmap should be on 3 levels
 void M_LoadObjectTMap(void)
 {
       for(int y = 0; y < MAP_HEIGHT; y++)
             for(int x = 0; x < MAP_WIDTH; x++)
-                  {
+                  {     
+                        // LEVEL 0 
                         // Initialize
-                        currentMap.objectTMap[y][x] = ObjT_Empty;
+                        currentMap.objectTMapLevel0[y][x] = ObjT_Empty;
 
                         // Check if it's a wall
-                        int wallID = currentMap.wallMap[y][x];
+                        int wallID = currentMap.level0[y][x];
                         if(wallID > 0)
                         {
                               // Check if it is a door
                               if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 2) == 1)
                               {
-                                    currentMap.objectTMap[y][x] = ObjT_Door;
+                                    currentMap.objectTMapLevel0[y][x] = ObjT_Door;
                               }
                               else
-                                    currentMap.objectTMap[y][x] = ObjT_Wall;
+                                    currentMap.objectTMapLevel0[y][x] = ObjT_Wall;
                         }
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
-                        int spriteID = currentMap.spritesMap[y][x];
+                        int spriteID = currentMap.spritesMapLevel0[y][x];
                         if(spriteID > 0)
-                              currentMap.objectTMap[y][x] = ObjT_Sprite;
+                              currentMap.objectTMapLevel0[y][x] = ObjT_Sprite;
+
+
+                        // LEVEL 1
+                        // Initialize
+                        currentMap.objectTMapLevel1[y][x] = ObjT_Empty;
+
+                        // Check if it's a wall
+                        wallID = currentMap.level1[y][x];
+                        if(wallID > 0)
+                        {
+                              // Check if it is a door
+                              if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 2) == 1)
+                              {
+                                    currentMap.objectTMapLevel1[y][x] = ObjT_Door;
+                              }
+                              else
+                                    currentMap.objectTMapLevel1[y][x] = ObjT_Wall;
+                        }
+
+                        // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
+                        spriteID = currentMap.spritesMapLevel1[y][x];
+                        if(spriteID > 0)
+                              currentMap.objectTMapLevel1[y][x] = ObjT_Sprite;
+
+
+                        // LEVEL 2
+                        // Initialize
+                        currentMap.objectTMapLevel2[y][x] = ObjT_Empty;
+
+                        // Check if it's a wall
+                        wallID = currentMap.level2[y][x];
+                        if(wallID > 0)
+                        {
+                              // Check if it is a door
+                              if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 2) == 1)
+                              {
+                                    currentMap.objectTMapLevel2[y][x] = ObjT_Door;
+                              }
+                              else
+                                    currentMap.objectTMapLevel2[y][x] = ObjT_Wall;
+                        }
+
+                        // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
+                        spriteID = currentMap.spritesMapLevel2[y][x];
+                        if(spriteID > 0)
+                              currentMap.objectTMapLevel2[y][x] = ObjT_Sprite;
                   }
 }
 
 // -------------------------------
 // Loads the collision map
 // -------------------------------
-void M_LoadCollisionMap(void)
+// TODO collision map should be on 3 levels
+void M_LoadCollisionMaps(void)
 {
+      // Load Level 0
       for(int y = 0; y < MAP_HEIGHT; y++)
             for(int x = 0; x < MAP_WIDTH; x++)
                   {
+                        // LEVEL 0
                         // Initialize
-                        currentMap.collisionMap[y][x] = 0;
+                        currentMap.collisionMapLevel0[y][x] = 0;
 
                         // Check if it's a wall
-                        int wallID = currentMap.wallMap[y][x];
+                        int wallID = currentMap.level0[y][x];
                         if(wallID > 0)
-                              currentMap.collisionMap[y][x] = 1;
+                              currentMap.collisionMapLevel0[y][x] = 1;
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
-                        int spriteID = currentMap.spritesMap[y][x];
+                        int spriteID = currentMap.spritesMapLevel0[y][x];
                         if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1)
-                              currentMap.collisionMap[y][x] = 1;
+                              currentMap.collisionMapLevel0[y][x] = 1;
+
+
+                        // LEVEL 1
+                        // Initialize
+                        currentMap.collisionMapLevel1[y][x] = 0;
+
+                        // Check if it's a wall
+                        wallID = currentMap.level1[y][x];
+                        if(wallID > 0)
+                              currentMap.collisionMapLevel1[y][x] = 1;
+
+                        // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
+                        spriteID = currentMap.spritesMapLevel1[y][x];
+                        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1)
+                              currentMap.collisionMapLevel1[y][x] = 1;
+
+                        // LEVEL 2
+                        // Initialize
+                        currentMap.collisionMapLevel2[y][x] = 0;
+
+                        // Check if it's a wall
+                        wallID = currentMap.level2[y][x];
+                        if(wallID > 0)
+                              currentMap.collisionMapLevel2[y][x] = 1;
+
+                        // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
+                        spriteID = currentMap.spritesMapLevel2[y][x];
+                        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1)
+                              currentMap.collisionMapLevel2[y][x] = 1;
                   }
 }
 

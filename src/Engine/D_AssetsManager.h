@@ -55,6 +55,13 @@ typedef enum spritesObjectID_e
     S_Campfire
 } spritesObjectID_t;
 
+// All sprites
+typedef enum skiesObjectID_e
+{
+    // 0 = Empty
+    SKY_Default1 = 1
+} skiesObjectID_e;
+
 
 typedef struct object_s
 {
@@ -62,6 +69,10 @@ typedef struct object_s
     SDL_Surface* texture;
     struct object_s* alt;
     byte flags;             // Flags to diversify types of objects
+
+    // Extra textures, after being init they point to texture
+    SDL_Surface** topTexture;
+    SDL_Surface** bottomTexture;
 } object_t;
 
 // The Text rendering is not hardcoded to use 16x6 elements font sheets, but the translation map is, 
@@ -152,7 +163,8 @@ typedef enum imgIDs_e
     IMG_ID_S_Campfire,
     IMG_ID_BLKCRY_TEXT_SHEET,
     IMG_ID_MENU_SELECT_CURSOR,
-    IMG_ID_MENU_TITLE
+    IMG_ID_MENU_TITLE,
+    IMG_ID_SKY_DEFAULT
 } imgIDs_e;
 
 typedef struct archt_s
@@ -194,6 +206,9 @@ typedef struct tomentdatapack_s
     unsigned enginesDefaultsLength;
 
     // Object in the game
+    object_t* skies[OBJECTARRAY_DEFAULT_SIZE];
+    unsigned skiesLength;
+
     object_t* walls[OBJECTARRAY_DEFAULT_SIZE];
     unsigned wallsLength;
 
@@ -223,6 +238,8 @@ bool D_CheckTextureLoaded(SDL_Surface* ptr, int ID);
 //-------------------------------------
 void D_InitObject(object_t* obj);
 
+void D_InitAssetManager(void);
+
 //-------------------------------------
 // Opens the archives to allow objects initializations
 //-------------------------------------
@@ -233,15 +250,14 @@ void D_OpenArchs(void);
 //-------------------------------------
 void D_CloseArchs(void);
 
+void D_InitEnginesDefaults(void);
 void D_InitFontSheets(void);
 void D_InitMenuAssets(void);
-
-void D_InitEnginesDefaults(void);
-void D_InitAssetManager(void);
 void D_InitLoadWalls(void);
 void D_InitLoadFloors(void);
 void D_InitLoadCeilings(void);
 void D_InitLoadSprites(void);
+void D_InitLoadSkies(void);
 
 //-------------------------------------
 // Sets the object for the given parameters

@@ -15,6 +15,8 @@
 #define TILE_SIZE 64
 #define UNIT_SIZE 64
 
+#define MAX_N_LEVELS 3
+
 // Types of object
 typedef enum objectType_e
 {
@@ -30,22 +32,34 @@ typedef struct map_s
     // Map static
     char id[MAX_STRLEN];
     char name[MAX_STRLEN];
-    int wallMap[MAP_HEIGHT][MAP_WIDTH];
+
+    // Walls on levels
+    int level0[MAP_HEIGHT][MAP_WIDTH];
+    int level1[MAP_HEIGHT][MAP_WIDTH];
+    int level2[MAP_HEIGHT][MAP_WIDTH];
+
     int floorMap[MAP_HEIGHT][MAP_WIDTH];
     int ceilingMap[MAP_HEIGHT][MAP_WIDTH];
-    int spritesMap[MAP_HEIGHT][MAP_WIDTH];
+
+    int spritesMapLevel0[MAP_HEIGHT][MAP_WIDTH];
+    int spritesMapLevel1[MAP_HEIGHT][MAP_WIDTH];
+    int spritesMapLevel2[MAP_HEIGHT][MAP_WIDTH];
+
     float wallLight;
     float floorLight;
-    int ceilingHeightMap[MAP_HEIGHT][MAP_WIDTH];
-    int orientationMap[MAP_HEIGHT][MAP_WIDTH];  // Orientation data
-    int pillarsMap[MAP_HEIGHT][MAP_WIDTH];
+    int skyID;
 
     int maxCeilingHeight;
 
-    // Map Dynamic
-    int objectTMap[MAP_HEIGHT][MAP_WIDTH];      // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
-    int collisionMap[MAP_HEIGHT][MAP_WIDTH];    // Collision data
+    // Map Dynamics, values are cached in multiple matrixes to avoid having to calculate them each time
 
+    int objectTMapLevel0[MAP_HEIGHT][MAP_WIDTH];      // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
+    int objectTMapLevel1[MAP_HEIGHT][MAP_WIDTH];      // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
+    int objectTMapLevel2[MAP_HEIGHT][MAP_WIDTH];      // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
+
+    int collisionMapLevel0[MAP_HEIGHT][MAP_WIDTH];    // Collision data
+    int collisionMapLevel1[MAP_HEIGHT][MAP_WIDTH];    // Collision data
+    int collisionMapLevel2[MAP_HEIGHT][MAP_WIDTH];    // Collision data
 } map_t;
 
 // The currently loaded map
@@ -64,6 +78,6 @@ void M_LoadObjectTMap(void);
 // -------------------------------
 // Loads the collision map
 // -------------------------------
-void M_LoadCollisionMap(void);
+void M_LoadCollisionMaps(void);
 
 #endif

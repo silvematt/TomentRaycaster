@@ -12,7 +12,7 @@
 #define PLAYER_CENTER_FIX 8     // To fix the player position to be at the center instead of the upper corner, this is WIDTH/2
 
 #define PLAYER_SPEED 250.0f
-#define PLAYER_ROT_SPEED 1.5f
+#define PLAYER_ROT_SPEED 0.5f
 
 #define PLAYER_STARTING_GRID_X 12
 #define PLAYER_STARTING_GRID_Y 12
@@ -35,6 +35,8 @@ typedef struct player_s
 {
     vector2_t position;     // abs SDL position
     vector2_t centeredPos;  // position centered for the player's width and height
+    float z;
+    int level;              // The current floor level the player is at
     
     vector2Int_t gridPosition;  // position of the player in the tilemap
     vector2Int_t inFrontGridPosition; // The grid pos of the cell in front of the player
@@ -70,5 +72,30 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e);
 // Handles Input from the player while doing the Event Input Handling
 //-------------------------------------
 void G_InGameInputHandlingEvent(SDL_Event* e);
+
+//-------------------------------------
+// Checks the collision map at player's level and returns what found
+//-------------------------------------
+int G_CheckCollisionMap(int level, int y, int x);
+
+//-------------------------------------
+// Checks door state map at player's level and returns what found
+//-------------------------------------
+int G_GetDoorState(int level, int y, int x);
+
+//-------------------------------------
+// Sets door state map at player's level
+//-------------------------------------
+int G_SetDoorState(int level, int y, int x, doorstate_e state);
+
+//-------------------------------------
+// Checks door position map at player's level and returns what found
+//-------------------------------------
+float G_GetDoorPosition(int level, int y, int x);
+
+//-------------------------------------
+// Checks object T map at player's level and returns what found
+//-------------------------------------
+int G_GetFromObjectTMap(int level, int y, int x);
 
 #endif

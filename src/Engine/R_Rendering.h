@@ -5,6 +5,7 @@
 
 #include "M_Map.h"
 #include "U_DataTypes.h"
+#include <float.h>
 
 // =========================================
 // Raycasting
@@ -16,7 +17,6 @@
 #define PROJECTION_PLANE_CENTER 240
 //#define DISTANCE_TO_PROJECTION ((PROJECTION_PLANE_WIDTH / 2) / tan(PLAYER_FOV /2))
 #define DISTANCE_TO_PROJECTION 554      // Distance to projection
-#define RENDERING_PLAYER_HEIGHT 32
 //#define GAME_VIEW_OFFSETX 350           // Offset of the GameView
 //#define GAME_VIEW_OFFSETY 125           // Offset of the GameView
 
@@ -30,7 +30,7 @@
 // =========================================
 // Sprites
 // =========================================
-#define MAXVISABLE 50
+#define MAXVISABLE 50 // * MAX_FLOORS, the visibleSprites array and visibleTiles are reused each time
 #define MAX_SPRITE_HEIGHT 1000
 #define ANIMATION_SPEED_DIVIDER 200
 
@@ -50,10 +50,6 @@ extern int visibleSpritesLength;
 extern walldata_t currentThinWalls[PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
 extern unsigned visibleThinWallsLength;
 
-// Found Pillars to draw
-#define MAX_VISIBLE_PILLARS PROJECTION_PLANE_WIDTH*MAX_THIN_WALL_TRANSPARENCY_RECURSION
-extern walldata_t currentPillars[MAX_VISIBLE_PILLARS];
-extern unsigned visiblePillarsLength;
 
 // =========================================
 // Debug
@@ -65,13 +61,15 @@ extern unsigned visiblePillarsLength;
 extern uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
 extern uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
 
-// Wall heights, saved for each x
-extern float wallHeights[PROJECTION_PLANE_WIDTH];
+// Wall heights, saved for each x for each level
+extern float zBuffer[PROJECTION_PLANE_HEIGHT][PROJECTION_PLANE_WIDTH];
 
 // Drawables
-#define MAX_DRAWABLES PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION + MAXVISABLE + MAX_VISIBLE_PILLARS
+#define MAX_DRAWABLES PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION + MAXVISABLE
 extern drawabledata_t allDrawables[MAX_DRAWABLES];
 extern int allDrawablesLength;
+
+extern bool debugRendering;
 
 //-------------------------------------
 // Initializes the rendering 
@@ -122,7 +120,7 @@ void R_DrawPixel(int x, int y, int color);
 //-------------------------------------
 // Draw a single pixel with shading
 //-------------------------------------
-void R_DrawPixelShaded(int x, int y, int color, float intensity);
+void R_DrawPixelShaded(int x, int y, int color, float intensity, float distance);
 
 //-------------------------------------
 // Draw a column of pixel
@@ -144,10 +142,31 @@ void R_DrawMinimap(void);
 //-------------------------------------
 void R_DrawBackground(void);
 
+
 //-------------------------------------
-// Performs the Raycast and draws the walls
+// Calls the  the Raycast routines and draws the walls
 //-------------------------------------
 void R_Raycast(void);
+
+//-------------------------------------
+// Raycasts the camera's level, therefore with occlusion
+//-------------------------------------
+void R_RaycastPlayersLevel(int level, int x, float _rayAngle);
+
+//-------------------------------------
+// Raycasts levels above and below the camera's level, therefore without occlusion
+//-------------------------------------
+void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle);
+
+//-------------------------------------
+// Draws the bottom face of a cube that's located above camera's head
+//-------------------------------------
+void R_DrawWallBottom(walldata_t* wall, float height, float screenZ);
+
+//-------------------------------------
+// Draws the bottom top of a cube that's located below camera's head
+//-------------------------------------
+void R_DrawWallTop(walldata_t* wall, float height, float screenZ);
 
 //-------------------------------------
 // Drawables routine, sort and render drawables
@@ -158,11 +177,6 @@ void R_DrawDrawables(void);
 // Draw the passed thin wall
 //-------------------------------------
 void R_DrawThinWall(walldata_t* wall);
-
-//-------------------------------------
-// Draw the passed pillar
-//-------------------------------------
-void R_DrawPillar(walldata_t* wall);
 
 //-------------------------------------
 // Floorcast and ceilingcast
@@ -185,12 +199,22 @@ void R_CeilingCasting(float start, float rayAngle, int x, float wallHeight);
 //-------------------------------------
 // Adds a sprite to the visible sprite array and adds its corresponding drawable
 //-------------------------------------
-void R_AddToVisibleSprite(int gridX, int gridY);
+void R_AddToVisibleSprite(int gridX, int gridY, int level);
 
 //-------------------------------------
 // Draws the visible sprites
 //-------------------------------------
 void R_DrawSprite(sprite_t* sprite);
+
+//-------------------------------------
+// Given a level and the grid coordinates, returns what is in the map
+//-------------------------------------
+int R_GetValueFromLevel(int level, int y, int x);
+
+//-------------------------------------
+// Given a level and the grid coordinates, returns what is in the map
+//-------------------------------------
+int R_GetValueFromSpritesMap(int level, int y, int x);
 
 //-------------------------------------
 // Draws a column of pixels with texture mapping
@@ -200,6 +224,6 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
 //-------------------------------------
 // Draws a column of pixels with texture mapping and shading
 //-------------------------------------
-void R_DrawColumnTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity);
+void R_DrawColumnTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist);
 
 #endif
