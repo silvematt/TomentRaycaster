@@ -1,7 +1,7 @@
 # TomentRaycaster
 A Software Rendering Raycaster Engine written in C and SDL2.
 
-![alt text](https://i.imgur.com/XTFXmYE.png)
+![alt text](https://i.imgur.com/n3cFHpA.png)
 
 I've written this raycaster following Permadi's paper and Wolfenstein 3D code (and Black Book), as a pilgrimage to my God John Carmack.
 
@@ -9,15 +9,16 @@ I've loved the time I've spent on it, it's a work in progress with other feature
 
 Features:
 - Rendering 640x480
-- Player Input (Walk forward/backwards, rotate, strafe, interact)
-- Textured Walls, Floors and Ceilings
+- Player Input (Walk forward/backwards, fly up/down, rotate, strafe, interact)
+- Textured Walls, Floors, Ceilings
 - Thin (offsetted) Walls
 - Sliding Doors
 - Transparent (see through) doors and thin walls
-- Variable Ceiling Height for each map
-- Variable Ceiling Height for each tile of the map, allowing the creation of smaller rooms and sectors in the same map.
-- Sprites Rendering & Physics (Sprites can be solid or not)
+- Multi Floor support (for player, doors, walls, sprites etc.)
+- Vertical Motion
+- Sprites Rendering & Collisions
 - Support for Animated Sprites
+- Seamless Sky Rendering
 - Shading and Map Lighting
 - Text Rendering of Bitmap Fonts
 - Game Menus
