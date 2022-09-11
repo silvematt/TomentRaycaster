@@ -617,7 +617,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
         float wallHeight = (TILE_SIZE  / finalDistance) * DISTANCE_TO_PROJECTION;
         float wallHeightUncapped = wallHeight;
 
-        float screenZ = round(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(TILE_SIZE/2)));
+        float screenZ = floor(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(TILE_SIZE/2)));
         int wallOffset = (PROJECTION_PLANE_CENTER) - floor(wallHeight / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
         
         //int wallOffset =  (PROJECTION_PLANE_HEIGHT-wallHeight)/2 + screenZ;
@@ -653,7 +653,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             if(rayAngle < M_PI)
                 offset = (TILE_SIZE-1) - offset;
             
-            R_DrawColumnTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawWallTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -675,7 +675,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
                 offset = (TILE_SIZE-1) - offset;
 
-            R_DrawColumnTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawWallTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -1136,7 +1136,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         float wallHeight = (TILE_SIZE  / finalDistance) * DISTANCE_TO_PROJECTION;
         float wallHeightUncapped = wallHeight;
 
-        float screenZ = round(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(TILE_SIZE/2)));
+        float screenZ = floor(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(TILE_SIZE/2)));
         int wallOffset = (PROJECTION_PLANE_CENTER) - floor(wallHeight / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
 
         int end = floor(wallOffset+wallHeight);
@@ -1176,7 +1176,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             if(rayAngle < M_PI)
                 offset = (TILE_SIZE-1) - offset;
             
-            R_DrawColumnTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawWallTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -1202,7 +1202,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
                 offset = (TILE_SIZE-1) - offset;
 
-            R_DrawColumnTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawWallTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -1318,7 +1318,7 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
             if(wallID >= 1)
             {
                 // Draw floor
-                R_DrawPixelShaded(wall->x, y, R_GetPixelFromSurface(*tomentdatapack.walls[wallID]->bottomTexture, textureX, textureY), lightingMult, straightlinedist-1.0f);
+                R_DrawColumnOfPixelShaded(wall->x, y-1, y+1, R_GetPixelFromSurface(*tomentdatapack.walls[wallID]->bottomTexture, textureX, textureY), lightingMult, straightlinedist-1.0f);
 
                 startedDrawing = true;
             }
@@ -1554,7 +1554,7 @@ void R_DrawThinWall(walldata_t* cur)
             offset = (TILE_SIZE-1) - offset;
         
         if(cur->extraData == 1) // If it is visible
-            R_DrawColumnTexturedShaded((cur->x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawWallTexturedShaded((cur->x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
     }
     else if(!isOffScreenBottom)
     {
@@ -1570,7 +1570,7 @@ void R_DrawThinWall(walldata_t* cur)
             offset = (TILE_SIZE-1) - offset;
 
         if(cur->extraData == 1) // If it is visible
-            R_DrawColumnTexturedShaded((cur->x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawWallTexturedShaded((cur->x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
     }
 }
 
@@ -1673,7 +1673,7 @@ void R_DrawSprite(sprite_t* sprite)
         drawYStart = spriteOffset;
         drawYEnd = spriteOffset+sprite->height;
 
-        R_DrawColumnTexturedShaded(drawX, drawYStart-(sprite->height*sprite->level), drawYEnd-(sprite->height*sprite->level), tomentdatapack.sprites[sprite->spriteID]->texture,offset, sprite->height, lighting, dist);
+        R_DrawWallTexturedShaded(drawX, drawYStart-(sprite->height*sprite->level), drawYEnd-(sprite->height*sprite->level), tomentdatapack.sprites[sprite->spriteID]->texture,offset, sprite->height, lighting, dist);
     }
 
     // Draws the center of the sprite
@@ -1939,6 +1939,37 @@ void R_DrawPixelShaded(int x, int y, int color, float intensity, float dist)
     }
 }
 
+//-------------------------------------
+// Draw a column of pixels with shading
+//-------------------------------------
+void R_DrawColumnOfPixelShaded(int x, int y, int endY, int color, float intensity, float distance)
+{
+    Uint32 pixel;
+
+    // Do shading
+    Uint8 r,g,b;
+    SDL_GetRGB(color, win_surface->format, &r, &g, &b);
+    r*=intensity;
+    g*=intensity;
+    b*=intensity;
+
+    pixel = SDL_MapRGB(win_surface->format, r,g,b);
+
+    for(int i = y; i <= endY; i++)
+    {
+        if( x >= 0 && x < SCREEN_WIDTH && i >= 0 && i < SCREEN_HEIGHT)    // To not go outside of boundaries
+        {
+            // Put it in the framebuffer
+            // Put in Z buffer
+            if(distance < zBuffer[i][x])
+            {
+                zBuffer[i][x] = distance;
+                pixels[x + i * win_width] = pixel;
+            }
+        }
+    }
+}
+
 
 //------------------------------------------------
 // Draws a column of pixel on the current framebuffer
@@ -2006,7 +2037,7 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
 // xOffset = the x index of the texture for this column
 // wallheight = the height of the wall to be drawn (must be uncapped)
 //-------------------------------------------------
-void R_DrawColumnTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist)
+void R_DrawWallTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist)
 {
     // The offset to extract Y pixels from the texture, this is != 0 only if the wall is bigger than the projection plane height
     float textureYoffset = 0.0f;

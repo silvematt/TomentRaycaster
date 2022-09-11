@@ -123,6 +123,11 @@ void R_DrawPixel(int x, int y, int color);
 void R_DrawPixelShaded(int x, int y, int color, float intensity, float distance);
 
 //-------------------------------------
+// Draw a column of pixels with shading
+//-------------------------------------
+void R_DrawColumnOfPixelShaded(int x, int y, int endY, int color, float intensity, float distance);
+
+//-------------------------------------
 // Draw a column of pixel
 //-------------------------------------
 void R_DrawColumn(int x, int y, int endY, int color);
@@ -224,6 +229,6 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
 //-------------------------------------
 // Draws a column of pixels with texture mapping and shading
 //-------------------------------------
-void R_DrawColumnTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist);
+void R_DrawWallTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist);
 
 #endif
