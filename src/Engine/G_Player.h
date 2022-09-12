@@ -14,12 +14,7 @@
 #define PLAYER_SPEED 250.0f
 #define PLAYER_ROT_SPEED 0.5f
 
-#define PLAYER_STARTING_GRID_X 12
-#define PLAYER_STARTING_GRID_Y 12
 #define PLAYER_STARTING_ROT M_PI
-
-#define PLAYER_STARTING_X PLAYER_STARTING_GRID_X*TILE_SIZE
-#define PLAYER_STARTING_Y PLAYER_STARTING_GRID_Y*TILE_SIZE
 
 // The minimum distance the player can get to the wall
 #define PLAYER_MIN_DIST_TO_WALL 30
@@ -48,6 +43,12 @@ typedef struct player_s
 
     // Rot of the player in radians
     float angle;
+
+    // Loaded at runtime
+    // The grid the player starts in (loaded from map)
+    int startingGridX; 
+    int startingGridY;
+    float startingRot;
 } player_t;
 
 
@@ -97,5 +98,8 @@ float G_GetDoorPosition(int level, int y, int x);
 // Checks object T map at player's level and returns what found
 //-------------------------------------
 int G_GetFromObjectTMap(int level, int y, int x);
+
+
+void G_PlayerRender(void);
 
 #endif

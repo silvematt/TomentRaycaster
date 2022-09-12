@@ -27,12 +27,13 @@ void SDL_Rect_Set(SDL_Rect* r, int x, int y, int w, int h)
 void G_InitPlayer(void)
 {
     // Init player
-    player.position.x = PLAYER_STARTING_X;
-    player.position.y = PLAYER_STARTING_Y;
-    player.angle = 0.0f;
-    player.z = 32;
-    player.gridPosition.x = PLAYER_STARTING_GRID_X;
-    player.gridPosition.y = PLAYER_STARTING_GRID_Y;
+    player.position.x = currentMap.playerStartingGridX * TILE_SIZE;
+    player.position.y = currentMap.playerStartingGridY * TILE_SIZE;
+    player.angle = currentMap.playerStartingRot;
+    player.z = (TILE_SIZE/2) + ((TILE_SIZE) * currentMap.playerStartingLevel);
+    player.level = currentMap.playerStartingLevel;
+    player.gridPosition.x = currentMap.playerStartingGridX;
+    player.gridPosition.y = currentMap.playerStartingGridY;
 
     // Rect for minimap
     SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
@@ -169,6 +170,13 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
     playerinput.input.y = SDL_clamp(playerinput.input.y, -1.0f , 1.0f);
 }
 
+
+SDL_Rect fpRect = {0, 0, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+void G_PlayerRender(void)
+{
+    R_BlitIntoScreen(&fpRect, tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->texture, NULL);
+}
+
 //-------------------------------------
 // Handles Input from the player while doing the Event Input Handling
 //-------------------------------------
@@ -209,6 +217,14 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 else if(objType == ObjT_Wall)
                 {
                     printf("Tapped a wall\n");
+                }
+                else if(objType == ObjT_Trigger)
+                {
+                    printf("Tapped a trigger\n");
+
+                    int wallID = R_GetValueFromLevel(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
+                    if(tomentdatapack.walls[wallID]->Callback != NULL)
+                        tomentdatapack.walls[wallID]->Callback(tomentdatapack.walls[wallID]->data);
                 }
             }
 

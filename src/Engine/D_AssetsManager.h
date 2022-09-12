@@ -1,9 +1,10 @@
 #ifndef ASSETS_MANAGER_H_INCLUDED
 #define ASSETS_MANAGER_H_INCLUDED
 
+#include "stdio.h"
+
 #include "../include/SDL2/SDL.h"
 #include "U_DataTypes.h"
-#include "stdio.h"
 
 // --------------------------------------------
 // DEFINES
@@ -31,6 +32,8 @@ typedef enum wallObjectID_e
     W_2 = 3,
     WD_Gate1 = 4,
     WD_Gate1Alt = 5,
+    WT_CastleDoorsLvl2,
+
 } wallObjectID_t;
 
 // All Floors
@@ -73,6 +76,10 @@ typedef struct object_s
     // Extra textures, after being init they point to texture
     SDL_Surface** topTexture;
     SDL_Surface** bottomTexture;
+
+    // Extra
+    char* data;
+    void (*Callback)(char* data);
 } object_t;
 
 // The Text rendering is not hardcoded to use 16x6 elements font sheets, but the translation map is, 
@@ -108,6 +115,12 @@ typedef enum menuAssetsID_e
     M_ASSET_TITLE,
 } menuAssetsID_e;
 
+// Player IDs
+typedef enum playerFPID_e
+{
+    PLAYER_FP_HANDS_IDLE = 0,
+} playerFPID_e;
+
 
 /* object_t Flags
 
@@ -126,6 +139,9 @@ typedef enum menuAssetsID_e
     //         \
     //          1 = Is Door
 
+    // 0000   0   000
+    //         \
+    //          1 = Is Teleporter
 
     // ============
     // For sprites
@@ -164,7 +180,9 @@ typedef enum imgIDs_e
     IMG_ID_BLKCRY_TEXT_SHEET,
     IMG_ID_MENU_SELECT_CURSOR,
     IMG_ID_MENU_TITLE,
-    IMG_ID_SKY_DEFAULT
+    IMG_ID_SKY_DEFAULT,
+    IMG_ID_P_HANDS_IDLE,
+    IMG_ID_WT_CASTLE_DOORS,
 } imgIDs_e;
 
 typedef struct archt_s
@@ -224,6 +242,9 @@ typedef struct tomentdatapack_s
     // Contains the value of the length of the spreadsheet for each sprite delcared
     // Access by spritesObjectID_e
     int spritesSheetsLenghtTable[OBJECTARRAY_DEFAULT_SIZE];
+
+    object_t* playersFP[OBJECTARRAY_DEFAULT_SIZE];
+    unsigned playersFPLength;
 } tomentdatapack_t;
     
 extern tomentdatapack_t tomentdatapack;
@@ -258,6 +279,7 @@ void D_InitLoadFloors(void);
 void D_InitLoadCeilings(void);
 void D_InitLoadSprites(void);
 void D_InitLoadSkies(void);
+void D_InitLoadPlayersFP(void);
 
 //-------------------------------------
 // Sets the object for the given parameters

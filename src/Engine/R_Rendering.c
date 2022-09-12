@@ -62,12 +62,17 @@ void R_InitRendering(void)
 //-------------------------------------
 void R_RenderDev(void)
 {
+    // Render World
     R_DrawBackground();
     R_Raycast();
-    R_DrawMinimap();
     
-    // Debug text
+    // Render Player
+    G_PlayerRender();
+
+    // Render UI
+    R_DrawMinimap();
     T_DisplayTextScaled(FONT_BLKCRY, "This is an alert  message!", 360, 10, 1.0f);
+
 }
 
 //-------------------------------------

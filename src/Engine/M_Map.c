@@ -3,6 +3,9 @@
 map_t currentMap;
 
 static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp);
+static void I_LoadIntFromFile(FILE* fp, int* toLoad);
+static void I_LoadFloatFromFile(FILE* fp, float* toLoad);
+static void I_ReadStringFromFile(FILE* fp, char toWrite[MAX_STRLEN]);
 
 // -------------------------------
 // Loads the map from the file named mapID
@@ -75,6 +78,14 @@ void M_LoadMapAsCurrent(char* mapID)
       }
       currentMap.name[i] = '\0';
 
+
+      I_LoadIntFromFile(fp, &currentMap.playerStartingLevel);
+
+      // Load Starting player pos
+      I_LoadIntFromFile(fp, &currentMap.playerStartingGridX);
+      I_LoadIntFromFile(fp, &currentMap.playerStartingGridY);
+      I_LoadFloatFromFile(fp, &currentMap.playerStartingRot);
+
       // Load Wall Map
       I_LoadMapFromFile(currentMap.level0, fp);
       I_LoadMapFromFile(currentMap.level1, fp);
@@ -91,81 +102,15 @@ void M_LoadMapAsCurrent(char* mapID)
       I_LoadMapFromFile(currentMap.spritesMapLevel1, fp);
       I_LoadMapFromFile(currentMap.spritesMapLevel2, fp);
 
-      fgets(curLine, MAX_STRLEN, fp); // Get next line
-      
-      // --------------------
       // Read Wall Lighting
-      // --------------------
-      // Find index for reading
-      str = strchr(curLine, '=');
-      indx = (int)(str - curLine) + 1;
+      I_LoadFloatFromFile(fp, &currentMap.wallLight);
 
-      // Init index for writing
-      i = 0;
-      
-      char tempStr[256];
-
-      // Write
-      while(curLine[indx] != ';' && curLine[indx] != '\n' && curLine[indx] != EOF)
-      {
-            tempStr[i] = curLine[indx];
-            i++;
-            indx++;
-      }
-      tempStr[i] = '\0';
-
-      // Convert to float
-      currentMap.wallLight = atof(tempStr);
-
-      // --------------------
       // Read Ceiling Lighting
-      // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // Layout =
+      I_LoadFloatFromFile(fp, &currentMap.floorLight);
 
-      // Find index for reading
-      str = strchr(curLine, '=');
-      indx = (int)(str - curLine) + 1;
-
-      // Init index for writing
-      i = 0;
-      
-      // Write
-      while(curLine[indx] != ';' && curLine[indx] != '\n' && curLine[indx] != EOF)
-      {
-            tempStr[i] = curLine[indx];
-            i++;
-            indx++;
-      }
-      tempStr[i] = '\0';
-
-      // Convert to float
-      currentMap.floorLight = atof(tempStr);
-
-      // --------------------
       // Read SkyID
-      // --------------------
-      fgets(curLine, MAX_STRLEN, fp); // Layout =
-
-      // Find index for reading
-      str = strchr(curLine, '=');
-      indx = (int)(str - curLine) + 1;
-
-      // Init index for writing
-      i = 0;
+      I_LoadIntFromFile(fp, &currentMap.skyID);
       
-      // Write
-      while(curLine[indx] != ';' && curLine[indx] != '\n' && curLine[indx] != EOF)
-      {
-            tempStr[i] = curLine[indx];
-            i++;
-            indx++;
-      }
-      tempStr[i] = '\0';
-
-      // Convert to float
-      currentMap.skyID = atoi(tempStr);
-      
-      printf("Map loaded successfully!\n");
       fclose(fp);
 
       // Load the TMap
@@ -173,6 +118,8 @@ void M_LoadMapAsCurrent(char* mapID)
 
       // Load the Collision Map
       M_LoadCollisionMaps();
+
+      printf("Map loaded successfully! ID: %s\n", currentMap.id);
 }
 
 // -------------------------------
@@ -192,13 +139,18 @@ void M_LoadObjectTMap(void)
                         int wallID = currentMap.level0[y][x];
                         if(wallID > 0)
                         {
+                              currentMap.objectTMapLevel0[y][x] = ObjT_Wall;
+
                               // Check if it is a door
                               if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 2) == 1)
                               {
                                     currentMap.objectTMapLevel0[y][x] = ObjT_Door;
                               }
-                              else
-                                    currentMap.objectTMapLevel0[y][x] = ObjT_Wall;
+
+                              if (U_GetBit(&tomentdatapack.walls[wallID]->flags, 3) == 1)
+                              {
+                                    currentMap.objectTMapLevel0[y][x] = ObjT_Trigger;
+                              }
                         }
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
@@ -215,13 +167,17 @@ void M_LoadObjectTMap(void)
                         wallID = currentMap.level1[y][x];
                         if(wallID > 0)
                         {
+                              currentMap.objectTMapLevel1[y][x] = ObjT_Wall;
+
                               // Check if it is a door
                               if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 2) == 1)
                               {
                                     currentMap.objectTMapLevel1[y][x] = ObjT_Door;
                               }
-                              else
-                                    currentMap.objectTMapLevel1[y][x] = ObjT_Wall;
+                              if (U_GetBit(&tomentdatapack.walls[wallID]->flags, 3) == 1)
+                              {
+                                    currentMap.objectTMapLevel1[y][x] = ObjT_Trigger;
+                              }
                         }
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
@@ -238,13 +194,17 @@ void M_LoadObjectTMap(void)
                         wallID = currentMap.level2[y][x];
                         if(wallID > 0)
                         {
+                              currentMap.objectTMapLevel2[y][x] = ObjT_Wall;
+
                               // Check if it is a door
                               if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 2) == 1)
                               {
                                     currentMap.objectTMapLevel2[y][x] = ObjT_Door;
                               }
-                              else
-                                    currentMap.objectTMapLevel2[y][x] = ObjT_Wall;
+                              if (U_GetBit(&tomentdatapack.walls[wallID]->flags, 3) == 1)
+                              {
+                                    currentMap.objectTMapLevel2[y][x] = ObjT_Trigger;
+                              }
                         }
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
@@ -365,4 +325,101 @@ static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp)
                   break;
             }
       }
+}
+
+static void I_LoadIntFromFile(FILE* fp, int* toLoad)
+{
+      // Load Map
+      char curLine[MAX_STRL_R];   // Current line we're reading
+      char* str;                  // Used to strchr
+      int indx;                   // Index of the =
+      int i;                      // Index for writing in new string
+
+      // --------------------
+      // Read SkyID
+      // --------------------
+      fgets(curLine, MAX_STRLEN, fp); // Layout =
+
+      // Find index for reading
+      str = strchr(curLine, '=');
+      indx = (int)(str - curLine) + 1;
+
+      // Init index for writing
+      i = 0;
+      
+      char tempStr[256];
+      // Write
+      while(curLine[indx] != ';' && curLine[indx] != '\n' && curLine[indx] != EOF)
+      {
+            tempStr[i] = curLine[indx];
+            i++;
+            indx++;
+      }
+      tempStr[i] = '\0';
+
+      // Convert to float
+      *toLoad = atoi(tempStr);
+}
+
+static void I_LoadFloatFromFile(FILE* fp, float* toLoad)
+{
+      // Load Map
+      char curLine[MAX_STRL_R];   // Current line we're reading
+      char* str;                  // Used to strchr
+      int indx;                   // Index of the =
+      int i;                      // Index for writing in new string
+
+      // --------------------
+      // Read SkyID
+      // --------------------
+      fgets(curLine, MAX_STRLEN, fp); // Layout =
+
+      // Find index for reading
+      str = strchr(curLine, '=');
+      indx = (int)(str - curLine) + 1;
+
+      // Init index for writing
+      i = 0;
+      
+      char tempStr[256];
+      // Write
+      while(curLine[indx] != ';' && curLine[indx] != '\n' && curLine[indx] != EOF)
+      {
+            tempStr[i] = curLine[indx];
+            i++;
+            indx++;
+      }
+      tempStr[i] = '\0';
+
+      // Convert to float
+      *toLoad = atof(tempStr);
+}
+
+static void I_ReadStringFromFile(FILE* fp, char toWrite[MAX_STRLEN])
+{
+      // Load Map
+      char curLine[MAX_STRL_R];   // Current line we're reading
+      char* str;                  // Used to strchr
+      int indx;                   // Index of the =
+      int i;                      // Index for writing in new string
+
+      fgets(curLine, MAX_STRL_R, fp);
+
+      printf("%s\n", curLine);
+
+      // Find index for reading
+      str = strchr(curLine, '=');
+      indx = (int)(str - curLine) + 1;
+
+      // Init index for writing
+      i = 0;
+
+      // Write
+      while(curLine[indx] != ';' && curLine[indx] != '\n' && curLine[indx] != EOF)
+      {
+            toWrite[i] = curLine[indx];
+            i++;
+            indx++;
+      }
+      toWrite[i] = '\0';
 }

@@ -48,4 +48,6 @@ void G_StateGameLoop(void);
 //-------------------------------------
 void G_UpdateDoors(void);
 
+void G_ChangeMap(char* mapID);
+
 #endif

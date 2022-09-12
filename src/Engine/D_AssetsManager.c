@@ -3,6 +3,7 @@
 #include "A_Application.h"
 #include "D_AssetsManager.h"
 #include "U_Utilities.h"
+#include "D_ObjectsCallbacks.h"
 
 tomentdatapack_t tomentdatapack;
 
@@ -104,7 +105,9 @@ void D_InitAssetManager(void)
     D_InitLoadWalls();
     D_InitLoadSprites();
     D_InitLoadSkies();
-    
+
+    D_InitLoadPlayersFP();
+
     D_CloseArchs();
 }
 
@@ -182,14 +185,16 @@ void D_InitLoadWalls(void)
     object_t* wall2 = (object_t*)malloc(sizeof(object_t));
     object_t* gate1 = (object_t*)malloc(sizeof(object_t));
     object_t* gate1Alt = (object_t*)malloc(sizeof(object_t));
+    object_t* castleDoorsToLvl2 = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.wallsLength = 8; // Set length
+    tomentdatapack.wallsLength = 9; // Set length
 
     D_InitObject(wall1);
     D_InitObject(wall1Alt);
     D_InitObject(wall2);
     D_InitObject(gate1);
     D_InitObject(gate1Alt);
+    D_InitObject(castleDoorsToLvl2);
 
     // Put objects in the datapack
     tomentdatapack.walls[W_1] = wall1;
@@ -197,6 +202,7 @@ void D_InitLoadWalls(void)
     tomentdatapack.walls[W_2] = wall2;
     tomentdatapack.walls[WD_Gate1] = gate1;
     tomentdatapack.walls[WD_Gate1Alt] = gate1Alt;
+    tomentdatapack.walls[WT_CastleDoorsLvl2] = castleDoorsToLvl2;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -262,12 +268,31 @@ void D_InitLoadWalls(void)
     U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 2); // Set Door bit flag to 1
     SDL_FreeSurface(temp1);
 
+    // WD_CastleDoorsLvl2
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WT_CASTLE_DOORS].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WT_CASTLE_DOORS].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_WT_CASTLE_DOORS))
+        tomentdatapack.walls[WT_CastleDoorsLvl2]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.walls[WT_CastleDoorsLvl2]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.walls[WT_CastleDoorsLvl2]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
+    U_SetBit(&tomentdatapack.walls[WT_CastleDoorsLvl2]->flags, 2); // Set Door bit flag to 1
+    U_SetBit(&tomentdatapack.walls[WT_CastleDoorsLvl2]->flags, 3); // Set Trigger bit flag to 1
+
+    // Set callback and data because this is a trigger
+    tomentdatapack.walls[WT_CastleDoorsLvl2]->Callback = CastleDoorsLvl2Callback;
+    tomentdatapack.walls[WT_CastleDoorsLvl2]->data = "lvl2";
+    
+    SDL_FreeSurface(temp1);
+
     // Final sets
     D_SetObject(wall1, W_1, tomentdatapack.walls[W_1]->texture, wall1Alt);
     D_SetObject(wall1Alt, W_1Alt, tomentdatapack.walls[W_1Alt]->texture, NULL);
     D_SetObject(wall2, W_2, tomentdatapack.walls[W_2]->texture, NULL);
     D_SetObject(gate1, WD_Gate1, tomentdatapack.walls[WD_Gate1]->texture, NULL);
     D_SetObject(gate1Alt, WD_Gate1Alt, tomentdatapack.walls[WD_Gate1Alt]->texture, NULL);
+    D_SetObject(castleDoorsToLvl2, WT_CastleDoorsLvl2, tomentdatapack.walls[WT_CastleDoorsLvl2]->texture, NULL);
 }
 
 void D_InitLoadFloors(void)
@@ -505,6 +530,40 @@ void D_InitLoadSkies(void)
 
     // Final sets
     D_SetObject(skyDefault, SKY_Default1, tomentdatapack.skies[SKY_Default1]->texture, NULL);
+}
+
+void D_InitLoadPlayersFP(void)
+{
+    // Create Objects
+    object_t* playerFPHandsIdle = (object_t*)malloc(sizeof(object_t));
+    tomentdatapack.playersFPLength = 1; // Set length
+
+    D_InitObject(playerFPHandsIdle);
+
+    // Put objects in the datapack
+    tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE] = playerFPHandsIdle;
+
+    // Fill objects
+    // Convert all the surfaces that we will load in the same format as the win_surface
+    SDL_Surface *temp1;     // Surface
+    SDL_RWops* sdlWops;     // Structure to read bytes
+    int offset;             // Offset in the img.archt
+
+    // Floor 1
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_P_HANDS_IDLE].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_P_HANDS_IDLE].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_P_HANDS_IDLE))
+    {
+        tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    SDL_FreeSurface(temp1);
+
+    // Final sets
+    D_SetObject(playerFPHandsIdle, PLAYER_FP_HANDS_IDLE, tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->texture, NULL);
 }
 
 //-------------------------------------

@@ -47,9 +47,9 @@ void G_InitGame(void)
         }
 
     G_PhysicsInit();
-    M_LoadMapAsCurrent("devmap");
-    G_InitPlayer();
 
+    G_ChangeMap("devmap");
+    
     gameTimer->Start(gameTimer);
 }
 
@@ -242,4 +242,10 @@ void G_UpdateDoors(void)
                     }
                 }
             }
+}
+
+void G_ChangeMap(char* mapID)
+{
+    M_LoadMapAsCurrent(mapID);
+    G_InitPlayer();
 }

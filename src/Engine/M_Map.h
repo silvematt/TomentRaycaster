@@ -23,7 +23,8 @@ typedef enum objectType_e
     ObjT_Empty = 0,
     ObjT_Wall,
     ObjT_Door,
-    ObjT_Sprite
+    ObjT_Sprite,
+    ObjT_Trigger        // Triggers the callback
 } objectType_e;
 
 // Map info
@@ -33,6 +34,11 @@ typedef struct map_s
     char id[MAX_STRLEN];
     char name[MAX_STRLEN];
 
+    int playerStartingLevel;
+    int playerStartingGridX;
+    int playerStartingGridY;
+    float playerStartingRot;
+    
     // Walls on levels
     int level0[MAP_HEIGHT][MAP_WIDTH];
     int level1[MAP_HEIGHT][MAP_WIDTH];
