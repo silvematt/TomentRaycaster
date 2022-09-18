@@ -281,7 +281,7 @@ void D_InitLoadWalls(void)
     U_SetBit(&tomentdatapack.walls[WT_CastleDoorsLvl2]->flags, 3); // Set Trigger bit flag to 1
 
     // Set callback and data because this is a trigger
-    tomentdatapack.walls[WT_CastleDoorsLvl2]->Callback = CastleDoorsLvl2Callback;
+    tomentdatapack.walls[WT_CastleDoorsLvl2]->Callback = D_CallbackChangeMap;
     tomentdatapack.walls[WT_CastleDoorsLvl2]->data = "lvl2";
     
     SDL_FreeSurface(temp1);
@@ -362,15 +362,18 @@ void D_InitLoadSprites(void)
     // Create Objects
     object_t* spritesBarrel1 = (object_t*)malloc(sizeof(object_t));
     object_t* spritesCampfire = (object_t*)malloc(sizeof(object_t));
+    object_t* aiSkeleton = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.spritesLength = 2; // Set length
+    tomentdatapack.spritesLength = 3; // Set length
 
     D_InitObject(spritesBarrel1);
     D_InitObject(spritesCampfire);
+    D_InitObject(aiSkeleton);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
     tomentdatapack.sprites[S_Campfire] = spritesCampfire;
+    tomentdatapack.sprites[SAI_Skeleton] = aiSkeleton;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -405,10 +408,23 @@ void D_InitLoadSprites(void)
     tomentdatapack.spritesSheetsLenghtTable[S_Campfire] = 4;
     SDL_FreeSurface(temp1);
 
+    // AI Skeleton
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_AI_SKELETON))
+        tomentdatapack.sprites[SAI_Skeleton]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[SAI_Skeleton]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[SAI_Skeleton]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[SAI_Skeleton]->flags, 2); // Set dynamic bit flag to 1
+    SDL_FreeSurface(temp1);
+
 
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
+    D_SetObject(aiSkeleton, SAI_Skeleton, tomentdatapack.sprites[SAI_Skeleton]->texture, NULL);
 }
 
 

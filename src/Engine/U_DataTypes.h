@@ -19,16 +19,30 @@ typedef struct vector2Int_s
     int x,y;
 } vector2Int_t;
 
+
+typedef struct circle_s
+{
+    vector2_t pos;
+    float r;
+} circle_t;
+
+
 // -------------------------------
 // Sprite data structure
 // -------------------------------
 typedef struct sprite_s
 {
+    bool active;            // used for dynamics
+    
     vector2_t pos;          // position in world
+    vector2_t centeredPos;  // position in world centered
     vector2Int_t gridPos;   // position in grid
     vector2_t pSpacePos;    // position in player space        
 
     int level; // which level this sprite is in
+    float speed;
+
+    circle_t collisionCircle;
 
     int spriteID;
     int sheetLength;        // For Animated objects
@@ -109,6 +123,5 @@ typedef enum orientation_e
     WEST_EAST,
     ALL_FOUR_DIR,
 } orientation_e;
-
 
 #endif

@@ -2,7 +2,7 @@
 #include "G_Game.h"
 #include "D_ObjectsCallbacks.h"
 
-void CastleDoorsLvl2Callback(char* data)
+void D_CallbackChangeMap(char* data)
 {
     G_ChangeMap(data);
 }

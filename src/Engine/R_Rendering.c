@@ -72,7 +72,6 @@ void R_RenderDev(void)
     // Render UI
     R_DrawMinimap();
     T_DisplayTextScaled(FONT_BLKCRY, "This is an alert  message!", 360, 10, 1.0f);
-
 }
 
 //-------------------------------------
@@ -123,6 +122,14 @@ void R_DrawMinimap(void)
             if(DEBUG_VISIBLE_TILES_MINIMAP)
             {
                 if(visibleTiles[y][x])
+                {
+                    R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 0, 255, 0), &curRect);
+                }
+            }
+
+            if(DEBUG_DYNAMIC_SPRITES)
+            {
+                if(currentMap.dynamicSprites[y][x] != NULL && currentMap.dynamicSprites[y][x]->active)
                 {
                     R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 0, 255, 0), &curRect);
                 }
@@ -233,11 +240,6 @@ void R_Raycast(void)
             zBuffer[y][x] = FLT_MAX;
 
 
-    //printf("ANGLE: %f\n", player.angle);
-    //float rayAngle = player.angle;
-
-    // The angle of the current ray
-
     // Determine player's level
     player.level = (int)floor(player.z / TILE_SIZE);
     player.level = SDL_clamp(player.level, 0, MAX_N_LEVELS-1);
@@ -331,6 +333,21 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
         hcurx = A.x;
         hcury = A.y;
 
+        
+        // Check for sprites in the player's cell
+        // If the current tile wasn't already marked as a visible sprite && there is a sprite in that tile
+        int spriteID = R_GetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x); 
+        if(!visibleTiles[player.gridPosition.y][player.gridPosition.x])
+        {   
+            // Add sprite and data in the array
+            if(spriteID >= 1)
+                R_AddToVisibleSprite(player.gridPosition.x, player.gridPosition.y, player.level, spriteID);
+
+            // Check if there's an active dynamic sprite there
+            if(currentMap.dynamicSprites[player.gridPosition.y][player.gridPosition.x] != NULL && currentMap.dynamicSprites[player.gridPosition.y][player.gridPosition.x]->active)
+                R_AddDynamicToVisibleSprite(player.gridPosition.x, player.gridPosition.y);
+        }
+
         // Check for wall, if not, check next grid
         while(hDepth < MAP_WIDTH)
         {
@@ -352,10 +369,16 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             {
                 // Check for sprites
                 // If the current tile wasn't already marked as a visible sprite && there is a sprite in that tile
-                if(!visibleTiles[hcurGridY][hcurGridX] && R_GetValueFromSpritesMap(level, hcurGridY, hcurGridX) >= 1)
-                {
+                int spriteID = R_GetValueFromSpritesMap(level, hcurGridY, hcurGridX); 
+                if(!visibleTiles[hcurGridY][hcurGridX])
+                {   
                     // Add sprite and data in the array
-                    R_AddToVisibleSprite(hcurGridX, hcurGridY, level);
+                    if(spriteID >= 1)
+                        R_AddToVisibleSprite(hcurGridX, hcurGridY, level, spriteID);
+
+                    // Check if there's an active dynamic sprite there
+                    if(currentMap.dynamicSprites[hcurGridY][hcurGridX] != NULL && currentMap.dynamicSprites[hcurGridY][hcurGridX]->active)
+                        R_AddDynamicToVisibleSprite(hcurGridX, hcurGridY);
                 }
                 
                 int idHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
@@ -466,11 +489,17 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             // If the ray is in a grid that is inside the map
             if(vcurGridX >= 0 && vcurGridY >= 0 && vcurGridX < MAP_WIDTH && vcurGridY < MAP_HEIGHT)
             {
+                int spriteID = R_GetValueFromSpritesMap(level, vcurGridY, vcurGridX);
                 // Check for sprites
-                if(!visibleTiles[vcurGridY][vcurGridX] && R_GetValueFromSpritesMap(level, vcurGridY, vcurGridX) >= 1)
+                if(!visibleTiles[vcurGridY][vcurGridX])
                 {
                     // Add sprite and data in the array
-                    R_AddToVisibleSprite(vcurGridX, vcurGridY, level);
+                    if(spriteID >= 1)
+                        R_AddToVisibleSprite(vcurGridX, vcurGridY, level, spriteID);
+
+                    // Check if there's an active dynamic sprite there
+                    if(currentMap.dynamicSprites[vcurGridY][vcurGridX] != NULL && currentMap.dynamicSprites[vcurGridY][vcurGridX]->active)
+                        R_AddDynamicToVisibleSprite(vcurGridX, vcurGridY);
                 }
 
                 int idHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
@@ -658,7 +687,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             if(rayAngle < M_PI)
                 offset = (TILE_SIZE-1) - offset;
             
-            R_DrawWallTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -680,7 +709,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
                 offset = (TILE_SIZE-1) - offset;
 
-            R_DrawWallTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -753,7 +782,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
     // For NonOccluded raycast we should keep raycasting until the end or the map or the defined 
     int maxDrawDistance = 24;
     bool mapEndedOrMaxDistanceReached = false;
-    walldata_t toDraw[PROJECTION_PLANE_WIDTH*25]; // 2 is the two extra levels  
+    walldata_t toDraw[PROJECTION_PLANE_WIDTH * MAX_N_LEVELS];
     unsigned int toDrawLength = 0;
     
     // HORIZONTAL CHECK
@@ -844,10 +873,16 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         {
             // Check for sprites
             // If the current tile wasn't already marked as a visible sprite && there is a sprite in that tile
-            if(!visibleTiles[hcurGridY][hcurGridX] && R_GetValueFromSpritesMap(level, hcurGridY, hcurGridX) >= 1)
+            int spriteID = R_GetValueFromSpritesMap(level, hcurGridY, hcurGridX);
+            if(!visibleTiles[hcurGridY][hcurGridX])
             {
                 // Add sprite and data in the array
-                R_AddToVisibleSprite(hcurGridX, hcurGridY, level);
+                if(spriteID >= 1)
+                    R_AddToVisibleSprite(hcurGridX, hcurGridY, level, spriteID);
+
+                // Check if there's an active dynamic sprite there
+                if(currentMap.dynamicSprites[hcurGridY][hcurGridX] != NULL && currentMap.dynamicSprites[hcurGridY][hcurGridX]->active)
+                    R_AddDynamicToVisibleSprite(hcurGridX, hcurGridY);
             }
             
             int idHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
@@ -946,10 +981,16 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         if(vcurGridX >= 0 && vcurGridY >= 0 && vcurGridX < MAP_WIDTH && vcurGridY < MAP_HEIGHT)
         {
             // Check for sprites
-            if(!visibleTiles[vcurGridY][vcurGridX] && R_GetValueFromSpritesMap(level, vcurGridY, vcurGridX) >= 1)
+            int spriteID = R_GetValueFromSpritesMap(level, vcurGridY, vcurGridX);
+            if(!visibleTiles[vcurGridY][vcurGridX])
             {
                 // Add sprite and data in the array
-                R_AddToVisibleSprite(vcurGridX, vcurGridY, level);
+                if(spriteID >= 1)
+                R_AddToVisibleSprite(vcurGridX, vcurGridY, level, spriteID);
+
+                // Check if there's an active dynamic sprite there
+                if(currentMap.dynamicSprites[vcurGridY][vcurGridX] != NULL && currentMap.dynamicSprites[vcurGridY][vcurGridX]->active)
+                    R_AddDynamicToVisibleSprite(vcurGridX, vcurGridY);
             }
 
             int idHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
@@ -1172,8 +1213,6 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
             // but this calculation lets us slide the texture offset too for the doors
 
-            // TODO: Sliding doors should have their doorspositions array for each level
-            //int offset = (int)(toDraw[tD].curX - (doorpositions[toDraw[tD].gridPos.y][toDraw[tD].gridPos.x])) % TILE_SIZE; 
             int offset = (int)(toDraw[tD].curX) % TILE_SIZE; 
             offset = SDL_clamp(offset, 0, TILE_SIZE);
 
@@ -1181,7 +1220,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             if(rayAngle < M_PI)
                 offset = (TILE_SIZE-1) - offset;
             
-            R_DrawWallTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -1196,9 +1235,6 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
             // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
             // but this calculation lets us slide the texture offse too for the doors
-            
-            // TODO: Sliding doors should have their doorspositions array for each level
-            //int offset = (int)(toDraw[tD].curY - (doorpositions[toDraw[tD].gridPos.y][toDraw[tD].gridPos.x])) % TILE_SIZE;
             int offset = (int)(toDraw[tD].curY) % TILE_SIZE;
 
             offset = SDL_clamp(offset, 0, TILE_SIZE);
@@ -1207,7 +1243,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
                 offset = (TILE_SIZE-1) - offset;
 
-            R_DrawWallTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -1559,7 +1595,7 @@ void R_DrawThinWall(walldata_t* cur)
             offset = (TILE_SIZE-1) - offset;
         
         if(cur->extraData == 1) // If it is visible
-            R_DrawWallTexturedShaded((cur->x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((cur->x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
     }
     else if(!isOffScreenBottom)
     {
@@ -1575,7 +1611,7 @@ void R_DrawThinWall(walldata_t* cur)
             offset = (TILE_SIZE-1) - offset;
 
         if(cur->extraData == 1) // If it is visible
-            R_DrawWallTexturedShaded((cur->x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((cur->x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
     }
 }
 
@@ -1583,8 +1619,12 @@ void R_DrawThinWall(walldata_t* cur)
 //-------------------------------------
 // Adds a sprite to the visible sprite array and adds its corresponding drawable
 //-------------------------------------
-void R_AddToVisibleSprite(int gridX, int gridY, int level)
+void R_AddToVisibleSprite(int gridX, int gridY, int level, int spriteID)
 {
+     // Check if it's a dynamic
+    if(U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 1)
+        return;
+
     visibleSprites[visibleSpritesLength].level = level;
 
     // Save Grid Pos
@@ -1595,15 +1635,17 @@ void R_AddToVisibleSprite(int gridX, int gridY, int level)
     visibleSprites[visibleSpritesLength].pos.x = gridX * TILE_SIZE;
     visibleSprites[visibleSpritesLength].pos.y = gridY * TILE_SIZE;
 
+    visibleSprites[visibleSpritesLength].centeredPos.x = visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE / 2);
+    visibleSprites[visibleSpritesLength].centeredPos.y = visibleSprites[visibleSpritesLength].pos.y + (TILE_SIZE / 2);
+
     // Get Player Space pos
-    visibleSprites[visibleSpritesLength].pSpacePos.x = (visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
-    visibleSprites[visibleSpritesLength].pSpacePos.y = (visibleSprites[visibleSpritesLength].pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
+    visibleSprites[visibleSpritesLength].pSpacePos.x = visibleSprites[visibleSpritesLength].centeredPos.x - player.centeredPos.x;
+    visibleSprites[visibleSpritesLength].pSpacePos.y = visibleSprites[visibleSpritesLength].centeredPos.y - player.centeredPos.y;
 
     // Calculate the distance to player
     visibleSprites[visibleSpritesLength].dist = sqrt(visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x + visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y);
 
     // Get ID
-    int spriteID = R_GetValueFromSpritesMap(level, gridY, gridX);
     visibleSprites[visibleSpritesLength].spriteID = spriteID;
     visibleSprites[visibleSpritesLength].sheetLength = tomentdatapack.spritesSheetsLenghtTable[spriteID];
 
@@ -1618,6 +1660,27 @@ void R_AddToVisibleSprite(int gridX, int gridY, int level)
     // Increment indexes
     allDrawablesLength++;
     visibleSpritesLength++;
+
+    
+    // Mark this sprite as added so we don't get duplicates
+    visibleTiles[gridY][gridX] = true;
+}
+
+void R_AddDynamicToVisibleSprite(int gridX, int gridY)
+{
+    // Check if it's a dynamic
+    sprite_t* dynamicSprite = currentMap.dynamicSprites[gridY][gridX];
+
+    // Sprite is also a drawable
+    // Add it to the drawables
+    allDrawables[allDrawablesLength].type = DRWB_SPRITE;
+    allDrawables[allDrawablesLength].spritePtr = currentMap.dynamicSprites[gridY][gridX];
+    
+    // Quick variable access
+    allDrawables[allDrawablesLength].dist = dynamicSprite->dist;
+    
+    // Increment indexes
+    allDrawablesLength++;
 
     // Mark this sprite as added so we don't get duplicates
     visibleTiles[gridY][gridX] = true;
@@ -1678,7 +1741,7 @@ void R_DrawSprite(sprite_t* sprite)
         drawYStart = spriteOffset;
         drawYEnd = spriteOffset+sprite->height;
 
-        R_DrawWallTexturedShaded(drawX, drawYStart-(sprite->height*sprite->level), drawYEnd-(sprite->height*sprite->level), tomentdatapack.sprites[sprite->spriteID]->texture,offset, sprite->height, lighting, dist);
+        R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->height*sprite->level), drawYEnd-(sprite->height*sprite->level), tomentdatapack.sprites[sprite->spriteID]->texture,offset, sprite->height, lighting, dist);
     }
 
     // Draws the center of the sprite
@@ -1692,6 +1755,7 @@ void R_DrawDrawables(void)
 {
     U_QuicksortDrawables(allDrawables, 0, allDrawablesLength-1);
 
+    int counter = 0;
     for(int i = 0; i < allDrawablesLength; i++)
     {
         switch(allDrawables[i].type)
@@ -1701,6 +1765,7 @@ void R_DrawDrawables(void)
                 break;
 
             case DRWB_SPRITE:
+                counter++;
                 R_DrawSprite(allDrawables[i].spritePtr);
                 break;
         }
@@ -1716,20 +1781,16 @@ int R_GetValueFromLevel(int level, int y, int x)
         {
             case 0:
                 return currentMap.level0[y][x];
-                break;
 
             case 1:
                 return currentMap.level1[y][x];
-                break;
 
             case 2:
                 return currentMap.level2[y][x];
-                break;
 
             default:
                 //printf("WARNING! Level get was out of max/min level size\n");
                 return 0;
-                break;
         }
     }
     else
@@ -1746,20 +1807,16 @@ int R_GetValueFromSpritesMap(int level, int y, int x)
         {
             case 0:
                 return currentMap.spritesMapLevel0[y][x];
-                break;
 
             case 1:
                 return currentMap.spritesMapLevel1[y][x];
-                break;
 
             case 2:
                 return currentMap.spritesMapLevel2[y][x];
-                break;
 
             default:
                 //printf("WARNING! Level get was out of max/min level size\n");
                 return 0;
-                break;
         }
     }
     else
@@ -1856,7 +1913,7 @@ void R_DrawLineLow(int x0, int y0, int x1, int y1, int color)
             D = D + (2 * (dy - dx));
         }
         else
-            D = D + 2*dy;
+            D = D + 2 * dy;
     }
 }
 
@@ -2042,7 +2099,7 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
 // xOffset = the x index of the texture for this column
 // wallheight = the height of the wall to be drawn (must be uncapped)
 //-------------------------------------------------
-void R_DrawWallTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist)
+void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist)
 {
     // The offset to extract Y pixels from the texture, this is != 0 only if the wall is bigger than the projection plane height
     float textureYoffset = 0.0f;

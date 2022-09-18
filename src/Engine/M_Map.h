@@ -58,6 +58,7 @@ typedef struct map_s
     int maxCeilingHeight;
 
     // Map Dynamics, values are cached in multiple matrixes to avoid having to calculate them each time
+    // These values can change during runtime
 
     int objectTMapLevel0[MAP_HEIGHT][MAP_WIDTH];      // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
     int objectTMapLevel1[MAP_HEIGHT][MAP_WIDTH];      // Contains the objectType_e currently placed in that cell, mainly used to differientate input and to know which kind of object is where
@@ -66,6 +67,9 @@ typedef struct map_s
     int collisionMapLevel0[MAP_HEIGHT][MAP_WIDTH];    // Collision data
     int collisionMapLevel1[MAP_HEIGHT][MAP_WIDTH];    // Collision data
     int collisionMapLevel2[MAP_HEIGHT][MAP_WIDTH];    // Collision data
+
+    // Dynamic sprites, like AI
+    sprite_t* dynamicSprites[MAP_HEIGHT][MAP_WIDTH];
 } map_t;
 
 // The currently loaded map

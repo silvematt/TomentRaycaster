@@ -1,4 +1,5 @@
 #include "M_Map.h"
+#include "G_Game.h"
 
 map_t currentMap;
 
@@ -6,6 +7,7 @@ static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp);
 static void I_LoadIntFromFile(FILE* fp, int* toLoad);
 static void I_LoadFloatFromFile(FILE* fp, float* toLoad);
 static void I_ReadStringFromFile(FILE* fp, char toWrite[MAX_STRLEN]);
+static void I_LoadDynamicSprite(sprite_t* cur, int spriteID, int x, int y);
 
 // -------------------------------
 // Loads the map from the file named mapID
@@ -13,7 +15,7 @@ static void I_ReadStringFromFile(FILE* fp, char toWrite[MAX_STRLEN]);
 void M_LoadMapAsCurrent(char* mapID)
 {
       FILE* fp;
-      char filepath[MAX_FILEPATH_L] = "Data/";
+      char filepath[MAX_FILEPATH_L] = "Data/maps/";
 
       // Find path
       strcat(filepath, mapID);
@@ -125,9 +127,10 @@ void M_LoadMapAsCurrent(char* mapID)
 // -------------------------------
 // Loads the object map
 // -------------------------------
-// TO DO object tmap should be on 3 levels
 void M_LoadObjectTMap(void)
 {
+      allDynamicSpritesLength = 0;
+      
       for(int y = 0; y < MAP_HEIGHT; y++)
             for(int x = 0; x < MAP_WIDTH; x++)
                   {     
@@ -156,7 +159,21 @@ void M_LoadObjectTMap(void)
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
                         int spriteID = currentMap.spritesMapLevel0[y][x];
                         if(spriteID > 0)
+                        {
                               currentMap.objectTMapLevel0[y][x] = ObjT_Sprite;
+
+                              // Check if this is a dynamic sprite
+                              if(U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 1)
+                              {
+                                    // Construct the dynamic sprite in base of its id
+                                    currentMap.dynamicSprites[y][x] = (sprite_t*)malloc(sizeof(sprite_t));
+                                    sprite_t* cur = currentMap.dynamicSprites[y][x];
+
+                                    I_LoadDynamicSprite(cur, spriteID, x, y);
+
+                                    // The rest is calculated at runtime
+                              }
+                        }
 
 
                         // LEVEL 1
@@ -183,7 +200,20 @@ void M_LoadObjectTMap(void)
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
                         spriteID = currentMap.spritesMapLevel1[y][x];
                         if(spriteID > 0)
+                        {
                               currentMap.objectTMapLevel1[y][x] = ObjT_Sprite;
+
+                              // Check if this is a dynamic sprite
+                              if(U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 1)
+                              {
+                                    currentMap.dynamicSprites[y][x] = (sprite_t*)malloc(sizeof(sprite_t));
+                                    sprite_t* cur = currentMap.dynamicSprites[y][x];
+                                    
+                                    I_LoadDynamicSprite(cur, spriteID, x, y);
+
+                                    // The rest is calculated at runtime
+                              }
+                        }
 
 
                         // LEVEL 2
@@ -210,14 +240,26 @@ void M_LoadObjectTMap(void)
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
                         spriteID = currentMap.spritesMapLevel2[y][x];
                         if(spriteID > 0)
+                        {
                               currentMap.objectTMapLevel2[y][x] = ObjT_Sprite;
+
+                              // Check if this is a dynamic sprite
+                              if(U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 1)
+                              {
+                                    currentMap.dynamicSprites[y][x] = (sprite_t*)malloc(sizeof(sprite_t));
+                                    sprite_t* cur = currentMap.dynamicSprites[y][x];
+                                    
+                                    I_LoadDynamicSprite(cur, spriteID, x, y);
+
+                                    // The rest is calculated at runtime
+                              }
+                        }
                   }
 }
 
 // -------------------------------
 // Loads the collision map
 // -------------------------------
-// TODO collision map should be on 3 levels
 void M_LoadCollisionMaps(void)
 {
       // Load Level 0
@@ -235,7 +277,8 @@ void M_LoadCollisionMaps(void)
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
                         int spriteID = currentMap.spritesMapLevel0[y][x];
-                        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1)
+                        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1 &&
+                              U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 0)
                               currentMap.collisionMapLevel0[y][x] = 1;
 
 
@@ -250,7 +293,8 @@ void M_LoadCollisionMaps(void)
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
                         spriteID = currentMap.spritesMapLevel1[y][x];
-                        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1)
+                        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1 &&
+                              U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 0)
                               currentMap.collisionMapLevel1[y][x] = 1;
 
                         // LEVEL 2
@@ -264,7 +308,8 @@ void M_LoadCollisionMaps(void)
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
                         spriteID = currentMap.spritesMapLevel2[y][x];
-                        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1)
+                        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 0) == 1 &&
+                              U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 0)
                               currentMap.collisionMapLevel2[y][x] = 1;
                   }
 }
@@ -422,4 +467,30 @@ static void I_ReadStringFromFile(FILE* fp, char toWrite[MAX_STRLEN])
             indx++;
       }
       toWrite[i] = '\0';
+}
+
+static void I_LoadDynamicSprite(sprite_t* cur, int spriteID, int x, int y)
+{
+      cur->active = true;
+      cur->level = 0;
+      cur->speed = 1.0f;
+
+      cur->gridPos.x = x;
+      cur->gridPos.y = y;
+
+      // Get World Pos
+      cur->pos.x = x * TILE_SIZE;
+      cur->pos.y = y * TILE_SIZE;
+
+      cur->collisionCircle.pos.x = cur->pos.x;
+      cur->collisionCircle.pos.y = cur->pos.y;
+      cur->collisionCircle.r = 32;
+
+      // Get ID
+      cur->spriteID = spriteID;
+      cur->sheetLength = tomentdatapack.spritesSheetsLenghtTable[spriteID];
+
+      // Add it to the dynamic sprite list
+      allDynamicSprites[allDynamicSpritesLength] = cur;
+      allDynamicSpritesLength++;
 }

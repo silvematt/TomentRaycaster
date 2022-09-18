@@ -9,7 +9,6 @@
 
 void    U_SetBit(byte* b, byte n);
 byte    U_GetBit(byte* b, byte n);
-float   U_GetDistanceSquared(float x1, float y1, float x2, float y2);
 
 // -------------------------------
 // Perform quicksorts before drawing drawables to draw from farther to nearest

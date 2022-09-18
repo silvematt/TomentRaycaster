@@ -55,7 +55,8 @@ extern unsigned visibleThinWallsLength;
 // Debug
 // =========================================
 #define DEBUG_RAYCAST_MINIMAP 0
-#define DEBUG_VISIBLE_TILES_MINIMAP 0
+#define DEBUG_VISIBLE_TILES_MINIMAP 1
+#define DEBUG_DYNAMIC_SPRITES 0
 #define DEBUG_VISIBLE_SPRITES_MINIMAP 0
 
 extern uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
@@ -204,7 +205,12 @@ void R_CeilingCasting(float start, float rayAngle, int x, float wallHeight);
 //-------------------------------------
 // Adds a sprite to the visible sprite array and adds its corresponding drawable
 //-------------------------------------
-void R_AddToVisibleSprite(int gridX, int gridY, int level);
+void R_AddToVisibleSprite(int gridX, int gridY, int level, int spriteID);
+
+//-------------------------------------
+// Adds a dynamic sprite to the visible sprite array and adds its corresponding drawable
+//-------------------------------------
+void R_AddDynamicToVisibleSprite(int gridX, int gridY);
 
 //-------------------------------------
 // Draws the visible sprites
@@ -229,6 +235,6 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
 //-------------------------------------
 // Draws a column of pixels with texture mapping and shading
 //-------------------------------------
-void R_DrawWallTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist);
+void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist);
 
 #endif

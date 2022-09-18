@@ -7,6 +7,7 @@
 #include "G_Physics.h"
 #include "U_Utilities.h"
 #include "D_AssetsManager.h"
+#include "G_Physics.h"
 
 player_t player;    // Player
 
@@ -27,13 +28,18 @@ void SDL_Rect_Set(SDL_Rect* r, int x, int y, int w, int h)
 void G_InitPlayer(void)
 {
     // Init player
-    player.position.x = currentMap.playerStartingGridX * TILE_SIZE;
-    player.position.y = currentMap.playerStartingGridY * TILE_SIZE;
+    player.position.x = (currentMap.playerStartingGridX * TILE_SIZE);
+    player.position.y = (currentMap.playerStartingGridY * TILE_SIZE);
+
+    player.collisionCircle.pos.x = player.position.x;
+    player.collisionCircle.pos.y = player.position.y;
+
     player.angle = currentMap.playerStartingRot;
     player.z = (TILE_SIZE/2) + ((TILE_SIZE) * currentMap.playerStartingLevel);
     player.level = currentMap.playerStartingLevel;
     player.gridPosition.x = currentMap.playerStartingGridX;
     player.gridPosition.y = currentMap.playerStartingGridY;
+    player.collisionCircle.r = 32;
 
     // Rect for minimap
     SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
@@ -66,10 +72,6 @@ void G_PlayerTick(void)
     player.deltaPos.x = (playerinput.dir.x * playerinput.input.y) * PLAYER_SPEED * deltaTime;
     player.deltaPos.y = (playerinput.dir.y * playerinput.input.y) * PLAYER_SPEED * deltaTime;
 
-    // Calculate the player position relative to cell
-    float playerXCellOffset = (int)(player.position.x+PLAYER_CENTER_FIX) % TILE_SIZE;
-    float playerYCellOffset = (int)(player.position.y+PLAYER_CENTER_FIX) % TILE_SIZE;
-
     // Strafe
     if(playerinput.strafe.x != 0.0f)
     {
@@ -88,6 +90,37 @@ void G_PlayerTick(void)
         player.deltaPos.x += (strafedDir.x) * PLAYER_SPEED * deltaTime;
         player.deltaPos.y += (strafedDir.y) * PLAYER_SPEED * deltaTime;
     }
+
+    // After calculating the movement, check for collision and in case, cancel the delta
+    G_PlayerCollisionCheck();
+    
+    // Move Player normally
+    player.position.x += player.deltaPos.x;
+    player.position.y += player.deltaPos.y;
+
+    // Clamp player in map boundaries
+    player.position.x = SDL_clamp(player.position.x, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
+    player.position.y = SDL_clamp(player.position.y, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
+
+    // Compute centered pos for calculations
+    player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
+    player.centeredPos.y = player.position.y + PLAYER_CENTER_FIX;
+
+    // Update collision circle
+    player.collisionCircle.pos.x = player.centeredPos.x;
+    player.collisionCircle.pos.y = player.centeredPos.y;
+}
+
+
+void G_PlayerCollisionCheck()
+{
+    //---------------------------------------------------
+    // Player->Collision Map
+    //---------------------------------------------------
+
+    // Calculate the player position relative to cell
+    float playerXCellOffset = (int)(player.position.x+PLAYER_CENTER_FIX) % TILE_SIZE;
+    float playerYCellOffset = (int)(player.position.y+PLAYER_CENTER_FIX) % TILE_SIZE;
 
     // Collision detection (Walls and solid sprites)
     if(player.deltaPos.x > 0)
@@ -123,19 +156,30 @@ void G_PlayerTick(void)
         if(coll != 0 && playerYCellOffset > (TILE_SIZE-PLAYER_MIN_DIST_TO_WALL)) // Wall check
             player.deltaPos.y = 0;
     }
-    
-    // Move Player normally
-    player.position.x += player.deltaPos.x;
-    player.position.y += player.deltaPos.y;
 
-    // Clamp player in map boundaries
-    player.position.x = SDL_clamp(player.position.x, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
-    player.position.y = SDL_clamp(player.position.y, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
+    //---------------------------------------------------
+    // Player->Dynamic Sprites
+    //---------------------------------------------------
 
-    // Compute centered pos for calculations
-    player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
-    player.centeredPos.y = player.position.y + PLAYER_CENTER_FIX;
+    // The circle the player has if the delta movement is applied
+    circle_t hypoteticalPlayerCircle = {player.collisionCircle.pos.x += player.deltaPos.x, player.collisionCircle.pos.y += player.deltaPos.y, player.collisionCircle.r};
+    for(int i = 0; i < allDynamicSpritesLength; i++)
+    {
+        if(allDynamicSprites[i]->active && allDynamicSprites[i]->level == player.level)
+        {
+            sprite_t* cur = allDynamicSprites[i];
+
+            // Check for collision
+            // If there's collision, do not apply movement
+            if(P_CheckCircleCollision(&hypoteticalPlayerCircle, &cur->collisionCircle) > 0)
+            {
+                player.deltaPos.x = 0;
+                player.deltaPos.y = 0;
+            }
+        }
+    }
 }
+
 
 //-------------------------------------
 // Handles Input from the player 

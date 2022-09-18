@@ -13,14 +13,7 @@ byte U_GetBit(byte* b, byte n)
     return (*b >> n) & 1;
 }
 
-float U_GetDistanceSquared(float x1, float y1, float x2, float y2)
-{
-    // Translate to player's coordinates
-    float dx = x1 - x2;
-    float dy = y1 - y2;
 
-    return sqrt(dx*dx + dy*dy);
-}
 
 // -------------------------------
 // Perform quicksorts before drawing drawables to draw from farther to nearest

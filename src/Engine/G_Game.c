@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "I_InputHandling.h"
 #include "G_Game.h"
 #include "G_Physics.h"
@@ -20,6 +22,10 @@ int doorstateLevel2[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, cl
 float doorpositionsLevel0[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 float doorpositionsLevel1[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 float doorpositionsLevel2[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
+
+// Dynamic AI list
+sprite_t* allDynamicSprites[OBJECTARRAY_DEFAULT_SIZE];
+unsigned int allDynamicSpritesLength = 0;
 
 //-------------------------------------
 // Initialize game related stuff 
@@ -70,6 +76,58 @@ void G_GameLoop(void)
     }
 }
 
+void G_UpdateAI(void)
+{
+    for(int y = 0; y < MAP_HEIGHT; y++)
+        for(int x = 0; x < MAP_WIDTH; x++)
+        {
+            sprite_t* cur = currentMap.dynamicSprites[y][x];
+
+            if(cur == NULL || cur->active == false)
+                continue;
+
+            int oldGridPosX = cur->gridPos.x;
+            int oldGridPosY = cur->gridPos.y;
+
+            // Calculate centered pos
+            cur->centeredPos.x = cur->pos.x + (TILE_SIZE / 2);
+            cur->centeredPos.y = cur->pos.y + (TILE_SIZE / 2);
+
+            cur->gridPos.x = cur->centeredPos.x / TILE_SIZE;
+            cur->gridPos.y = cur->centeredPos.y / TILE_SIZE;
+            
+            // Calculate runtime stuff
+            // Get Player Space pos
+            cur->pSpacePos.x = (cur->pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
+            cur->pSpacePos.y = (cur->pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
+
+            // Calculate the distance to player
+            cur->dist = sqrt(cur->pSpacePos.x*cur->pSpacePos.x + cur->pSpacePos.y*cur->pSpacePos.y);
+
+            // Move towards player
+            float deltaX = player.centeredPos.x - cur->centeredPos.x;
+            float deltaY = player.centeredPos.y - cur->centeredPos.y;
+
+            if(P_CheckCircleCollision(&cur->collisionCircle, &player.collisionCircle) < 0 && 
+                P_GetDistance(player.centeredPos.x, player.centeredPos.y, cur->centeredPos.x+ ((deltaX * cur->speed) * deltaTime), cur->centeredPos.y+((deltaX * cur->speed) * deltaTime)) > TILE_SIZE)
+            {
+                cur->pos.x += (deltaX * cur->speed) * deltaTime;
+                cur->pos.y += (deltaY * cur->speed) * deltaTime; 
+            }
+            
+            // Check if this AI changed grid pos
+            if(!(oldGridPosX == cur->gridPos.x && oldGridPosY == cur->gridPos.y))
+            {
+                // Update the dynamic map 
+                currentMap.dynamicSprites[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSprites[y][x];
+                currentMap.dynamicSprites[y][x] = NULL;
+            }
+
+            cur->collisionCircle.pos.x = cur->centeredPos.x;
+            cur->collisionCircle.pos.y = cur->centeredPos.y;
+        }
+        
+}
 
 void G_StateGameLoop(void)
 {
@@ -83,7 +141,7 @@ void G_StateGameLoop(void)
     // Do stuff
     G_PlayerTick();
     G_UpdateDoors();
-
+    G_UpdateAI();
     G_PhysicsEndTick();
     
     // Render

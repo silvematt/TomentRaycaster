@@ -33,6 +33,8 @@ typedef struct player_s
     float z;
     int level;              // The current floor level the player is at
     
+    circle_t collisionCircle;
+
     vector2Int_t gridPosition;  // position of the player in the tilemap
     vector2Int_t inFrontGridPosition; // The grid pos of the cell in front of the player
     vector2_t deltaPos; // used to calculate movements and collision
@@ -99,6 +101,7 @@ float G_GetDoorPosition(int level, int y, int x);
 //-------------------------------------
 int G_GetFromObjectTMap(int level, int y, int x);
 
+void G_PlayerCollisionCheck();
 
 void G_PlayerRender(void);
 

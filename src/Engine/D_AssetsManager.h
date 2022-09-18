@@ -55,7 +55,8 @@ typedef enum spritesObjectID_e
 {
     // 0 = Empty
     S_Barrel1 = 1,
-    S_Campfire
+    S_Campfire,
+    SAI_Skeleton
 } spritesObjectID_t;
 
 // All sprites
@@ -154,6 +155,10 @@ typedef enum playerFPID_e
     // 000000 0 0
     //         \
     //          1 = Animated sprite (uses horizontal sheet)
+
+    // 00000  0 00
+    //         \
+    //          1 = Dynamic sprite: A dynamic sprite is a sprite that can move in the world and update the sprites maps, used for AI
 */
 
 // Table of Content elements for opening archives (MUST BE IN SYNCH WITH ARCH)
@@ -183,6 +188,7 @@ typedef enum imgIDs_e
     IMG_ID_SKY_DEFAULT,
     IMG_ID_P_HANDS_IDLE,
     IMG_ID_WT_CASTLE_DOORS,
+    IMG_ID_AI_SKELETON
 } imgIDs_e;
 
 typedef struct archt_s

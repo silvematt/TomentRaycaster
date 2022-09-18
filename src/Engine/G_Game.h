@@ -29,6 +29,10 @@ extern float doorpositionsLevel0[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the po
 extern float doorpositionsLevel1[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 extern float doorpositionsLevel2[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 
+// Dynamic AI list
+extern sprite_t* allDynamicSprites[OBJECTARRAY_DEFAULT_SIZE];
+extern unsigned int allDynamicSpritesLength;
+
 //-------------------------------------
 // Initialize game related stuff 
 //-------------------------------------
