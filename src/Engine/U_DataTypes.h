@@ -1,11 +1,11 @@
 #ifndef DATA_TYPES_H_INCLUDED
 #define DATA_TYPES_H_INCLUDED
 
-
 #include <stdint.h>
 #include <stdbool.h>
 
 #define RADIAN 0.0174533        // 1 Radian
+
 
 typedef	uint8_t byte;
 
@@ -26,6 +26,27 @@ typedef struct circle_s
     float r;
 } circle_t;
 
+
+//-------------------------------------
+// Pathfinding
+//-------------------------------------
+// Node of a path
+typedef struct pathnode_s
+{
+    vector2Int_t gridPos;
+
+    // Costs
+    int f, g, h;
+    struct pathnode_s* parent;
+} pathnode_t;
+
+// Used by AI and such
+typedef struct path_s
+{
+    bool isValid;
+    pathnode_t* nodes[256];
+    unsigned int nodesLength;
+} path_t;
 
 // -------------------------------
 // Sprite data structure
@@ -50,6 +71,8 @@ typedef struct sprite_s
     float dist;     // distance from player
     float height;   // how big the sprite will be drawn
 
+    vector2Int_t targetGridPos;   // position in grid of the target
+    path_t* path;
 } sprite_t;
 
 // -------------------------------

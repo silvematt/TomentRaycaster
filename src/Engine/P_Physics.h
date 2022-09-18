@@ -1,7 +1,7 @@
 #ifndef PHYSICS_H_INCLUDED
 #define PHYSICS_H_INCLUDED
 
-#include "G_Physics.h"
+#include "P_Physics.h"
 #include "U_Timer.h"
 #include "U_DataTypes.h"
 
@@ -14,17 +14,17 @@ extern float deltaTime;
 //-------------------------------------
 // Initializes the physics
 //-------------------------------------
-void G_PhysicsInit(void);
+void P_PhysicsInit(void);
 
 //-------------------------------------
 // Physics tick
 //-------------------------------------
-void G_PhysicsTick(void);
+void P_PhysicsTick(void);
 
 //-------------------------------------
 // End the physics tick
 //-------------------------------------
-void G_PhysicsEndTick(void);
+void P_PhysicsEndTick(void);
 
 //-------------------------------------
 // Checks the collision between two circles

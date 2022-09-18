@@ -4,10 +4,10 @@
 #include "R_Rendering.h"
 #include "I_InputHandling.h"
 #include "M_Map.h"
-#include "G_Physics.h"
+#include "P_Physics.h"
 #include "U_Utilities.h"
 #include "D_AssetsManager.h"
-#include "G_Physics.h"
+#include "G_Pathfinding.h"
 
 player_t player;    // Player
 
@@ -160,7 +160,7 @@ void G_PlayerCollisionCheck()
     //---------------------------------------------------
     // Player->Dynamic Sprites
     //---------------------------------------------------
-
+    
     // The circle the player has if the delta movement is applied
     circle_t hypoteticalPlayerCircle = {player.collisionCircle.pos.x += player.deltaPos.x, player.collisionCircle.pos.y += player.deltaPos.y, player.collisionCircle.r};
     for(int i = 0; i < allDynamicSpritesLength; i++)
@@ -209,6 +209,7 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
     if(keyboardState[SDL_SCANCODE_LSHIFT])
         if(player.z < 191)
             player.z += 1.0f; 
+
 
     //playerinput.input.x = SDL_clamp(playerinput.input.x, -1.0f , 1.0f);
     playerinput.input.y = SDL_clamp(playerinput.input.y, -1.0f , 1.0f);
@@ -281,6 +282,26 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
             {
                 debugRendering = !debugRendering;
             }
+
+            if(e->key.keysym.sym == SDLK_F2)
+            {
+                r_debugPathfinding = true;
+
+                // Update minimap
+                R_DrawMinimap();
+
+                if(allDynamicSprites[0] != NULL)
+                    G_PerformPathfindingDebug(allDynamicSprites[0]->level, allDynamicSprites[0]->gridPos, player.gridPosition);
+                else
+                {
+                    printf("Tried to debug pathfinding between first dynamic sprite and player, but no dynamic sprite is present in this map... Performing Pathfinding from center of the map to the player...\n");
+                    vector2Int_t gridpos = {floor(MAP_WIDTH / 2), floor(MAP_HEIGHT / 2)};
+                    G_PerformPathfindingDebug(player.level, gridpos, player.gridPosition);
+                }
+
+                r_debugPathfinding = false;
+            }
+
 
         break;
     }

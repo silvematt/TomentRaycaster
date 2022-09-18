@@ -23,7 +23,7 @@
 // =========================================
 // Minimap
 // =========================================
-#define MINIMAP_DIVIDER 32               // Divider for making the minimap smaller
+#define MINIMAP_DIVIDER 16               // Divider for making the minimap smaller
 #define MINIMAP_PLAYER_WIDTH 4          // Dividers for making the player in the minimap smaller
 #define MINIMAP_PLAYER_HEIGHT 4
 
@@ -71,6 +71,8 @@ extern drawabledata_t allDrawables[MAX_DRAWABLES];
 extern int allDrawablesLength;
 
 extern bool debugRendering;
+extern bool r_debugPathfinding;
+
 
 //-------------------------------------
 // Initializes the rendering 

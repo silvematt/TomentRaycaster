@@ -129,6 +129,16 @@ void M_LoadMapAsCurrent(char* mapID)
 // -------------------------------
 void M_LoadObjectTMap(void)
 {
+      for(int i = 0; i < allDynamicSpritesLength; i++)
+            free(allDynamicSprites[i]);
+
+      for(int y = 0; y < MAP_HEIGHT; y++)
+            for(int x = 0; x < MAP_WIDTH; x++)
+                  {
+                        free(currentMap.dynamicSprites[y][x]);
+                        currentMap.dynamicSprites[y][x] = NULL;
+                  }
+
       allDynamicSpritesLength = 0;
       
       for(int y = 0; y < MAP_HEIGHT; y++)
@@ -471,9 +481,10 @@ static void I_ReadStringFromFile(FILE* fp, char toWrite[MAX_STRLEN])
 
 static void I_LoadDynamicSprite(sprite_t* cur, int spriteID, int x, int y)
 {
+      printf("LOADING DYNAMIC SPRITE!\n");
       cur->active = true;
       cur->level = 0;
-      cur->speed = 1.0f;
+      cur->speed = 2.0f;
 
       cur->gridPos.x = x;
       cur->gridPos.y = y;

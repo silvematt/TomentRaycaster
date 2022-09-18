@@ -35,13 +35,14 @@ drawabledata_t allDrawables[MAX_DRAWABLES];
 int allDrawablesLength;
 
 bool debugRendering = false;
-
+bool r_debugPathfinding = false;
 
 // =========================================
 // Static functions
 // =========================================
 // Save the information about this hit, it will be drawn later after this ray draws a wall
 static void I_AddThinWall(int level, bool horizontal, float rayAngle, int x, float curX, float curY, int gridX, int gridY, float distance);
+static void I_DebugPathfinding(void);
 
 //-------------------------------------
 // Initializes the rendering 
@@ -71,6 +72,8 @@ void R_RenderDev(void)
 
     // Render UI
     R_DrawMinimap();
+
+
     T_DisplayTextScaled(FONT_BLKCRY, "This is an alert  message!", 360, 10, 1.0f);
 }
 
@@ -97,6 +100,12 @@ void R_ComposeFrame(void)
 //-------------------------------------
 void R_DrawMinimap(void)
 {
+    if(r_debugPathfinding)
+    {
+        I_DebugPathfinding();
+        return;
+    }
+
     SDL_Rect curRect;
 
     // If the map has never been drawn, draw it in the framebuffer 1
@@ -403,7 +412,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                                 // If they're in the same tile, the door is visible
                                 if(newGridX == hcurGridX && newGridY == hcurGridY && thinWallDepth < MAX_THIN_WALL_TRANSPARENCY_RECURSION)
                                 {   
-                                    hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));;
+                                    hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
                                     
                                     // Save the information about this hit, it will be drawn later after this ray draws a wall
                                     I_AddThinWall(level, true, rayAngle, x, hcurx, hcury, hcurGridX, hcurGridY, hDistance);
@@ -527,7 +536,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                                 // If they're in the same tile, the door is visible
                                 if(newGridX == vcurGridX && newGridY == vcurGridY  && thinWallDepth < MAX_THIN_WALL_TRANSPARENCY_RECURSION)
                                 {
-                                    vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));;
+                                    vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
                                     
                                     // Save the information about this hit, it will be drawn later after this ray draws a wall
                                     I_AddThinWall(level, false, rayAngle, x, vcurx, vcury, vcurGridX, vcurGridY, vDistance);
@@ -909,7 +918,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                             // If they're in the same tile, the door is visible
                             if(newGridX == hcurGridX && newGridY == hcurGridY && thinWallDepth < MAX_THIN_WALL_TRANSPARENCY_RECURSION)
                             {   
-                                hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));;
+                                hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
                                 
                                 // Save the information about this hit, it will be drawn later after this ray draws a wall
                                 I_AddThinWall(level, true, rayAngle, x, hcurx, hcury, hcurGridX, hcurGridY, hDistance);
@@ -1020,7 +1029,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                             // If they're in the same tile, the door is visible
                             if(newGridX == vcurGridX && newGridY == vcurGridY && thinWallDepth < MAX_THIN_WALL_TRANSPARENCY_RECURSION)
                             {
-                                vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));;
+                                vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
                                 
                                 // Save the information about this hit, it will be drawn later after this ray draws a wall
                                 I_AddThinWall(level, false, rayAngle, x, vcurx, vcury, vcurGridX, vcurGridY, vDistance);
@@ -1770,6 +1779,8 @@ void R_DrawDrawables(void)
                 break;
         }
     }
+
+    //printf("DRAWN %d\n", counter);
 }
 
 
@@ -2142,34 +2153,62 @@ void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, in
 // Save the information about this hit, it will be drawn later after this ray draws a wall
 void I_AddThinWall(int level, bool horizontal, float rayAngle, int x, float curX, float curY, int gridX, int gridY, float distance)
 {
-        if(visibleThinWallsLength >= PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION)
+    if(visibleThinWallsLength >= PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION)
+    {
+        printf("problem");
+        return;
+    }
+    walldata_t* data = &currentThinWalls[visibleThinWallsLength];
+    data->level = level;
+    data->rayAngle = rayAngle;
+    data->x = x;
+    data->curX = curX;
+    data->curY = curY;
+    data->distance = distance;
+    data->gridPos.x = gridX;
+    data->gridPos.y = gridY;
+    data->idHit = R_GetValueFromLevel(level, gridY, gridX);
+    data->isVertical = !horizontal;
+
+    if(horizontal)
+        data->extraData = (curX - (UNIT_SIZE*gridX)) < G_GetDoorPosition(data->level, gridY, gridX); // Is Door Visible (we have to ceil cast even if the door is closed, but we don't have to show the actual door if it is closed)
+    else
+        data->extraData = (curY - (UNIT_SIZE*gridY)) < G_GetDoorPosition(data->level, gridY, gridX);
+
+    // Add it to the drawables
+    allDrawables[allDrawablesLength].type = DRWB_WALL;
+    allDrawables[allDrawablesLength].wallPtr = &currentThinWalls[visibleThinWallsLength];
+    // Quick variable access
+    allDrawables[allDrawablesLength].dist = data->distance;
+
+    allDrawablesLength++;
+    visibleThinWallsLength++;
+}
+
+static void I_DebugPathfinding(void)
+{
+    int level = (allDynamicSprites[0] != NULL) ? allDynamicSprites[0]->level : player.level;
+
+    SDL_Rect curRect;
+
+    // If the map has never been drawn, draw it in the framebuffer 1
+    for(int y = 0; y < MAP_HEIGHT; y++)
+        for(int x = 0; x < MAP_WIDTH; x++)
         {
-            printf("problem");
-            return;
+            // Set X and Y
+            curRect.w = TILE_SIZE / MINIMAP_DIVIDER;
+            curRect.h = TILE_SIZE / MINIMAP_DIVIDER;
+            curRect.x = x * TILE_SIZE / MINIMAP_DIVIDER;
+            curRect.y = y * TILE_SIZE / MINIMAP_DIVIDER;
+
+            // If it is an empty space
+            if(R_GetValueFromLevel(level, y, x) == 0)
+            {
+                R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 0, 0, 0), &curRect);
+            }
+            else
+            {
+                R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 255, 0, 0), &curRect);
+            }
         }
-        walldata_t* data = &currentThinWalls[visibleThinWallsLength];
-        data->level = level;
-        data->rayAngle = rayAngle;
-        data->x = x;
-        data->curX = curX;
-        data->curY = curY;
-        data->distance = distance;
-        data->gridPos.x = gridX;
-        data->gridPos.y = gridY;
-        data->idHit = R_GetValueFromLevel(level, gridY, gridX);
-        data->isVertical = !horizontal;
-
-        if(horizontal)
-            data->extraData = (curX - (UNIT_SIZE*gridX)) < G_GetDoorPosition(data->level, gridY, gridX); // Is Door Visible (we have to ceil cast even if the door is closed, but we don't have to show the actual door if it is closed)
-        else
-            data->extraData = (curY - (UNIT_SIZE*gridY)) < G_GetDoorPosition(data->level, gridY, gridX);
-
-        // Add it to the drawables
-        allDrawables[allDrawablesLength].type = DRWB_WALL;
-        allDrawables[allDrawablesLength].wallPtr = &currentThinWalls[visibleThinWallsLength];
-        // Quick variable access
-        allDrawables[allDrawablesLength].dist = data->distance;
-
-        allDrawablesLength++;
-        visibleThinWallsLength++;
 }

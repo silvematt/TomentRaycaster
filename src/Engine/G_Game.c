@@ -2,8 +2,9 @@
 
 #include "I_InputHandling.h"
 #include "G_Game.h"
-#include "G_Physics.h"
+#include "P_Physics.h"
 #include "M_Map.h"
+#include "G_Pathfinding.h"
 
 // Game Timer
 Timer* gameTimer;
@@ -52,11 +53,12 @@ void G_InitGame(void)
             doorpositionsLevel2[y][x] = DOOR_FULLY_CLOSED;
         }
 
-    G_PhysicsInit();
+    P_PhysicsInit();
 
     G_ChangeMap("devmap");
     
     gameTimer->Start(gameTimer);
+
 }
 
 //-------------------------------------
@@ -86,6 +88,7 @@ void G_UpdateAI(void)
             if(cur == NULL || cur->active == false)
                 continue;
 
+
             int oldGridPosX = cur->gridPos.x;
             int oldGridPosY = cur->gridPos.y;
 
@@ -104,7 +107,28 @@ void G_UpdateAI(void)
             // Calculate the distance to player
             cur->dist = sqrt(cur->pSpacePos.x*cur->pSpacePos.x + cur->pSpacePos.y*cur->pSpacePos.y);
 
+            // Set the target as the player
+            cur->targetGridPos.x = player.gridPosition.x;
+            cur->targetGridPos.y = player.gridPosition.y;
+
+            path_t path = G_PerformPathfinding(cur->level, cur->gridPos, player.gridPosition);
+            cur->path = &path;
+            
+            if(path.isValid && path.nodesLength-1 > 0 && path.nodes[path.nodesLength-1] != NULL)
+            {
+                float deltaX = (path.nodes[path.nodesLength-1]->gridPos.x * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.x;
+                float deltaY = (path.nodes[path.nodesLength-1]->gridPos.y * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.y;
+
+                if(P_CheckCircleCollision(&cur->collisionCircle, &player.collisionCircle) < 0 && 
+                    P_GetDistance(player.centeredPos.x, player.centeredPos.y, cur->centeredPos.x + ((deltaX * cur->speed) * deltaTime), cur->centeredPos.y + ((deltaX * cur->speed) * deltaTime)) > TILE_SIZE)
+                    {
+                        cur->pos.x += (deltaX * cur->speed) * deltaTime;
+                        cur->pos.y += (deltaY * cur->speed) * deltaTime; 
+                    }
+            }
+
             // Move towards player
+            /*
             float deltaX = player.centeredPos.x - cur->centeredPos.x;
             float deltaY = player.centeredPos.y - cur->centeredPos.y;
 
@@ -114,8 +138,10 @@ void G_UpdateAI(void)
                 cur->pos.x += (deltaX * cur->speed) * deltaTime;
                 cur->pos.y += (deltaY * cur->speed) * deltaTime; 
             }
+            */
             
             // Check if this AI changed grid pos
+            // TODO: fix issue with overlapping sprites and make dynamicSprites map for each level
             if(!(oldGridPosX == cur->gridPos.x && oldGridPosY == cur->gridPos.y))
             {
                 // Update the dynamic map 
@@ -136,13 +162,13 @@ void G_StateGameLoop(void)
     // Handle input
     I_HandleInput();
 
-    G_PhysicsTick();
+    P_PhysicsTick();
 
     // Do stuff
     G_PlayerTick();
     G_UpdateDoors();
     G_UpdateAI();
-    G_PhysicsEndTick();
+    P_PhysicsEndTick();
     
     // Render
     // Creates the frame

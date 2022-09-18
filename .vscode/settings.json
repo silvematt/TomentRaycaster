@@ -3,6 +3,8 @@
         "sdl.h": "c",
         "cmath": "c",
         "t_textrendering.h": "c",
-        "r_rendering.h": "c"
+        "r_rendering.h": "c",
+        "m_map.h": "c",
+        "p_physics.h": "c"
     }
 }

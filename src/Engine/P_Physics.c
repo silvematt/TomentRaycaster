@@ -1,6 +1,6 @@
 #include <math.h>
 
-#include "G_Physics.h"
+#include "P_Physics.h"
 
 // Timer needed to calculate delta time
 Timer* stepTimer;
@@ -11,7 +11,7 @@ float deltaTime;
 //-------------------------------------
 // Initializes the physics
 //-------------------------------------
-void G_PhysicsInit(void)
+void P_PhysicsInit(void)
 {
     stepTimer = U_TimerCreateNew();
     stepTimer->Start(stepTimer);
@@ -21,7 +21,7 @@ void G_PhysicsInit(void)
 //-------------------------------------
 // Physics tick
 //-------------------------------------
-void G_PhysicsTick(void)
+void P_PhysicsTick(void)
 {
     deltaTime = stepTimer->GetTicks(stepTimer) / 1000.0f;
 }
@@ -29,7 +29,7 @@ void G_PhysicsTick(void)
 //-------------------------------------
 // End the physics tick
 //-------------------------------------
-void G_PhysicsEndTick(void)
+void P_PhysicsEndTick(void)
 {
     stepTimer->Start(stepTimer);
 }
