@@ -7,11 +7,11 @@ pathnode_t frontier[MAP_HEIGHT*MAP_WIDTH+2];
 unsigned int frontierLength = 0;
 bool visited[MAP_HEIGHT][MAP_WIDTH];
 
-static void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug);
-static void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug);
+static void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug, sprite_t* entity);
+static void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug, sprite_t* entity);
 
 
-path_t G_PerformPathfinding(int level, vector2Int_t gridPos, vector2Int_t gridTargetPos)
+path_t G_PerformPathfinding(int level, vector2Int_t gridPos, vector2Int_t gridTargetPos, sprite_t* entity) //entity performing pathfinding
 {
     // Path to return
     path_t path;
@@ -23,8 +23,8 @@ path_t G_PerformPathfinding(int level, vector2Int_t gridPos, vector2Int_t gridTa
     frontierLength = 0;
     
     // Insert the start node and its adiacents
-    I_InsertNode(level, &frontier[0], gridPos.x, gridPos.y, 0, 0, 0, NULL, false);
-    I_AddAdiacentNodes(level, gridPos.x, gridPos.y, &frontier[0], false);
+    I_InsertNode(level, &frontier[0], gridPos.x, gridPos.y, 0, 0, 0, NULL, false, entity);
+    I_AddAdiacentNodes(level, gridPos.x, gridPos.y, &frontier[0], false, entity);
 
     // Check element keeps track of the elements that have been checked
     int checkElement = 1;
@@ -44,7 +44,7 @@ path_t G_PerformPathfinding(int level, vector2Int_t gridPos, vector2Int_t gridTa
         }
 
         // Otherwise we'll check all the other adiacent nodes
-        I_AddAdiacentNodes(level, cur->gridPos.x, cur->gridPos.y, cur, false);
+        I_AddAdiacentNodes(level, cur->gridPos.x, cur->gridPos.y, cur, false, entity);
         checkElement++;
     }
 
@@ -90,8 +90,8 @@ path_t G_PerformPathfindingDebug(int level, vector2Int_t gridPos, vector2Int_t g
     frontierLength = 0;
     
     // Insert the start node and its adiacents
-    I_InsertNode(level, &frontier[0], gridPos.x, gridPos.y, 0, 0, 0, NULL, true);
-    I_AddAdiacentNodes(level, gridPos.x, gridPos.y, &frontier[0], true);
+    I_InsertNode(level, &frontier[0], gridPos.x, gridPos.y, 0, 0, 0, NULL, true, NULL);
+    I_AddAdiacentNodes(level, gridPos.x, gridPos.y, &frontier[0], true, NULL);
 
     // Draw start
     SDL_Rect curRect;
@@ -132,7 +132,7 @@ path_t G_PerformPathfindingDebug(int level, vector2Int_t gridPos, vector2Int_t g
         }
 
         // Otherwise we'll check all the other adiacent nodes
-        I_AddAdiacentNodes(level, cur->gridPos.x, cur->gridPos.y, cur, true);
+        I_AddAdiacentNodes(level, cur->gridPos.x, cur->gridPos.y, cur, true, NULL);
         checkElement++;
     }
 
@@ -187,9 +187,9 @@ path_t G_PerformPathfindingDebug(int level, vector2Int_t gridPos, vector2Int_t g
     }
 }
 
-void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug)
+void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug, sprite_t* entity)
 {
-    if(visited[gridy][gridx] || G_CheckCollisionMap(level, gridy, gridx) > 0)
+    if(visited[gridy][gridx] || G_CheckCollisionMap(level, gridy, gridx) > 0 || (currentMap.dynamicSprites[gridy][gridx] != NULL && currentMap.dynamicSprites[gridy][gridx] != entity))
         return;
 
     node->gridPos.x = gridx;
@@ -219,41 +219,47 @@ void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int 
     }
 }
 
-void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug)
+void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug, sprite_t* entity)
 {
     // Top
     if(oGridY-1 >= 0 && !visited[oGridY-1][oGridX])
-        I_InsertNode(level, &frontier[frontierLength], oGridX, oGridY-1, 0,0,0, parent, debug);
+        I_InsertNode(level, &frontier[frontierLength], oGridX, oGridY-1, 0,0,0, parent, debug, entity);
 
     // Bottom
     if(oGridY+1 < MAP_HEIGHT && !visited[oGridY+1][oGridX])
-        I_InsertNode(level, &frontier[frontierLength], oGridX, oGridY+1, 0,0,0, parent, debug);
+        I_InsertNode(level, &frontier[frontierLength], oGridX, oGridY+1, 0,0,0, parent, debug, entity);
 
     // Left
     if(oGridX-1 >= 0 && !visited[oGridY][oGridX-1])
-        I_InsertNode(level, &frontier[frontierLength], oGridX-1, oGridY, 0,0,0, parent, debug);
+        I_InsertNode(level, &frontier[frontierLength], oGridX-1, oGridY, 0,0,0, parent, debug, entity);
 
     // Right
     if(oGridX+1 < MAP_WIDTH && !visited[oGridY][oGridX+1])
-        I_InsertNode(level, &frontier[frontierLength], oGridX+1, oGridY, 0,0,0, parent, debug);
+        I_InsertNode(level, &frontier[frontierLength], oGridX+1, oGridY, 0,0,0, parent, debug, entity);
 
 
-    // Allow Diagonal movement (and corner cutting)
-    /*
+    // Allow Diagonal movement and prevent corner cutting
     // Top Left
     if(oGridY-1 >= 0 && oGridX-1 >= 0 && !visited[oGridY-1][oGridX-1])
-        I_InsertNode(&frontier[frontierLength], oGridX-1, oGridY-1, 0,0,0, parent, debug);
+        if(G_CheckCollisionMap(level, oGridY-1, oGridX-1+1) == 0 && // check right
+           G_CheckCollisionMap(level, oGridY-1+1, oGridX-1) == 0)   // check under
+            I_InsertNode(level, &frontier[frontierLength], oGridX-1, oGridY-1, 0,0,0, parent, debug, entity);
 
     // Top Right
     if(oGridY-1 >= 0 && oGridX+1 < MAP_WIDTH && !visited[oGridY-1][oGridX+1])
-        I_InsertNode(&frontier[frontierLength], oGridX+1, oGridY-1, 0,0,0, parent, debug);
+        if(G_CheckCollisionMap(level, oGridY-1+1, oGridX+1) == 0 && // check under
+           G_CheckCollisionMap(level, oGridY-1, oGridX+1-1) == 0)   // left
+            I_InsertNode(level, &frontier[frontierLength], oGridX+1, oGridY-1, 0,0,0, parent, debug, entity);
 
     // Bottom Left
     if(oGridY+1 < MAP_HEIGHT && oGridX-1 >= 0 && !visited[oGridY+1][oGridX-1])
-        I_InsertNode(&frontier[frontierLength], oGridX-1, oGridY+1, 0,0,0, parent, debug);
+        if(G_CheckCollisionMap(level, oGridY+1, oGridX-1+1) == 0 && // check right
+           G_CheckCollisionMap(level, oGridY+1-1, oGridX-1) == 0)   // check up
+            I_InsertNode(level, &frontier[frontierLength], oGridX-1, oGridY+1, 0,0,0, parent, debug, entity);
 
     // Bottom Right
     if(oGridY+1 < MAP_HEIGHT && oGridX+1 < MAP_WIDTH && !visited[oGridY+1][oGridX+1])
-        I_InsertNode(&frontier[frontierLength], oGridX+1, oGridY+1, 0,0,0, parent, debug);
-    */
+        if(G_CheckCollisionMap(level, oGridY+1-1, oGridX+1) == 0 && // check under
+           G_CheckCollisionMap(level, oGridY+1, oGridX+1-1) == 0)   // check left
+            I_InsertNode(level, &frontier[frontierLength], oGridX+1, oGridY+1, 0,0,0, parent, debug, entity);
 }

@@ -78,96 +78,21 @@ void G_GameLoop(void)
     }
 }
 
-void G_UpdateAI(void)
-{
-    for(int y = 0; y < MAP_HEIGHT; y++)
-        for(int x = 0; x < MAP_WIDTH; x++)
-        {
-            sprite_t* cur = currentMap.dynamicSprites[y][x];
-
-            if(cur == NULL || cur->active == false)
-                continue;
-
-
-            int oldGridPosX = cur->gridPos.x;
-            int oldGridPosY = cur->gridPos.y;
-
-            // Calculate centered pos
-            cur->centeredPos.x = cur->pos.x + (TILE_SIZE / 2);
-            cur->centeredPos.y = cur->pos.y + (TILE_SIZE / 2);
-
-            cur->gridPos.x = cur->centeredPos.x / TILE_SIZE;
-            cur->gridPos.y = cur->centeredPos.y / TILE_SIZE;
-            
-            // Calculate runtime stuff
-            // Get Player Space pos
-            cur->pSpacePos.x = (cur->pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
-            cur->pSpacePos.y = (cur->pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
-
-            // Calculate the distance to player
-            cur->dist = sqrt(cur->pSpacePos.x*cur->pSpacePos.x + cur->pSpacePos.y*cur->pSpacePos.y);
-
-            // Set the target as the player
-            cur->targetGridPos.x = player.gridPosition.x;
-            cur->targetGridPos.y = player.gridPosition.y;
-
-            path_t path = G_PerformPathfinding(cur->level, cur->gridPos, player.gridPosition);
-            cur->path = &path;
-            
-            if(path.isValid && path.nodesLength-1 > 0 && path.nodes[path.nodesLength-1] != NULL)
-            {
-                float deltaX = (path.nodes[path.nodesLength-1]->gridPos.x * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.x;
-                float deltaY = (path.nodes[path.nodesLength-1]->gridPos.y * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.y;
-
-                if(P_CheckCircleCollision(&cur->collisionCircle, &player.collisionCircle) < 0 && 
-                    P_GetDistance(player.centeredPos.x, player.centeredPos.y, cur->centeredPos.x + ((deltaX * cur->speed) * deltaTime), cur->centeredPos.y + ((deltaX * cur->speed) * deltaTime)) > TILE_SIZE)
-                    {
-                        cur->pos.x += (deltaX * cur->speed) * deltaTime;
-                        cur->pos.y += (deltaY * cur->speed) * deltaTime; 
-                    }
-            }
-
-            // Move towards player
-            /*
-            float deltaX = player.centeredPos.x - cur->centeredPos.x;
-            float deltaY = player.centeredPos.y - cur->centeredPos.y;
-
-            if(P_CheckCircleCollision(&cur->collisionCircle, &player.collisionCircle) < 0 && 
-                P_GetDistance(player.centeredPos.x, player.centeredPos.y, cur->centeredPos.x+ ((deltaX * cur->speed) * deltaTime), cur->centeredPos.y+((deltaX * cur->speed) * deltaTime)) > TILE_SIZE)
-            {
-                cur->pos.x += (deltaX * cur->speed) * deltaTime;
-                cur->pos.y += (deltaY * cur->speed) * deltaTime; 
-            }
-            */
-            
-            // Check if this AI changed grid pos
-            // TODO: fix issue with overlapping sprites and make dynamicSprites map for each level
-            if(!(oldGridPosX == cur->gridPos.x && oldGridPosY == cur->gridPos.y))
-            {
-                // Update the dynamic map 
-                currentMap.dynamicSprites[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSprites[y][x];
-                currentMap.dynamicSprites[y][x] = NULL;
-            }
-
-            cur->collisionCircle.pos.x = cur->centeredPos.x;
-            cur->collisionCircle.pos.y = cur->centeredPos.y;
-        }
-        
-}
 
 void G_StateGameLoop(void)
 {
     curTime = gameTimer->GetTicks(gameTimer);
     
+    P_PhysicsTick();
+
     // Handle input
     I_HandleInput();
-
-    P_PhysicsTick();
 
     // Do stuff
     G_PlayerTick();
     G_UpdateDoors();
     G_UpdateAI();
+    
     P_PhysicsEndTick();
     
     // Render
@@ -332,4 +257,98 @@ void G_ChangeMap(char* mapID)
 {
     M_LoadMapAsCurrent(mapID);
     G_InitPlayer();
+}
+
+
+void G_UpdateAI(void)
+{
+    for(int y = 0; y < MAP_HEIGHT; y++)
+        for(int x = 0; x < MAP_WIDTH; x++)
+        {
+            sprite_t* cur = currentMap.dynamicSprites[y][x];
+
+            if(cur == NULL || cur->active == false)
+                continue;
+
+
+            int oldGridPosX = cur->gridPos.x;
+            int oldGridPosY = cur->gridPos.y;
+
+            // Calculate centered pos
+            cur->centeredPos.x = cur->pos.x + (TILE_SIZE / 2);
+            cur->centeredPos.y = cur->pos.y + (TILE_SIZE / 2);
+
+            cur->gridPos.x = cur->centeredPos.x / TILE_SIZE;
+            cur->gridPos.y = cur->centeredPos.y / TILE_SIZE;
+            
+            // Calculate runtime stuff
+            // Get Player Space pos
+            cur->pSpacePos.x = (cur->pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
+            cur->pSpacePos.y = (cur->pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
+
+            // Calculate the distance to player
+            cur->dist = sqrt(cur->pSpacePos.x*cur->pSpacePos.x + cur->pSpacePos.y*cur->pSpacePos.y);
+
+            // Set the target as the player
+            cur->targetGridPos.x = player.gridPosition.x;
+            cur->targetGridPos.y = player.gridPosition.y;
+
+            path_t path = G_PerformPathfinding(cur->level, cur->gridPos, player.gridPosition, cur);
+            cur->path = &path;
+
+            bool moved = false;
+            float deltaX = 0.0f;
+            float deltaY = 0.0f; 
+
+            if(path.isValid && path.nodesLength-1 > 0 && path.nodes[path.nodesLength-1] != NULL &&
+               currentMap.dynamicSprites[path.nodes[path.nodesLength-1]->gridPos.y][path.nodes[path.nodesLength-1]->gridPos.x] == NULL)
+            {
+                deltaX = (path.nodes[path.nodesLength-1]->gridPos.x * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.x;
+                deltaY = (path.nodes[path.nodesLength-1]->gridPos.y * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.y;
+
+                if(P_CheckCircleCollision(&cur->collisionCircle, &player.collisionCircle) < 0 && 
+                    P_GetDistance(player.centeredPos.x, player.centeredPos.y, cur->centeredPos.x + ((deltaX * cur->speed) * deltaTime), cur->centeredPos.y + ((deltaX * cur->speed) * deltaTime)) > TILE_SIZE)
+                    {
+                        cur->pos.x += (deltaX * cur->speed) * deltaTime;
+                        cur->pos.y += (deltaY * cur->speed) * deltaTime; 
+
+                        // Recalculate centered pos after delta move
+                        cur->centeredPos.x = cur->pos.x + (TILE_SIZE / 2);
+                        cur->centeredPos.y = cur->pos.y + (TILE_SIZE / 2);
+
+                        cur->gridPos.x = cur->centeredPos.x / TILE_SIZE;
+                        cur->gridPos.y = cur->centeredPos.y / TILE_SIZE;
+
+                        moved = true;
+                    }
+            }
+
+
+            // Check if this AI changed grid pos
+            // TODO: make dynamicSprites map for each level
+            if(!(oldGridPosX == cur->gridPos.x && oldGridPosY == cur->gridPos.y))
+            {
+                // If the tile the AI ended up in is not occupied
+                if(currentMap.dynamicSprites[cur->gridPos.y][cur->gridPos.x] == NULL)
+                {
+                    // Update the dynamic map 
+                    currentMap.dynamicSprites[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSprites[y][x];
+                    currentMap.dynamicSprites[y][x] = NULL;
+                }
+                else
+                {
+                    // Move back
+                    cur->pos.x -= (deltaX * cur->speed) * deltaTime;
+                    cur->pos.y -= (deltaY * cur->speed) * deltaTime; 
+
+                    cur->gridPos.x = oldGridPosX;
+                    cur->gridPos.y = oldGridPosY;
+                }
+            }
+            
+
+            cur->collisionCircle.pos.x = cur->centeredPos.x;
+            cur->collisionCircle.pos.y = cur->centeredPos.y;
+        }
+        
 }

@@ -73,6 +73,8 @@ typedef struct sprite_s
 
     vector2Int_t targetGridPos;   // position in grid of the target
     path_t* path;
+
+    bool fixingPath;
 } sprite_t;
 
 // -------------------------------

@@ -54,4 +54,6 @@ void G_UpdateDoors(void);
 
 void G_ChangeMap(char* mapID);
 
+void G_UpdateAI(void);
+
 #endif
