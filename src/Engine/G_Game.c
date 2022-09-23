@@ -262,15 +262,17 @@ void G_ChangeMap(char* mapID)
 
 void G_UpdateAI(void)
 {
-    for(int y = 0; y < MAP_HEIGHT; y++)
+    // Update every level
+    for(int l = 0; l < MAX_N_LEVELS; l++)
+    {
+        for(int y = 0; y < MAP_HEIGHT; y++)
         for(int x = 0; x < MAP_WIDTH; x++)
         {
-            sprite_t* cur = currentMap.dynamicSprites[y][x];
+            sprite_t* cur = G_GetFromDynamicSpriteMap(l, y, x);
 
             if(cur == NULL || cur->active == false)
                 continue;
-
-
+            
             int oldGridPosX = cur->gridPos.x;
             int oldGridPosY = cur->gridPos.y;
 
@@ -301,7 +303,7 @@ void G_UpdateAI(void)
             float deltaY = 0.0f; 
 
             if(path.isValid && path.nodesLength-1 > 0 && path.nodes[path.nodesLength-1] != NULL &&
-               currentMap.dynamicSprites[path.nodes[path.nodesLength-1]->gridPos.y][path.nodes[path.nodesLength-1]->gridPos.x] == NULL)
+               G_CheckDynamicSpriteMap(l, path.nodes[path.nodesLength-1]->gridPos.y, path.nodes[path.nodesLength-1]->gridPos.x) == false)
             {
                 deltaX = (path.nodes[path.nodesLength-1]->gridPos.x * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.x;
                 deltaY = (path.nodes[path.nodesLength-1]->gridPos.y * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.y;
@@ -329,11 +331,29 @@ void G_UpdateAI(void)
             if(!(oldGridPosX == cur->gridPos.x && oldGridPosY == cur->gridPos.y))
             {
                 // If the tile the AI ended up in is not occupied
-                if(currentMap.dynamicSprites[cur->gridPos.y][cur->gridPos.x] == NULL)
+                if(G_CheckDynamicSpriteMap(l, cur->gridPos.y, cur->gridPos.x) == false)
                 {
-                    // Update the dynamic map 
-                    currentMap.dynamicSprites[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSprites[y][x];
-                    currentMap.dynamicSprites[y][x] = NULL;
+                    // Update the dynamic map
+                    switch(l)
+                    {
+                        case 0:
+                            currentMap.dynamicSpritesLevel0[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSpritesLevel0[y][x];
+                            currentMap.dynamicSpritesLevel0[y][x] = NULL;
+                            break;
+                        
+                        case 1:
+                            currentMap.dynamicSpritesLevel1[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSpritesLevel1[y][x];
+                            currentMap.dynamicSpritesLevel1[y][x] = NULL;
+                            break;
+
+                        case 2:
+                            currentMap.dynamicSpritesLevel2[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSpritesLevel2[y][x];
+                            currentMap.dynamicSpritesLevel2[y][x] = NULL;
+                            break;
+
+                        default:
+                        break;
+                    }
                 }
                 else
                 {
@@ -350,5 +370,5 @@ void G_UpdateAI(void)
             cur->collisionCircle.pos.x = cur->centeredPos.x;
             cur->collisionCircle.pos.y = cur->centeredPos.y;
         }
-        
+    }
 }

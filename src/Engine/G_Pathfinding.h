@@ -11,6 +11,10 @@ extern pathnode_t frontier[MAP_HEIGHT*MAP_WIDTH+2];
 extern unsigned int frontierLength;
 extern bool visited[MAP_HEIGHT][MAP_WIDTH];
 
+extern bool G_CheckDynamicSpriteMap(int level, int y, int x);
+
+extern sprite_t* G_GetFromDynamicSpriteMap(int level, int y, int x);
+
 //----------------------------------
 // Performs pathfinding and returns a path 
 //----------------------------------

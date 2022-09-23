@@ -11,6 +11,7 @@
 #include "U_Utilities.h"
 #include "T_TextRendering.h"
 #include "G_MainMenu.h"
+#include "G_Pathfinding.h"
 
 uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
 uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
@@ -138,7 +139,7 @@ void R_DrawMinimap(void)
 
             if(DEBUG_DYNAMIC_SPRITES)
             {
-                if(currentMap.dynamicSprites[y][x] != NULL && currentMap.dynamicSprites[y][x]->active)
+                if(G_GetFromDynamicSpriteMap(player.level, y, x) != NULL && G_GetFromDynamicSpriteMap(player.level, y, x)->active)
                 {
                     R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 0, 255, 0), &curRect);
                 }
@@ -353,8 +354,8 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                 R_AddToVisibleSprite(player.gridPosition.x, player.gridPosition.y, player.level, spriteID);
 
             // Check if there's an active dynamic sprite there
-            if(currentMap.dynamicSprites[player.gridPosition.y][player.gridPosition.x] != NULL && currentMap.dynamicSprites[player.gridPosition.y][player.gridPosition.x]->active)
-                R_AddDynamicToVisibleSprite(player.gridPosition.x, player.gridPosition.y);
+            if(G_GetFromDynamicSpriteMap(level, player.gridPosition.y, player.gridPosition.x) != NULL && G_GetFromDynamicSpriteMap(level, player.gridPosition.y, player.gridPosition.x)->active)
+                R_AddDynamicToVisibleSprite(level, player.gridPosition.x, player.gridPosition.y);
         }
 
         // Check for wall, if not, check next grid
@@ -386,8 +387,8 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                         R_AddToVisibleSprite(hcurGridX, hcurGridY, level, spriteID);
 
                     // Check if there's an active dynamic sprite there
-                    if(currentMap.dynamicSprites[hcurGridY][hcurGridX] != NULL && currentMap.dynamicSprites[hcurGridY][hcurGridX]->active)
-                        R_AddDynamicToVisibleSprite(hcurGridX, hcurGridY);
+                    if(G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX)->active)
+                        R_AddDynamicToVisibleSprite(level, hcurGridX, hcurGridY);
                 }
                 
                 int idHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
@@ -507,8 +508,8 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                         R_AddToVisibleSprite(vcurGridX, vcurGridY, level, spriteID);
 
                     // Check if there's an active dynamic sprite there
-                    if(currentMap.dynamicSprites[vcurGridY][vcurGridX] != NULL && currentMap.dynamicSprites[vcurGridY][vcurGridX]->active)
-                        R_AddDynamicToVisibleSprite(vcurGridX, vcurGridY);
+                    if(G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX)->active)
+                        R_AddDynamicToVisibleSprite(level, vcurGridX, vcurGridY);
                 }
 
                 int idHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
@@ -890,8 +891,8 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                     R_AddToVisibleSprite(hcurGridX, hcurGridY, level, spriteID);
 
                 // Check if there's an active dynamic sprite there
-                if(currentMap.dynamicSprites[hcurGridY][hcurGridX] != NULL && currentMap.dynamicSprites[hcurGridY][hcurGridX]->active)
-                    R_AddDynamicToVisibleSprite(hcurGridX, hcurGridY);
+                if(G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX)->active)
+                    R_AddDynamicToVisibleSprite(level, hcurGridX, hcurGridY);
             }
             
             int idHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
@@ -998,8 +999,8 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                 R_AddToVisibleSprite(vcurGridX, vcurGridY, level, spriteID);
 
                 // Check if there's an active dynamic sprite there
-                if(currentMap.dynamicSprites[vcurGridY][vcurGridX] != NULL && currentMap.dynamicSprites[vcurGridY][vcurGridX]->active)
-                    R_AddDynamicToVisibleSprite(vcurGridX, vcurGridY);
+                if(G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX)->active)
+                    R_AddDynamicToVisibleSprite(level, vcurGridX, vcurGridY);
             }
 
             int idHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
@@ -1675,15 +1676,15 @@ void R_AddToVisibleSprite(int gridX, int gridY, int level, int spriteID)
     visibleTiles[gridY][gridX] = true;
 }
 
-void R_AddDynamicToVisibleSprite(int gridX, int gridY)
+void R_AddDynamicToVisibleSprite(int level, int gridX, int gridY)
 {
     // Check if it's a dynamic
-    sprite_t* dynamicSprite = currentMap.dynamicSprites[gridY][gridX];
+    sprite_t* dynamicSprite = G_GetFromDynamicSpriteMap(level, gridY, gridX);
 
     // Sprite is also a drawable
     // Add it to the drawables
     allDrawables[allDrawablesLength].type = DRWB_SPRITE;
-    allDrawables[allDrawablesLength].spritePtr = currentMap.dynamicSprites[gridY][gridX];
+    allDrawables[allDrawablesLength].spritePtr = G_GetFromDynamicSpriteMap(level, gridY, gridX);
     
     // Quick variable access
     allDrawables[allDrawablesLength].dist = dynamicSprite->dist;

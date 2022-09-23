@@ -212,7 +212,7 @@ void R_AddToVisibleSprite(int gridX, int gridY, int level, int spriteID);
 //-------------------------------------
 // Adds a dynamic sprite to the visible sprite array and adds its corresponding drawable
 //-------------------------------------
-void R_AddDynamicToVisibleSprite(int gridX, int gridY);
+void R_AddDynamicToVisibleSprite(int level, int gridX, int gridY);
 
 //-------------------------------------
 // Draws the visible sprites

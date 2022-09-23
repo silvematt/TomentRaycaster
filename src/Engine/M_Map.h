@@ -69,7 +69,10 @@ typedef struct map_s
     int collisionMapLevel2[MAP_HEIGHT][MAP_WIDTH];    // Collision data
 
     // Dynamic sprites, like AI
-    sprite_t* dynamicSprites[MAP_HEIGHT][MAP_WIDTH];
+    sprite_t* dynamicSpritesLevel0[MAP_HEIGHT][MAP_WIDTH];
+    sprite_t* dynamicSpritesLevel1[MAP_HEIGHT][MAP_WIDTH];
+    sprite_t* dynamicSpritesLevel2[MAP_HEIGHT][MAP_WIDTH];
+
 } map_t;
 
 // The currently loaded map

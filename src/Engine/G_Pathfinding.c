@@ -189,7 +189,7 @@ path_t G_PerformPathfindingDebug(int level, vector2Int_t gridPos, vector2Int_t g
 
 void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug, sprite_t* entity)
 {
-    if(visited[gridy][gridx] || G_CheckCollisionMap(level, gridy, gridx) > 0 || (currentMap.dynamicSprites[gridy][gridx] != NULL && currentMap.dynamicSprites[gridy][gridx] != entity))
+    if(visited[gridy][gridx] || G_CheckCollisionMap(level, gridy, gridx) > 0 || G_CheckDynamicSpriteMap(level, gridy, gridx) && G_GetFromDynamicSpriteMap(level, gridy, gridx) != entity)
         return;
 
     node->gridPos.x = gridx;
@@ -262,4 +262,56 @@ void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, b
         if(G_CheckCollisionMap(level, oGridY+1-1, oGridX+1) == 0 && // check under
            G_CheckCollisionMap(level, oGridY+1, oGridX+1-1) == 0)   // check left
             I_InsertNode(level, &frontier[frontierLength], oGridX+1, oGridY+1, 0,0,0, parent, debug, entity);
+}
+
+bool G_CheckDynamicSpriteMap(int level, int y, int x)
+{
+    if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
+    {
+        switch(level)
+        {
+            case 0:
+                return (currentMap.dynamicSpritesLevel0[y][x]) != NULL ? currentMap.dynamicSpritesLevel0[y][x] : NULL;
+
+            case 1:
+                return (currentMap.dynamicSpritesLevel1[y][x]) != NULL ? currentMap.dynamicSpritesLevel1[y][x] : NULL;
+
+            case 2:
+                return (currentMap.dynamicSpritesLevel2[y][x]) != NULL ? currentMap.dynamicSpritesLevel2[y][x] : NULL;
+
+            default:
+                //printf("WARNING! Level get was out of max/min level size\n");
+                return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
+}
+
+sprite_t* G_GetFromDynamicSpriteMap(int level, int y, int x)
+{
+    if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
+    {
+        switch(level)
+        {
+            case 0:
+                return (currentMap.dynamicSpritesLevel0[y][x]);
+
+            case 1:
+                return (currentMap.dynamicSpritesLevel1[y][x]);
+
+            case 2:
+                return (currentMap.dynamicSpritesLevel2[y][x]);
+
+            default:
+                //printf("WARNING! Level get was out of max/min level size\n");
+                return NULL;
+        }
+    }
+    else
+    {
+        return NULL;
+    }
 }
