@@ -5,6 +5,7 @@
 #include "P_Physics.h"
 #include "M_Map.h"
 #include "G_Pathfinding.h"
+#include "G_AI.h"
 
 // Game Timer
 Timer* gameTimer;
@@ -23,10 +24,6 @@ int doorstateLevel2[MAP_HEIGHT][MAP_WIDTH];       // State of the door (open, cl
 float doorpositionsLevel0[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 float doorpositionsLevel1[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 float doorpositionsLevel2[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
-
-// Dynamic AI list
-sprite_t* allDynamicSprites[OBJECTARRAY_DEFAULT_SIZE];
-unsigned int allDynamicSpritesLength = 0;
 
 //-------------------------------------
 // Initialize game related stuff 
@@ -62,7 +59,7 @@ void G_InitGame(void)
 }
 
 //-------------------------------------
-// Tick 
+// Game Tick 
 //-------------------------------------
 void G_GameLoop(void)
 {
@@ -91,7 +88,7 @@ void G_StateGameLoop(void)
     // Do stuff
     G_PlayerTick();
     G_UpdateDoors();
-    G_UpdateAI();
+    G_AIUpdate();
     
     P_PhysicsEndTick();
     
@@ -257,118 +254,4 @@ void G_ChangeMap(char* mapID)
 {
     M_LoadMapAsCurrent(mapID);
     G_InitPlayer();
-}
-
-
-void G_UpdateAI(void)
-{
-    // Update every level
-    for(int l = 0; l < MAX_N_LEVELS; l++)
-    {
-        for(int y = 0; y < MAP_HEIGHT; y++)
-        for(int x = 0; x < MAP_WIDTH; x++)
-        {
-            sprite_t* cur = G_GetFromDynamicSpriteMap(l, y, x);
-
-            if(cur == NULL || cur->active == false)
-                continue;
-            
-            int oldGridPosX = cur->gridPos.x;
-            int oldGridPosY = cur->gridPos.y;
-
-            // Calculate centered pos
-            cur->centeredPos.x = cur->pos.x + (TILE_SIZE / 2);
-            cur->centeredPos.y = cur->pos.y + (TILE_SIZE / 2);
-
-            cur->gridPos.x = cur->centeredPos.x / TILE_SIZE;
-            cur->gridPos.y = cur->centeredPos.y / TILE_SIZE;
-            
-            // Calculate runtime stuff
-            // Get Player Space pos
-            cur->pSpacePos.x = (cur->pos.x + (TILE_SIZE/2)) - player.centeredPos.x;
-            cur->pSpacePos.y = (cur->pos.y + (TILE_SIZE/2)) - player.centeredPos.y;
-
-            // Calculate the distance to player
-            cur->dist = sqrt(cur->pSpacePos.x*cur->pSpacePos.x + cur->pSpacePos.y*cur->pSpacePos.y);
-
-            // Set the target as the player
-            cur->targetGridPos.x = player.gridPosition.x;
-            cur->targetGridPos.y = player.gridPosition.y;
-
-            path_t path = G_PerformPathfinding(cur->level, cur->gridPos, player.gridPosition, cur);
-            cur->path = &path;
-
-            bool moved = false;
-            float deltaX = 0.0f;
-            float deltaY = 0.0f; 
-
-            if(path.isValid && path.nodesLength-1 > 0 && path.nodes[path.nodesLength-1] != NULL &&
-               G_CheckDynamicSpriteMap(l, path.nodes[path.nodesLength-1]->gridPos.y, path.nodes[path.nodesLength-1]->gridPos.x) == false)
-            {
-                deltaX = (path.nodes[path.nodesLength-1]->gridPos.x * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.x;
-                deltaY = (path.nodes[path.nodesLength-1]->gridPos.y * TILE_SIZE + (TILE_SIZE/2)) - cur->centeredPos.y;
-
-                if(P_CheckCircleCollision(&cur->collisionCircle, &player.collisionCircle) < 0 && 
-                    P_GetDistance(player.centeredPos.x, player.centeredPos.y, cur->centeredPos.x + ((deltaX * cur->speed) * deltaTime), cur->centeredPos.y + ((deltaX * cur->speed) * deltaTime)) > TILE_SIZE)
-                    {
-                        cur->pos.x += (deltaX * cur->speed) * deltaTime;
-                        cur->pos.y += (deltaY * cur->speed) * deltaTime; 
-
-                        // Recalculate centered pos after delta move
-                        cur->centeredPos.x = cur->pos.x + (TILE_SIZE / 2);
-                        cur->centeredPos.y = cur->pos.y + (TILE_SIZE / 2);
-
-                        cur->gridPos.x = cur->centeredPos.x / TILE_SIZE;
-                        cur->gridPos.y = cur->centeredPos.y / TILE_SIZE;
-
-                        moved = true;
-                    }
-            }
-
-
-            // Check if this AI changed grid pos
-            // TODO: make dynamicSprites map for each level
-            if(!(oldGridPosX == cur->gridPos.x && oldGridPosY == cur->gridPos.y))
-            {
-                // If the tile the AI ended up in is not occupied
-                if(G_CheckDynamicSpriteMap(l, cur->gridPos.y, cur->gridPos.x) == false)
-                {
-                    // Update the dynamic map
-                    switch(l)
-                    {
-                        case 0:
-                            currentMap.dynamicSpritesLevel0[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSpritesLevel0[y][x];
-                            currentMap.dynamicSpritesLevel0[y][x] = NULL;
-                            break;
-                        
-                        case 1:
-                            currentMap.dynamicSpritesLevel1[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSpritesLevel1[y][x];
-                            currentMap.dynamicSpritesLevel1[y][x] = NULL;
-                            break;
-
-                        case 2:
-                            currentMap.dynamicSpritesLevel2[cur->gridPos.y][cur->gridPos.x] = currentMap.dynamicSpritesLevel2[y][x];
-                            currentMap.dynamicSpritesLevel2[y][x] = NULL;
-                            break;
-
-                        default:
-                        break;
-                    }
-                }
-                else
-                {
-                    // Move back
-                    cur->pos.x -= (deltaX * cur->speed) * deltaTime;
-                    cur->pos.y -= (deltaY * cur->speed) * deltaTime; 
-
-                    cur->gridPos.x = oldGridPosX;
-                    cur->gridPos.y = oldGridPosY;
-                }
-            }
-            
-
-            cur->collisionCircle.pos.x = cur->centeredPos.x;
-            cur->collisionCircle.pos.y = cur->centeredPos.y;
-        }
-    }
 }

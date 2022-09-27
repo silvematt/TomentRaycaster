@@ -16,6 +16,8 @@ void D_InitObject(object_t* obj)
 
     obj->topTexture = &obj->texture;
     obj->bottomTexture = &obj->texture;
+
+    obj->animations = NULL;
 }
 
 //-------------------------------------
@@ -373,7 +375,7 @@ void D_InitLoadSprites(void)
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
     tomentdatapack.sprites[S_Campfire] = spritesCampfire;
-    tomentdatapack.sprites[SAI_Skeleton] = aiSkeleton;
+    tomentdatapack.sprites[DS_Skeleton] = aiSkeleton;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -408,23 +410,43 @@ void D_InitLoadSprites(void)
     tomentdatapack.spritesSheetsLenghtTable[S_Campfire] = 4;
     SDL_FreeSurface(temp1);
 
+    // LOAD DYNAMIC
     // AI Skeleton
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_AI_SKELETON))
-        tomentdatapack.sprites[SAI_Skeleton]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    {
+        tomentdatapack.sprites[DS_Skeleton]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+
+        // Load animations as well
+        tomentdatapack.sprites[DS_Skeleton]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[DS_Skeleton]->animations->belongsTo = tomentdatapack.sprites[DS_Skeleton];
+
+        // Idle = Normal
+        tomentdatapack.sprites[DS_Skeleton]->animations->animIdle = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_Skeleton]->animations->animIdleSheetLength = 0;
+
+        // Skeleton Death
+        int animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_DEATH].startingOffset);
+        SDL_RWops* animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_DEATH].size);
+        SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_Skeleton]->animations->animDie = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_Skeleton]->animations->animDieSheetLength = 4;
+
+        SDL_FreeSurface(animTemp1);
+    }
     else
-        tomentdatapack.sprites[SAI_Skeleton]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
-    U_SetBit(&tomentdatapack.sprites[SAI_Skeleton]->flags, 0); // Set collision bit flag to 1
-    U_SetBit(&tomentdatapack.sprites[SAI_Skeleton]->flags, 2); // Set dynamic bit flag to 1
+        tomentdatapack.sprites[DS_Skeleton]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[DS_Skeleton]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[DS_Skeleton]->flags, 2); // Set dynamic bit flag to 1
     SDL_FreeSurface(temp1);
 
 
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
-    D_SetObject(aiSkeleton, SAI_Skeleton, tomentdatapack.sprites[SAI_Skeleton]->texture, NULL);
+    D_SetObject(aiSkeleton, DS_Skeleton, tomentdatapack.sprites[DS_Skeleton]->texture, NULL);
 }
 
 

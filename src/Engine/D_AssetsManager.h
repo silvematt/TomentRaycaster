@@ -56,7 +56,7 @@ typedef enum spritesObjectID_e
     // 0 = Empty
     S_Barrel1 = 1,
     S_Campfire,
-    SAI_Skeleton
+    DS_Skeleton
 } spritesObjectID_t;
 
 // All sprites
@@ -66,6 +66,27 @@ typedef enum skiesObjectID_e
     SKY_Default1 = 1
 } skiesObjectID_e;
 
+typedef enum objectanimationsID_e
+{
+    ANIM_IDLE = 0,
+    ANIM_ATTACK,
+    ANIM_DIE
+} objectanimationsID_e;
+
+// Specific object data for AI
+typedef struct objectAnimations_s
+{
+    struct object_s* belongsTo;
+    
+    SDL_Surface* animIdle;
+    unsigned animIdleSheetLength;
+
+    SDL_Surface* animDie;
+    unsigned animDieSheetLength;
+
+    SDL_Surface* aimAttack;
+    unsigned animAttackSheetLength;
+} objectanimations_t;
 
 typedef struct object_s
 {
@@ -73,6 +94,8 @@ typedef struct object_s
     SDL_Surface* texture;
     struct object_s* alt;
     byte flags;             // Flags to diversify types of objects
+
+    objectanimations_t* animations;
 
     // Extra textures, after being init they point to texture
     SDL_Surface** topTexture;
@@ -82,6 +105,7 @@ typedef struct object_s
     char* data;
     void (*Callback)(char* data);
 } object_t;
+
 
 // The Text rendering is not hardcoded to use 16x6 elements font sheets, but the translation map is, 
 // if you wish to use more character or a different map of the characters, you'll have to edit the translation code, 
@@ -188,7 +212,8 @@ typedef enum imgIDs_e
     IMG_ID_SKY_DEFAULT,
     IMG_ID_P_HANDS_IDLE,
     IMG_ID_WT_CASTLE_DOORS,
-    IMG_ID_AI_SKELETON
+    IMG_ID_AI_SKELETON,
+    IMG_ID_AI_SKELETON_DEATH
 } imgIDs_e;
 
 typedef struct archt_s

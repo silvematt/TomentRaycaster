@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "U_Timer.h"
+
 #define RADIAN 0.0174533        // 1 Radian
 
 
@@ -49,7 +51,7 @@ typedef struct path_s
 } path_t;
 
 // -------------------------------
-// Sprite data structure
+// Sprite data structure, represents static sprites
 // -------------------------------
 typedef struct sprite_s
 {
@@ -61,7 +63,6 @@ typedef struct sprite_s
     vector2_t pSpacePos;    // position in player space        
 
     int level; // which level this sprite is in
-    float speed;
 
     circle_t collisionCircle;
 
@@ -70,12 +71,49 @@ typedef struct sprite_s
 
     float dist;     // distance from player
     float height;   // how big the sprite will be drawn
-
-    vector2Int_t targetGridPos;   // position in grid of the target
-    path_t* path;
-
-    bool fixingPath;
 } sprite_t;
+
+
+typedef struct entityattributes_s
+{
+    float curHealth;
+    float maxhealth;
+} entityattributes_t;
+
+typedef enum dynamicSpriteState_e
+{
+    DS_STATE_NULL = 0,
+    DS_STATE_IDLE,
+    DS_STATE_MOVING,
+    DS_STATE_ATTACKING,
+    DS_STATE_DEAD
+} dynamicSpriteState_e;
+
+// -------------------------------
+// Dynamic Sprite data structure, represents dynamic sprites such as AI or projectiles
+// -------------------------------
+typedef struct dynamicSprite_s
+{
+    sprite_t base;
+
+    // Dnyamic-Specific
+    dynamicSpriteState_e state;
+    bool isAlive;
+    float speed;
+
+    Timer* animTimer;
+    bool animPlay;
+    int animFrame;
+    bool animPlayOnce;
+
+    entityattributes_t attributes;
+
+    vector2_t* targetPos;
+    vector2Int_t* targetGridPos;
+    circle_t* targetColl;
+
+    path_t* path;
+} dynamicSprite_t;
 
 // -------------------------------
 // Door states
@@ -115,6 +153,7 @@ typedef enum drawabletype_e
 {
     DRWB_WALL = 0,
     DRWB_SPRITE,
+    DRWB_DYNAMIC_SPRITE
 } drawabletype_e;
 
 // -------------------------------
@@ -123,11 +162,12 @@ typedef enum drawabletype_e
 // -------------------------------
 typedef struct drawabledata_s 
 {
-    unsigned type;
+    drawabletype_e type;
 
     // Pointers
     walldata_t* wallPtr;
     sprite_t* spritePtr;
+    dynamicSprite_t* dynamicSpritePtr;
 
     // Quick access varaibles
     float dist;

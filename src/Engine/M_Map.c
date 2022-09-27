@@ -1,5 +1,6 @@
 #include "M_Map.h"
 #include "G_Game.h"
+#include "G_AI.h"
 
 map_t currentMap;
 
@@ -7,7 +8,6 @@ static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp);
 static void I_LoadIntFromFile(FILE* fp, int* toLoad);
 static void I_LoadFloatFromFile(FILE* fp, float* toLoad);
 static void I_ReadStringFromFile(FILE* fp, char toWrite[MAX_STRLEN]);
-static void I_LoadDynamicSprite(sprite_t* cur, int level, int spriteID, int x, int y);
 
 // -------------------------------
 // Loads the map from the file named mapID
@@ -136,22 +136,12 @@ void M_LoadObjectTMap(void)
       for(int y = 0; y < MAP_HEIGHT; y++)
             for(int x = 0; x < MAP_WIDTH; x++)
                   {
-                        if(currentMap.dynamicSpritesLevel0[y][x] != NULL)
-                              currentMap.dynamicSpritesLevel0[y][x] = NULL;
-                  }
-
-      for(int y = 0; y < MAP_HEIGHT; y++)
-            for(int x = 0; x < MAP_WIDTH; x++)
-                  {
-                        if(currentMap.dynamicSpritesLevel1[y][x] != NULL)
-                              currentMap.dynamicSpritesLevel1[y][x] = NULL;
-                  }
-
-      for(int y = 0; y < MAP_HEIGHT; y++)
-            for(int x = 0; x < MAP_WIDTH; x++)
-                  {
-                        if(currentMap.dynamicSpritesLevel2[y][x] != NULL)
-                              currentMap.dynamicSpritesLevel2[y][x] = NULL;
+                        currentMap.dynamicSpritesLevel0[y][x] = NULL;
+                        currentMap.dynamicSpritesLevel1[y][x] = NULL;
+                        currentMap.dynamicSpritesLevel2[y][x] = NULL;
+                        currentMap.deadDynamicSpritesLevel0[y][x] = NULL;
+                        currentMap.deadDynamicSpritesLevel1[y][x] = NULL;
+                        currentMap.deadDynamicSpritesLevel2[y][x] = NULL;
                   }
 
       allDynamicSpritesLength = 0;
@@ -191,10 +181,10 @@ void M_LoadObjectTMap(void)
                               if(U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 1)
                               {
                                     // Construct the dynamic sprite in base of its id
-                                    currentMap.dynamicSpritesLevel0[y][x] = (sprite_t*)malloc(sizeof(sprite_t));
-                                    sprite_t* cur = currentMap.dynamicSpritesLevel0[y][x];
+                                    currentMap.dynamicSpritesLevel0[y][x] = (dynamicSprite_t*)malloc(sizeof(dynamicSprite_t));
+                                    dynamicSprite_t* cur = currentMap.dynamicSpritesLevel0[y][x];
 
-                                    I_LoadDynamicSprite(cur, 0, spriteID, x, y);
+                                    G_AIInitialize(cur, 0, spriteID, x, y);
 
                                     // The rest is calculated at runtime
                               }
@@ -231,10 +221,10 @@ void M_LoadObjectTMap(void)
                               // Check if this is a dynamic sprite
                               if(U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 1)
                               {
-                                    currentMap.dynamicSpritesLevel1[y][x] = (sprite_t*)malloc(sizeof(sprite_t));
-                                    sprite_t* cur = currentMap.dynamicSpritesLevel1[y][x];
+                                    currentMap.dynamicSpritesLevel1[y][x] = (dynamicSprite_t*)malloc(sizeof(dynamicSprite_t));
+                                    dynamicSprite_t* cur = currentMap.dynamicSpritesLevel1[y][x];
                                     
-                                    I_LoadDynamicSprite(cur, 1, spriteID, x, y);
+                                    G_AIInitialize(cur, 1, spriteID, x, y);
 
                                     // The rest is calculated at runtime
                               }
@@ -271,10 +261,10 @@ void M_LoadObjectTMap(void)
                               // Check if this is a dynamic sprite
                               if(U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 1)
                               {
-                                    currentMap.dynamicSpritesLevel2[y][x] = (sprite_t*)malloc(sizeof(sprite_t));
-                                    sprite_t* cur = currentMap.dynamicSpritesLevel2[y][x];
+                                    currentMap.dynamicSpritesLevel2[y][x] = (dynamicSprite_t*)malloc(sizeof(dynamicSprite_t));
+                                    dynamicSprite_t* cur = currentMap.dynamicSpritesLevel2[y][x];
                                     
-                                    I_LoadDynamicSprite(cur, 2, spriteID, x, y);
+                                    G_AIInitialize(cur, 2, spriteID, x, y);
 
                                     // The rest is calculated at runtime
                               }
@@ -492,30 +482,4 @@ static void I_ReadStringFromFile(FILE* fp, char toWrite[MAX_STRLEN])
             indx++;
       }
       toWrite[i] = '\0';
-}
-
-static void I_LoadDynamicSprite(sprite_t* cur, int level, int spriteID, int x, int y)
-{
-      cur->active = true;
-      cur->level = level;
-      cur->speed = 2.0f;
-
-      cur->gridPos.x = x;
-      cur->gridPos.y = y;
-
-      // Get World Pos
-      cur->pos.x = x * TILE_SIZE;
-      cur->pos.y = y * TILE_SIZE;
-
-      cur->collisionCircle.pos.x = cur->pos.x;
-      cur->collisionCircle.pos.y = cur->pos.y;
-      cur->collisionCircle.r = 32;
-
-      // Get ID
-      cur->spriteID = spriteID;
-      cur->sheetLength = tomentdatapack.spritesSheetsLenghtTable[spriteID];
-
-      // Add it to the dynamic sprite list
-      allDynamicSprites[allDynamicSpritesLength] = cur;
-      allDynamicSpritesLength++;
 }

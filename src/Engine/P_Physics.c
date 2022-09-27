@@ -55,6 +55,10 @@ float P_GetDistanceSquared(float x1, float y1, float x2, float y2)
 //-------------------------------------
 float P_CheckCircleCollision(circle_t* c1, circle_t* c2)
 {
+    // Check for null
+    if(c1->r <= 0.0f || c2->r <= 0.0f)
+        return -1.0f;
+        
     float totalRadius = c1->r + c2->r;
     totalRadius = totalRadius*totalRadius;
     
@@ -62,6 +66,7 @@ float P_CheckCircleCollision(circle_t* c1, circle_t* c2)
     if(dist < totalRadius)
         return dist;
 
+    // Negative values are false
     return -1.0f;
 }
 

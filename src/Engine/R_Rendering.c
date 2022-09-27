@@ -12,6 +12,7 @@
 #include "T_TextRendering.h"
 #include "G_MainMenu.h"
 #include "G_Pathfinding.h"
+#include "G_AI.h"
 
 uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
 uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
@@ -139,7 +140,7 @@ void R_DrawMinimap(void)
 
             if(DEBUG_DYNAMIC_SPRITES)
             {
-                if(G_GetFromDynamicSpriteMap(player.level, y, x) != NULL && G_GetFromDynamicSpriteMap(player.level, y, x)->active)
+                if(G_GetFromDynamicSpriteMap(player.level, y, x) != NULL && G_GetFromDynamicSpriteMap(player.level, y, x)->base.active)
                 {
                     R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 0, 255, 0), &curRect);
                 }
@@ -354,8 +355,12 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                 R_AddToVisibleSprite(player.gridPosition.x, player.gridPosition.y, player.level, spriteID);
 
             // Check if there's an active dynamic sprite there
-            if(G_GetFromDynamicSpriteMap(level, player.gridPosition.y, player.gridPosition.x) != NULL && G_GetFromDynamicSpriteMap(level, player.gridPosition.y, player.gridPosition.x)->active)
+            if(G_GetFromDynamicSpriteMap(level, player.gridPosition.y, player.gridPosition.x) != NULL && G_GetFromDynamicSpriteMap(level, player.gridPosition.y, player.gridPosition.x)->base.active)
                 R_AddDynamicToVisibleSprite(level, player.gridPosition.x, player.gridPosition.y);
+
+            // Check if there's an active dynamic sprite there
+            if(G_GetFromDeadDynamicSpriteMap(level, player.gridPosition.y, player.gridPosition.x) != NULL && G_GetFromDeadDynamicSpriteMap(level, player.gridPosition.y, player.gridPosition.x)->base.active)
+                R_AddDeadDynamicToVisibleSprite(level, player.gridPosition.x, player.gridPosition.y);
         }
 
         // Check for wall, if not, check next grid
@@ -387,8 +392,12 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                         R_AddToVisibleSprite(hcurGridX, hcurGridY, level, spriteID);
 
                     // Check if there's an active dynamic sprite there
-                    if(G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX)->active)
+                    if(G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX)->base.active)
                         R_AddDynamicToVisibleSprite(level, hcurGridX, hcurGridY);
+
+                    // Check if there's an active dead dynamic sprite there
+                    if(G_GetFromDeadDynamicSpriteMap(level, hcurGridY, hcurGridX) != NULL && G_GetFromDeadDynamicSpriteMap(level, hcurGridY, hcurGridX)->base.active)
+                        R_AddDeadDynamicToVisibleSprite(level, hcurGridX, hcurGridY);
                 }
                 
                 int idHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
@@ -508,8 +517,12 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                         R_AddToVisibleSprite(vcurGridX, vcurGridY, level, spriteID);
 
                     // Check if there's an active dynamic sprite there
-                    if(G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX)->active)
+                    if(G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX)->base.active)
                         R_AddDynamicToVisibleSprite(level, vcurGridX, vcurGridY);
+
+                    // Check if there's an active dynamic sprite there
+                    if(G_GetFromDeadDynamicSpriteMap(level, vcurGridY, vcurGridX) != NULL && G_GetFromDeadDynamicSpriteMap(level, vcurGridY, vcurGridX)->base.active)
+                        R_AddDeadDynamicToVisibleSprite(level, vcurGridX, vcurGridY);
                 }
 
                 int idHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
@@ -891,8 +904,12 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                     R_AddToVisibleSprite(hcurGridX, hcurGridY, level, spriteID);
 
                 // Check if there's an active dynamic sprite there
-                if(G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX)->active)
+                if(G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, hcurGridY, hcurGridX)->base.active)
                     R_AddDynamicToVisibleSprite(level, hcurGridX, hcurGridY);
+
+                // Check if there's an active dynamic sprite there
+                if(G_GetFromDeadDynamicSpriteMap(level, hcurGridY, hcurGridX) != NULL && G_GetFromDeadDynamicSpriteMap(level, hcurGridY, hcurGridX)->base.active)
+                    R_AddDeadDynamicToVisibleSprite(level, hcurGridX, hcurGridY);
             }
             
             int idHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
@@ -999,8 +1016,12 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                 R_AddToVisibleSprite(vcurGridX, vcurGridY, level, spriteID);
 
                 // Check if there's an active dynamic sprite there
-                if(G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX)->active)
+                if(G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX) != NULL && G_GetFromDynamicSpriteMap(level, vcurGridY, vcurGridX)->base.active)
                     R_AddDynamicToVisibleSprite(level, vcurGridX, vcurGridY);
+
+                // Check if there's an active dynamic sprite there
+                if(G_GetFromDeadDynamicSpriteMap(level, vcurGridY, vcurGridX) != NULL && G_GetFromDeadDynamicSpriteMap(level, vcurGridY, vcurGridX)->base.active)
+                    R_AddDeadDynamicToVisibleSprite(level, vcurGridX, vcurGridY);
             }
 
             int idHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
@@ -1679,15 +1700,35 @@ void R_AddToVisibleSprite(int gridX, int gridY, int level, int spriteID)
 void R_AddDynamicToVisibleSprite(int level, int gridX, int gridY)
 {
     // Check if it's a dynamic
-    sprite_t* dynamicSprite = G_GetFromDynamicSpriteMap(level, gridY, gridX);
+    dynamicSprite_t* dynamicSprite = G_GetFromDynamicSpriteMap(level, gridY, gridX);
 
     // Sprite is also a drawable
     // Add it to the drawables
-    allDrawables[allDrawablesLength].type = DRWB_SPRITE;
-    allDrawables[allDrawablesLength].spritePtr = G_GetFromDynamicSpriteMap(level, gridY, gridX);
+    allDrawables[allDrawablesLength].type = DRWB_DYNAMIC_SPRITE;
+    allDrawables[allDrawablesLength].dynamicSpritePtr = G_GetFromDynamicSpriteMap(level, gridY, gridX);
     
     // Quick variable access
-    allDrawables[allDrawablesLength].dist = dynamicSprite->dist;
+    allDrawables[allDrawablesLength].dist = dynamicSprite->base.dist;
+    
+    // Increment indexes
+    allDrawablesLength++;
+
+    // Mark this sprite as added so we don't get duplicates
+    visibleTiles[gridY][gridX] = true;
+}
+
+void R_AddDeadDynamicToVisibleSprite(int level, int gridX, int gridY)
+{
+    // Check if it's a dynamic
+    dynamicSprite_t* dynamicSprite = G_GetFromDeadDynamicSpriteMap(level, gridY, gridX);
+
+    // Sprite is also a drawable
+    // Add it to the drawables
+    allDrawables[allDrawablesLength].type = DRWB_DYNAMIC_SPRITE;
+    allDrawables[allDrawablesLength].dynamicSpritePtr = G_GetFromDeadDynamicSpriteMap(level, gridY, gridX);
+    
+    // Quick variable access
+    allDrawables[allDrawablesLength].dist = dynamicSprite->base.dist;
     
     // Increment indexes
     allDrawablesLength++;
@@ -1759,6 +1800,107 @@ void R_DrawSprite(sprite_t* sprite)
 }
 
 //-------------------------------------
+// Draws the passed sprite
+//-------------------------------------
+void R_DrawDynamicSprite(dynamicSprite_t* sprite)
+{
+    // Done in degrees to avoid computations (even if I could cache radians values and stuff)
+    // Calculate angle and convert to degrees (*-1 makes sure it uses SDL screen space coordinates for unit circle and quadrants)
+    float angle = ((atan2(-sprite->base.pSpacePos.y, sprite->base.pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
+    FIX_ANGLES_DEGREES(angle);
+
+    float playerAngle = player.angle * RADIAN_TO_DEGREE;
+    float yTemp = playerAngle + (PLAYER_FOV / 2) - angle;
+
+    if(angle > 270 && playerAngle < 90)
+        yTemp = playerAngle + (PLAYER_FOV / 2) - angle + 360;
+
+    if(playerAngle > 270 && angle < 90)
+        yTemp = playerAngle + (PLAYER_FOV / 2) - angle - 360;
+
+    float spriteX = yTemp * (PROJECTION_PLANE_WIDTH / PLAYER_FOV_F);
+    float spriteY = PROJECTION_PLANE_HEIGHT / 2;
+    
+    // Calculate distance and fix fisheye
+    float fixedAngle = ((angle*RADIAN) - player.angle);
+    float dist = (sprite->base.dist * cos(fixedAngle));
+
+    sprite->base.height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
+
+    float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-(TILE_SIZE/2)));
+    int spriteOffset = (PROJECTION_PLANE_CENTER) - floor(sprite->base.height / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
+    
+    if(sprite->base.height <= 0)
+        return;
+
+    if(sprite->base.height > MAX_SPRITE_HEIGHT)
+        sprite->base.height = MAX_SPRITE_HEIGHT;
+
+    // Calculate lighting intensity
+    float lighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / dist;
+    lighting = SDL_clamp(lighting, 0, 1.0f);
+
+    // Draw
+    int offset, drawX, drawYStart, drawYEnd;
+
+    // Select Animation
+    SDL_Surface* curAnim;
+    int curAnimLength = 0;
+
+    switch(sprite->state)
+    {
+        case DS_STATE_IDLE:
+            curAnim = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdle;
+            curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdleSheetLength;
+            break;
+
+        case DS_STATE_DEAD:
+            curAnim = tomentdatapack.sprites[sprite->base.spriteID]->animations->animDie;
+            curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animDieSheetLength;
+            break;
+
+        default:
+            curAnim = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdle;
+            curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdleSheetLength;
+            break;
+    }
+
+    if(sprite->animPlay)
+    {
+        if(sprite->animPlayOnce)
+        {
+            if(curAnimLength > 0)
+                sprite->animFrame = ((int)floor(sprite->animTimer->GetTicks(sprite->animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
+
+            // Prevent loop
+            if(sprite->animFrame >= curAnimLength-1)
+                sprite->animPlay = false;
+        }
+        else
+        {
+            // Allow loop
+             if(curAnimLength > 0)
+                sprite->animFrame = ((int)floor(sprite->animTimer->GetTicks(sprite->animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
+        }
+    }
+    
+
+    for(int j = 0; j < sprite->base.height; j++)
+    {
+        offset = j*TILE_SIZE/sprite->base.height + (UNIT_SIZE*sprite->animFrame);
+        drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(sprite->base.height/2);
+
+        drawYStart = spriteOffset;
+        drawYEnd = spriteOffset+sprite->base.height;
+
+        R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->base.height*sprite->base.level), drawYEnd-(sprite->base.height*sprite->base.level), curAnim,offset, sprite->base.height, lighting, dist);
+    }
+
+    // Draws the center of the sprite
+    //R_DrawPixel(PROJECTION_PLANE_WIDTH-spriteX, spriteY, SDL_MapRGB(win_surface->format, 255, 0, 0));
+}
+
+//-------------------------------------
 // Drawables routine, sort and render drawables
 //-------------------------------------
 void R_DrawDrawables(void)
@@ -1777,6 +1919,10 @@ void R_DrawDrawables(void)
             case DRWB_SPRITE:
                 counter++;
                 R_DrawSprite(allDrawables[i].spritePtr);
+                break;
+
+            case DRWB_DYNAMIC_SPRITE:
+                R_DrawDynamicSprite(allDrawables[i].dynamicSpritePtr);
                 break;
         }
     }
@@ -2188,7 +2334,7 @@ void I_AddThinWall(int level, bool horizontal, float rayAngle, int x, float curX
 
 static void I_DebugPathfinding(void)
 {
-    int level = (allDynamicSprites[0] != NULL) ? allDynamicSprites[0]->level : player.level;
+    int level = (allDynamicSprites[0] != NULL) ? allDynamicSprites[0]->base.level : player.level;
 
     SDL_Rect curRect;
 

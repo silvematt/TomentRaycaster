@@ -215,9 +215,19 @@ void R_AddToVisibleSprite(int gridX, int gridY, int level, int spriteID);
 void R_AddDynamicToVisibleSprite(int level, int gridX, int gridY);
 
 //-------------------------------------
+// Adds a dynamic sprite to the visible sprite array and adds its corresponding drawable
+//-------------------------------------
+void R_AddDeadDynamicToVisibleSprite(int level, int gridX, int gridY);
+
+//-------------------------------------
 // Draws the visible sprites
 //-------------------------------------
 void R_DrawSprite(sprite_t* sprite);
+
+//-------------------------------------
+// Draws the visible sprites
+//-------------------------------------
+void R_DrawDynamicSprite(dynamicSprite_t* sprite);
 
 //-------------------------------------
 // Given a level and the grid coordinates, returns what is in the map

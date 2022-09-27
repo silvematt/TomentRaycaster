@@ -8,6 +8,7 @@
 #include "U_Utilities.h"
 #include "D_AssetsManager.h"
 #include "G_Pathfinding.h"
+#include "G_AI.h"
 
 player_t player;    // Player
 
@@ -165,13 +166,13 @@ void G_PlayerCollisionCheck()
     circle_t hypoteticalPlayerCircle = {player.collisionCircle.pos.x += player.deltaPos.x, player.collisionCircle.pos.y += player.deltaPos.y, player.collisionCircle.r};
     for(int i = 0; i < allDynamicSpritesLength; i++)
     {
-        if(allDynamicSprites[i]->active && allDynamicSprites[i]->level == player.level)
+        if(allDynamicSprites[i]->base.active && allDynamicSprites[i]->base.level == player.level)
         {
-            sprite_t* cur = allDynamicSprites[i];
+            dynamicSprite_t* cur = allDynamicSprites[i];
 
             // Check for collision
             // If there's collision, do not apply movement
-            if(P_CheckCircleCollision(&hypoteticalPlayerCircle, &cur->collisionCircle) > 0)
+            if(P_CheckCircleCollision(&hypoteticalPlayerCircle, &cur->base.collisionCircle) > 0)
             {
                 player.deltaPos.x = 0;
                 player.deltaPos.y = 0;
@@ -210,6 +211,10 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
         if(player.z < 191)
             player.z += 1.0f; 
 
+    if(keyboardState[SDL_SCANCODE_KP_PLUS])
+    {
+        G_AIDie(allDynamicSprites[2]);
+    }
 
     //playerinput.input.x = SDL_clamp(playerinput.input.x, -1.0f , 1.0f);
     playerinput.input.y = SDL_clamp(playerinput.input.y, -1.0f , 1.0f);
@@ -291,7 +296,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 R_DrawMinimap();
 
                 if(allDynamicSprites[0] != NULL)
-                    G_PerformPathfindingDebug(allDynamicSprites[0]->level, allDynamicSprites[0]->gridPos, player.gridPosition);
+                    G_PerformPathfindingDebug(allDynamicSprites[0]->base.level, allDynamicSprites[0]->base.gridPos, player.gridPosition);
                 else
                 {
                     printf("Tried to debug pathfinding between first dynamic sprite and player, but no dynamic sprite is present in this map... Performing Pathfinding from center of the map to the player...\n");

@@ -7,11 +7,11 @@ pathnode_t frontier[MAP_HEIGHT*MAP_WIDTH+2];
 unsigned int frontierLength = 0;
 bool visited[MAP_HEIGHT][MAP_WIDTH];
 
-static void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug, sprite_t* entity);
-static void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug, sprite_t* entity);
+static void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug, dynamicSprite_t* entity);
+static void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug, dynamicSprite_t* entity);
 
 
-path_t G_PerformPathfinding(int level, vector2Int_t gridPos, vector2Int_t gridTargetPos, sprite_t* entity) //entity performing pathfinding
+path_t G_PerformPathfinding(int level, vector2Int_t gridPos, vector2Int_t gridTargetPos, dynamicSprite_t* entity) //entity performing pathfinding
 {
     // Path to return
     path_t path;
@@ -187,8 +187,10 @@ path_t G_PerformPathfindingDebug(int level, vector2Int_t gridPos, vector2Int_t g
     }
 }
 
-void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug, sprite_t* entity)
+void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug, dynamicSprite_t* entity)
 {
+    dynamicSprite_t* entityAtNode = G_GetFromDynamicSpriteMap(level, gridy, gridx);
+
     if(visited[gridy][gridx] || G_CheckCollisionMap(level, gridy, gridx) > 0 || G_CheckDynamicSpriteMap(level, gridy, gridx) && G_GetFromDynamicSpriteMap(level, gridy, gridx) != entity)
         return;
 
@@ -219,7 +221,7 @@ void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int 
     }
 }
 
-void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug, sprite_t* entity)
+void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug, dynamicSprite_t* entity)
 {
     // Top
     if(oGridY-1 >= 0 && !visited[oGridY-1][oGridX])
@@ -290,7 +292,7 @@ bool G_CheckDynamicSpriteMap(int level, int y, int x)
     }
 }
 
-sprite_t* G_GetFromDynamicSpriteMap(int level, int y, int x)
+dynamicSprite_t* G_GetFromDynamicSpriteMap(int level, int y, int x)
 {
     if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
     {
@@ -313,5 +315,134 @@ sprite_t* G_GetFromDynamicSpriteMap(int level, int y, int x)
     else
     {
         return NULL;
+    }
+}
+
+
+void G_ClearFromDynamicSpriteMap(int level, int y, int x)
+{
+    if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
+    {
+        switch(level)
+        {
+            case 0:
+                (currentMap.dynamicSpritesLevel0[y][x]) = NULL;
+                break;
+
+            case 1:
+                (currentMap.dynamicSpritesLevel1[y][x]) = NULL;
+                break;
+
+            case 2:
+                (currentMap.dynamicSpritesLevel2[y][x]) = NULL;
+                break;
+
+            default:
+                //printf("WARNING! Level get was out of max/min level size\n");
+                break;
+        }
+    }
+}
+
+bool G_CheckDeadDynamicSpriteMap(int level, int y, int x)
+{
+    if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
+    {
+        switch(level)
+        {
+            case 0:
+                return (currentMap.deadDynamicSpritesLevel0[y][x]) != NULL ? currentMap.deadDynamicSpritesLevel0[y][x] : NULL;
+
+            case 1:
+                return (currentMap.deadDynamicSpritesLevel1[y][x]) != NULL ? currentMap.deadDynamicSpritesLevel1[y][x] : NULL;
+
+            case 2:
+                return (currentMap.deadDynamicSpritesLevel2[y][x]) != NULL ? currentMap.deadDynamicSpritesLevel2[y][x] : NULL;
+
+            default:
+                //printf("WARNING! Level get was out of max/min level size\n");
+                return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
+}
+
+dynamicSprite_t* G_GetFromDeadDynamicSpriteMap(int level, int y, int x)
+{
+    if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
+    {
+        switch(level)
+        {
+            case 0:
+                return (currentMap.deadDynamicSpritesLevel0[y][x]);
+
+            case 1:
+                return (currentMap.deadDynamicSpritesLevel1[y][x]);
+
+            case 2:
+                return (currentMap.deadDynamicSpritesLevel2[y][x]);
+
+            default:
+                //printf("WARNING! Level get was out of max/min level size\n");
+                return NULL;
+        }
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+
+void G_ClearFromDeadDynamicSpriteMap(int level, int y, int x)
+{
+    if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
+    {
+        switch(level)
+        {
+            case 0:
+                (currentMap.deadDynamicSpritesLevel0[y][x]) = NULL;
+                break;
+
+            case 1:
+                (currentMap.deadDynamicSpritesLevel1[y][x]) = NULL;
+                break;
+
+            case 2:
+                (currentMap.deadDynamicSpritesLevel2[y][x]) = NULL;
+                break;
+
+            default:
+                //printf("WARNING! Level get was out of max/min level size\n");
+                break;
+        }
+    }
+}
+
+void G_AddToDeadDynamicSpriteMap(dynamicSprite_t* cur, int level, int y, int x)
+{
+    if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT && cur != NULL)
+    {
+        switch(level)
+        {
+            case 0:
+                (currentMap.deadDynamicSpritesLevel0[y][x]) = cur;
+                break;
+
+            case 1:
+                (currentMap.deadDynamicSpritesLevel1[y][x]) = cur;
+                break;
+
+            case 2:
+                (currentMap.deadDynamicSpritesLevel2[y][x]) = cur;
+                break;
+
+            default:
+                //printf("WARNING! Level get was out of max/min level size\n");
+                break;
+        }
     }
 }
