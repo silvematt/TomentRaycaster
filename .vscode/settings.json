@@ -6,6 +6,7 @@
         "r_rendering.h": "c",
         "m_map.h": "c",
         "p_physics.h": "c",
-        "g_ai.h": "c"
+        "g_ai.h": "c",
+        "u_utilities.h": "c"
     }
 }

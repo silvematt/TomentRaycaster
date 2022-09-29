@@ -74,7 +74,7 @@ void G_InMenuInputHandling(SDL_Event* e)
             if (isOn)
                 currentMenu->selectedElement = &currentMenu->elements[i];
         }
-        else if(e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT)
+        else if(e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT)
         {
             if (isOn && currentMenu->selectedElement->OnClick != NULL)
             {

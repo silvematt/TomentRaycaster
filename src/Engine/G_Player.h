@@ -4,6 +4,7 @@
 #include "A_Application.h"
 #include "G_Game.h"
 #include "U_DataTypes.h"
+#include "D_AssetsManager.h"
 
 // Minimap Player
 #define PLAYER_WIDTH 16
@@ -22,6 +23,13 @@
 // The light that the player will always carry, no matter the current map
 #define PLAYER_POINT_LIGHT_INTENSITY 10
 
+#define PLAYER_AI_HIT_DISTANCE 110.0f
+
+typedef enum playerState_e
+{
+    PSTATE_IDLE = 0,
+    PSTATE_ATTACKING
+} playerState_e;
 
 // ----------------------------------------------------
 // Sets an SDL_Rect
@@ -51,6 +59,15 @@ typedef struct player_s
     int startingGridX; 
     int startingGridY;
     float startingRot;
+
+    playerState_e state;
+
+    // Animation
+    Timer* animTimer;
+    bool animPlay;
+    int animFrame;
+    bool animPlayOnce;
+
 } player_t;
 
 
@@ -104,5 +121,7 @@ int G_GetFromObjectTMap(int level, int y, int x);
 void G_PlayerCollisionCheck();
 
 void G_PlayerRender(void);
+
+void G_PlayerPlayAnimationOnce(objectanimationsID_e animID);
 
 #endif

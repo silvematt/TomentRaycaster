@@ -6,11 +6,14 @@
 #include "M_Map.h"
 #include "P_Physics.h"
 #include "U_Utilities.h"
-#include "D_AssetsManager.h"
 #include "G_Pathfinding.h"
 #include "G_AI.h"
 
 player_t player;    // Player
+
+static void I_DetermineInFrontGrid(void);
+
+static bool I_PlayerAttack(int attackType);
 
 // ----------------------------------------------------
 // Sets an SDL_Rect
@@ -41,6 +44,14 @@ void G_InitPlayer(void)
     player.gridPosition.x = currentMap.playerStartingGridX;
     player.gridPosition.y = currentMap.playerStartingGridY;
     player.collisionCircle.r = 32;
+
+    player.state = PSTATE_IDLE;
+    player.animTimer = U_TimerCreateNew();
+    player.animFrame = 0;
+    player.animPlay = true;
+    player.animPlayOnce = false;
+    
+    player.animTimer->Start(player.animTimer);
 
     // Rect for minimap
     SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
@@ -110,6 +121,8 @@ void G_PlayerTick(void)
     // Update collision circle
     player.collisionCircle.pos.x = player.centeredPos.x;
     player.collisionCircle.pos.y = player.centeredPos.y;
+
+    I_DetermineInFrontGrid();
 }
 
 
@@ -211,20 +224,68 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
         if(player.z < 191)
             player.z += 1.0f; 
 
-    if(keyboardState[SDL_SCANCODE_KP_PLUS])
-    {
-        G_AIDie(allDynamicSprites[2]);
-    }
 
     //playerinput.input.x = SDL_clamp(playerinput.input.x, -1.0f , 1.0f);
     playerinput.input.y = SDL_clamp(playerinput.input.y, -1.0f , 1.0f);
 }
 
 
-SDL_Rect fpRect = {0, 0, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+// FPS Images size are: PROJECTION_PLANE_WIDTH/2 by PROJECTION_PLANE_HEIGHT/2
 void G_PlayerRender(void)
 {
-    R_BlitIntoScreen(&fpRect, tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->texture, NULL);
+    SDL_Rect screenPos = {0, 0, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect size = {(0), (0), PROJECTION_PLANE_WIDTH/2, PROJECTION_PLANE_HEIGHT/2};
+
+    // Select Animation
+    SDL_Surface* curAnim;
+    int curAnimLength = 0;
+
+    switch(player.state)
+    {
+        case PSTATE_IDLE:
+            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animIdle;
+            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animIdleSheetLength;
+            break;
+
+        case PSTATE_ATTACKING:
+            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animAttack;
+            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animAttackSheetLength;
+            break;
+
+        default:
+            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animIdle;
+            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animIdleSheetLength;
+            break;
+    }
+
+    if(player.animPlay)
+    {
+        if(player.animPlayOnce)
+        {
+            if(curAnimLength > 0)
+                player.animFrame = ((int)floor(player.animTimer->GetTicks(player.animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
+
+            // Prevent loop
+            if(player.animFrame >= curAnimLength-1)
+            {
+                player.animPlay = false;
+                
+                // Go back to idle
+                if(player.state == PSTATE_ATTACKING)
+                    player.state = PSTATE_IDLE;
+            }
+        }
+        else
+        {
+            // Allow loop
+             if(curAnimLength > 0)
+                player.animFrame = ((int)floor(player.animTimer->GetTicks(player.animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
+        }
+
+        size.x = (PROJECTION_PLANE_WIDTH/2) * player.animFrame; 
+    }
+
+    R_BlitIntoScreenScaled(&size, curAnim, &screenPos);
 }
 
 //-------------------------------------
@@ -236,6 +297,14 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
     {
         case SDL_MOUSEMOTION:
             playerinput.input.x = e->motion.xrel;
+            break;
+
+        case SDL_MOUSEBUTTONUP:
+            if(e->button.button == SDL_BUTTON_LEFT)
+            {
+                if(player.state != PSTATE_ATTACKING)
+                    I_PlayerAttack(0);
+            }
             break;
 
         case SDL_KEYUP:
@@ -402,5 +471,93 @@ int G_GetFromObjectTMap(int level, int y, int x)
 
         case 2:
             return currentMap.objectTMapLevel2[y][x];
+    }
+}
+
+static void I_DetermineInFrontGrid(void)
+{
+    // Update front grid pos
+    // Bottom cell
+    if(player.angle < (2*M_PI)/3 && player.angle > M_PI/3)
+    {
+        player.inFrontGridPosition.x = player.gridPosition.x;
+        player.inFrontGridPosition.y = player.gridPosition.y +1;
+    }
+    // Top cell
+    else if(player.angle > (4*M_PI)/3 && player.angle < (5*M_PI)/3)
+    {
+        player.inFrontGridPosition.x = player.gridPosition.x;
+        player.inFrontGridPosition.y = player.gridPosition.y -1;
+    }
+    // Right cell
+    else if(player.angle < M_PI/6 || player.angle > (11*M_PI) / 6)
+    {
+        player.inFrontGridPosition.x = player.gridPosition.x +1;
+        player.inFrontGridPosition.y = player.gridPosition.y;
+    }
+    // Left Cell
+    else if(player.angle > (5*M_PI)/6 && player.angle < (7*M_PI)/6)
+    {
+        player.inFrontGridPosition.x = player.gridPosition.x -1;
+        player.inFrontGridPosition.y = player.gridPosition.y;
+    }
+    // Top Right Cell
+    else if(player.angle < (11*M_PI) / 6 && player.angle > (5*M_PI)/3)
+    {
+        player.inFrontGridPosition.x = player.gridPosition.x +1;
+        player.inFrontGridPosition.y = player.gridPosition.y -1;
+    }
+    // Top Left Cell
+    else if(player.angle > (7*M_PI) / 6 && player.angle < (4*M_PI)/3)
+    {
+        player.inFrontGridPosition.x = player.gridPosition.x -1;
+        player.inFrontGridPosition.y = player.gridPosition.y -1;
+    }
+    // Bottom Right Cell
+    else if(player.angle < M_PI/3 && player.angle > M_PI/6)
+    {
+        player.inFrontGridPosition.x = player.gridPosition.x +1;
+        player.inFrontGridPosition.y = player.gridPosition.y +1;
+    }
+    // Bottom Left Cell
+    else if(player.angle > (2*M_PI)/3 && player.angle < (M_PI*5)/6)
+    {
+        player.inFrontGridPosition.x = player.gridPosition.x -1;
+        player.inFrontGridPosition.y = player.gridPosition.y +1;
+    }
+}
+
+void G_PlayerPlayAnimationOnce(objectanimationsID_e animID)
+{
+    player.animTimer->Start(player.animTimer);
+    player.animPlayOnce = true;
+    player.animFrame = 0;
+
+    switch(animID)
+    {
+        case ANIM_ATTACK:
+            player.state = PSTATE_ATTACKING;
+            break;
+    }
+
+    player.animPlay = true;
+}
+
+static bool I_PlayerAttack(int attackType)
+{
+    G_PlayerPlayAnimationOnce(ANIM_ATTACK);
+
+    dynamicSprite_t* ai = G_GetFromDynamicSpriteMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
+
+    if(ai != NULL && ai->base.dist < PLAYER_AI_HIT_DISTANCE)
+    {
+        printf("Hit an enemy.\n");
+        G_AITakeDamage(ai, 10.0f);
+        return true;
+    }
+    else
+    {
+        printf("Hit the air.\n");
+        return false;
     }
 }

@@ -11,6 +11,7 @@ extern unsigned int allDynamicSpritesLength;
 void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y);
 void G_AIUpdate(void);
 void G_AIDie(dynamicSprite_t* cur);
-void G_PlayAnimationOnce(dynamicSprite_t* cur, objectanimationsID_e animID);
+void G_AIPlayAnimationOnce(dynamicSprite_t* cur, objectanimationsID_e animID);
+void G_AITakeDamage(dynamicSprite_t* cur, float amount);
 
 #endif

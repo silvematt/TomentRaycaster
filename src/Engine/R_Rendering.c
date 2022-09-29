@@ -161,6 +161,14 @@ void R_DrawMinimap(void)
         }
     }
 
+        // Set X and Y
+    curRect.w = TILE_SIZE / MINIMAP_DIVIDER;
+    curRect.h = TILE_SIZE / MINIMAP_DIVIDER;
+    curRect.x = player.inFrontGridPosition.x * TILE_SIZE / MINIMAP_DIVIDER;
+    curRect.y = player.inFrontGridPosition.y * TILE_SIZE / MINIMAP_DIVIDER;
+
+    R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 255, 0, 255), &curRect);
+
     // Draw Direction
     R_DrawLine((player.centeredPos.x) / MINIMAP_DIVIDER, (player.centeredPos.y) / MINIMAP_DIVIDER, ((player.centeredPos.x)/MINIMAP_DIVIDER)+(playerinput.dir.x/MINIMAP_DIVIDER) * 25, ((player.centeredPos.y) / MINIMAP_DIVIDER)+(playerinput.dir.y / MINIMAP_DIVIDER) * 25, r_debugColor);
 }
@@ -594,40 +602,6 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
         vDistance = FLT_MAX;
 
     
-    // Get the in front grid of the player and save it (can be optimized)
-    float firstHDistance = fabs(sqrt((((player.centeredPos.x) - A.x) * ((player.centeredPos.x) - A.x)) + (((player.centeredPos.y) - A.y) * ((player.centeredPos.y) - A.y))));
-    float firstVDistance = fabs(sqrt((((player.centeredPos.x) - B.x) * ((player.centeredPos.x) - B.x)) + (((player.centeredPos.y) - B.y) * ((player.centeredPos.y) - B.y))));
-
-    // Save the grid pos, 
-    if(firstVDistance < firstHDistance)
-    {
-        if(rayAngle < M_PI / 2 || rayAngle > (3*M_PI) / 2)
-        {
-            player.inFrontGridPosition.x = floor(B.x / TILE_SIZE);
-            player.inFrontGridPosition.y = floor(B.y / TILE_SIZE);
-        }
-        else
-        {
-            // Here X is reduced of 1 to make sure it goes to the grid on the left of the collision point
-            player.inFrontGridPosition.x = floor((B.x-1) / TILE_SIZE);
-            player.inFrontGridPosition.y = floor(B.y / TILE_SIZE);
-        }
-    }
-    else
-    {
-        if(rayAngle < M_PI)
-        {
-            player.inFrontGridPosition.x = floor(A.x / TILE_SIZE);
-            player.inFrontGridPosition.y = floor(A.y / TILE_SIZE);
-        }
-        else
-        {
-            // Here X is reduced of 1 to make sure it goes to the grid on the left of the collision point
-            player.inFrontGridPosition.x = floor(A.x / TILE_SIZE);
-            player.inFrontGridPosition.y = floor((A.y-1) / TILE_SIZE);
-        }
-    }
-
     bool horizontal = false;    // Has this ray hit an horizontal?
     float correctDistance;      // Corrected distance for fixing fisheye
 

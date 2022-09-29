@@ -174,12 +174,6 @@ void G_AIUpdate(void)
             // Update collision circle
             cur->base.collisionCircle.pos.x = cur->base.centeredPos.x;
             cur->base.collisionCircle.pos.y = cur->base.centeredPos.y;
-
-            // Check death
-            if(cur->isAlive && cur->attributes.curHealth <= 0.0f)
-            {
-                G_AIDie(cur);
-            }
         }
     }
 }
@@ -190,11 +184,17 @@ void G_AIDie(dynamicSprite_t* cur)
         return;
 
     cur->isAlive = false;
-    G_PlayAnimationOnce(cur, ANIM_DIE);
+    G_AIPlayAnimationOnce(cur, ANIM_DIE);
     cur->base.collisionCircle.r = -1.0f; // Remove collision
+
+    // Add to death map
+    G_AddToDeadDynamicSpriteMap(cur, cur->base.level, cur->base.gridPos.y, cur->base.gridPos.x);
+
+    // Clear from dynamic map
+    G_ClearFromDynamicSpriteMap(cur->base.level, cur->base.gridPos.y, cur->base.gridPos.x);
 }
 
-void G_PlayAnimationOnce(dynamicSprite_t* cur, objectanimationsID_e animID)
+void G_AIPlayAnimationOnce(dynamicSprite_t* cur, objectanimationsID_e animID)
 {
     cur->animTimer->Start(cur->animTimer);
     cur->animPlayOnce = true;
@@ -208,10 +208,18 @@ void G_PlayAnimationOnce(dynamicSprite_t* cur, objectanimationsID_e animID)
     }
 
     cur->animPlay = true;
+}
 
-    // Add to death map
-    G_AddToDeadDynamicSpriteMap(cur, cur->base.level, cur->base.gridPos.y, cur->base.gridPos.x);
-
-    // Clear from dynamic map
-    G_ClearFromDynamicSpriteMap(cur->base.level, cur->base.gridPos.y, cur->base.gridPos.x);
+void G_AITakeDamage(dynamicSprite_t* cur, float amount)
+{
+    if(cur != NULL && cur->isAlive)
+    {
+        cur->attributes.curHealth -= amount;
+        
+        // Check death
+        if(cur->attributes.curHealth <= 0.0f)
+        {
+            G_AIDie(cur);
+        }
+    }
 }

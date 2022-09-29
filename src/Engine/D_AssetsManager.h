@@ -84,7 +84,7 @@ typedef struct objectAnimations_s
     SDL_Surface* animDie;
     unsigned animDieSheetLength;
 
-    SDL_Surface* aimAttack;
+    SDL_Surface* animAttack;
     unsigned animAttackSheetLength;
 } objectanimations_t;
 
@@ -144,6 +144,7 @@ typedef enum menuAssetsID_e
 typedef enum playerFPID_e
 {
     PLAYER_FP_HANDS_IDLE = 0,
+    PLAYER_FP_HANDS_ATTACK1
 } playerFPID_e;
 
 
@@ -213,7 +214,8 @@ typedef enum imgIDs_e
     IMG_ID_P_HANDS_IDLE,
     IMG_ID_WT_CASTLE_DOORS,
     IMG_ID_AI_SKELETON,
-    IMG_ID_AI_SKELETON_DEATH
+    IMG_ID_AI_SKELETON_DEATH,
+    IMG_ID_P_HANDS_ATTACK
 } imgIDs_e;
 
 typedef struct archt_s
