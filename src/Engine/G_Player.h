@@ -25,6 +25,9 @@
 
 #define PLAYER_AI_HIT_DISTANCE 110.0f
 
+#define ATTACK_CONE_SIZE 4
+#define ATTACK_CONE_MAX_DIFF 25
+
 typedef enum playerState_e
 {
     PSTATE_IDLE = 0,
@@ -45,6 +48,8 @@ typedef struct player_s
 
     vector2Int_t gridPosition;  // position of the player in the tilemap
     vector2Int_t inFrontGridPosition; // The grid pos of the cell in front of the player
+    vector2Int_t attackConeGridPos[ATTACK_CONE_SIZE]; // The grid pos of the cells in front of the player that represents the cone of attack, AI that will be in these cells will be checked for hit
+
     vector2_t deltaPos; // used to calculate movements and collision
 
     // Minimap rapresentaton

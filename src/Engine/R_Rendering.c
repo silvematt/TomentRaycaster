@@ -161,13 +161,18 @@ void R_DrawMinimap(void)
         }
     }
 
+    // Debug Attack Cone:
+    for(int i = 0; i < ATTACK_CONE_SIZE; i++)
+    {
         // Set X and Y
-    curRect.w = TILE_SIZE / MINIMAP_DIVIDER;
-    curRect.h = TILE_SIZE / MINIMAP_DIVIDER;
-    curRect.x = player.inFrontGridPosition.x * TILE_SIZE / MINIMAP_DIVIDER;
-    curRect.y = player.inFrontGridPosition.y * TILE_SIZE / MINIMAP_DIVIDER;
+        curRect.w = TILE_SIZE / MINIMAP_DIVIDER;
+        curRect.h = TILE_SIZE / MINIMAP_DIVIDER;
+        curRect.x = player.attackConeGridPos[i].x * TILE_SIZE / MINIMAP_DIVIDER;
+        curRect.y = player.attackConeGridPos[i].y * TILE_SIZE / MINIMAP_DIVIDER;
 
-    R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 255, 0, 255), &curRect);
+        R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 255, 0, 255), &curRect);
+    }
+    
 
     // Draw Direction
     R_DrawLine((player.centeredPos.x) / MINIMAP_DIVIDER, (player.centeredPos.y) / MINIMAP_DIVIDER, ((player.centeredPos.x)/MINIMAP_DIVIDER)+(playerinput.dir.x/MINIMAP_DIVIDER) * 25, ((player.centeredPos.y) / MINIMAP_DIVIDER)+(playerinput.dir.y / MINIMAP_DIVIDER) * 25, r_debugColor);
@@ -1780,23 +1785,24 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
 {
     // Done in degrees to avoid computations (even if I could cache radians values and stuff)
     // Calculate angle and convert to degrees (*-1 makes sure it uses SDL screen space coordinates for unit circle and quadrants)
-    float angle = ((atan2(-sprite->base.pSpacePos.y, sprite->base.pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
-    FIX_ANGLES_DEGREES(angle);
+    sprite->base.angle = ((atan2(-sprite->base.pSpacePos.y, sprite->base.pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
+    FIX_ANGLES_DEGREES(sprite->base.angle);
+    
 
     float playerAngle = player.angle * RADIAN_TO_DEGREE;
-    float yTemp = playerAngle + (PLAYER_FOV / 2) - angle;
+    float yTemp = playerAngle + (PLAYER_FOV / 2) - sprite->base.angle;
 
-    if(angle > 270 && playerAngle < 90)
-        yTemp = playerAngle + (PLAYER_FOV / 2) - angle + 360;
+    if(sprite->base.angle > 270 && playerAngle < 90)
+        yTemp = playerAngle + (PLAYER_FOV / 2) - sprite->base.angle + 360;
 
-    if(playerAngle > 270 && angle < 90)
-        yTemp = playerAngle + (PLAYER_FOV / 2) - angle - 360;
+    if(playerAngle > 270 && sprite->base.angle < 90)
+        yTemp = playerAngle + (PLAYER_FOV / 2) - sprite->base.angle - 360;
 
     float spriteX = yTemp * (PROJECTION_PLANE_WIDTH / PLAYER_FOV_F);
     float spriteY = PROJECTION_PLANE_HEIGHT / 2;
     
     // Calculate distance and fix fisheye
-    float fixedAngle = ((angle*RADIAN) - player.angle);
+    float fixedAngle = ((sprite->base.angle*RADIAN) - player.angle);
     float dist = (sprite->base.dist * cos(fixedAngle));
 
     sprite->base.height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;

@@ -12,6 +12,7 @@
 player_t player;    // Player
 
 static void I_DetermineInFrontGrid(void);
+static void I_SetAttackCone(int id, int x, int y);
 
 static bool I_PlayerAttack(int attackType);
 
@@ -376,7 +377,6 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 r_debugPathfinding = false;
             }
 
-
         break;
     }
 }
@@ -482,48 +482,153 @@ static void I_DetermineInFrontGrid(void)
     {
         player.inFrontGridPosition.x = player.gridPosition.x;
         player.inFrontGridPosition.y = player.gridPosition.y +1;
+
+        // Set Attack Cone
+        // Center Cell
+        I_SetAttackCone(0, player.gridPosition.x, player.gridPosition.y);
+
+        // In Front Cell
+        I_SetAttackCone(1, player.inFrontGridPosition.x, player.inFrontGridPosition.y);
+
+        // Right
+        I_SetAttackCone(2, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y);
+
+        // Leeft 
+        I_SetAttackCone(3, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
+        
     }
     // Top cell
     else if(player.angle > (4*M_PI)/3 && player.angle < (5*M_PI)/3)
     {
         player.inFrontGridPosition.x = player.gridPosition.x;
         player.inFrontGridPosition.y = player.gridPosition.y -1;
+
+        // Set Attack Cone
+        // Center Cell
+        I_SetAttackCone(0, player.gridPosition.x, player.gridPosition.y);
+
+        // In Front Cell
+        I_SetAttackCone(1, player.inFrontGridPosition.x, player.inFrontGridPosition.y);
+
+        // Right
+        I_SetAttackCone(2, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y);
+
+        // Left 
+        I_SetAttackCone(3, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
     }
     // Right cell
     else if(player.angle < M_PI/6 || player.angle > (11*M_PI) / 6)
     {
         player.inFrontGridPosition.x = player.gridPosition.x +1;
         player.inFrontGridPosition.y = player.gridPosition.y;
+
+        // Set Attack Cone
+        // Center Cell
+        I_SetAttackCone(0, player.gridPosition.x, player.gridPosition.y);
+
+        // In Front Cell
+        I_SetAttackCone(1, player.inFrontGridPosition.x, player.inFrontGridPosition.y);
+
+        // Top
+        I_SetAttackCone(2, player.inFrontGridPosition.x, player.inFrontGridPosition.y-1);
+
+        // Bottom 
+        I_SetAttackCone(3, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
     }
     // Left Cell
     else if(player.angle > (5*M_PI)/6 && player.angle < (7*M_PI)/6)
     {
         player.inFrontGridPosition.x = player.gridPosition.x -1;
         player.inFrontGridPosition.y = player.gridPosition.y;
+
+        // Set Attack Cone
+        // Center Cell
+        I_SetAttackCone(0, player.gridPosition.x, player.gridPosition.y);
+
+        // In Front Cell
+        I_SetAttackCone(1, player.inFrontGridPosition.x, player.inFrontGridPosition.y);
+
+        // Top
+        I_SetAttackCone(2, player.inFrontGridPosition.x, player.inFrontGridPosition.y-1);
+
+        // Bottom 
+        I_SetAttackCone(3, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
     }
     // Top Right Cell
     else if(player.angle < (11*M_PI) / 6 && player.angle > (5*M_PI)/3)
     {
         player.inFrontGridPosition.x = player.gridPosition.x +1;
         player.inFrontGridPosition.y = player.gridPosition.y -1;
+
+        // Set Attack Cone
+        // Center Cell
+        I_SetAttackCone(0, player.gridPosition.x, player.gridPosition.y);
+
+        // In Front Cell
+        I_SetAttackCone(1, player.inFrontGridPosition.x, player.inFrontGridPosition.y);
+
+        // Left
+        I_SetAttackCone(2, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
+
+        // Bottom 
+        I_SetAttackCone(3, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
     }
     // Top Left Cell
     else if(player.angle > (7*M_PI) / 6 && player.angle < (4*M_PI)/3)
     {
         player.inFrontGridPosition.x = player.gridPosition.x -1;
         player.inFrontGridPosition.y = player.gridPosition.y -1;
+
+        // Set Attack Cone
+        // Center Cell
+        I_SetAttackCone(0, player.gridPosition.x, player.gridPosition.y);
+
+        // In Front Cell
+        I_SetAttackCone(1, player.inFrontGridPosition.x, player.inFrontGridPosition.y);
+
+        // Right
+        I_SetAttackCone(2, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y);
+
+        // Bottom 
+        I_SetAttackCone(3, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
     }
     // Bottom Right Cell
     else if(player.angle < M_PI/3 && player.angle > M_PI/6)
     {
         player.inFrontGridPosition.x = player.gridPosition.x +1;
         player.inFrontGridPosition.y = player.gridPosition.y +1;
+
+        // Set Attack Cone
+        // Center Cell
+        I_SetAttackCone(0, player.gridPosition.x, player.gridPosition.y);
+
+        // In Front Cell
+        I_SetAttackCone(1, player.inFrontGridPosition.x, player.inFrontGridPosition.y);
+
+        // Top
+        I_SetAttackCone(2, player.inFrontGridPosition.x, player.inFrontGridPosition.y-1);
+
+        // Left 
+        I_SetAttackCone(3, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
     }
     // Bottom Left Cell
     else if(player.angle > (2*M_PI)/3 && player.angle < (M_PI*5)/6)
     {
         player.inFrontGridPosition.x = player.gridPosition.x -1;
         player.inFrontGridPosition.y = player.gridPosition.y +1;
+
+        // Set Attack Cone
+        // Center Cell
+        I_SetAttackCone(0, player.gridPosition.x, player.gridPosition.y);
+
+        // In Front Cell
+        I_SetAttackCone(1, player.inFrontGridPosition.x, player.inFrontGridPosition.y);
+
+        // Top
+        I_SetAttackCone(2, player.inFrontGridPosition.x, player.inFrontGridPosition.y-1);
+
+        // Right 
+        I_SetAttackCone(3, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y);
     }
 }
 
@@ -547,7 +652,26 @@ static bool I_PlayerAttack(int attackType)
 {
     G_PlayerPlayAnimationOnce(ANIM_ATTACK);
 
-    dynamicSprite_t* ai = G_GetFromDynamicSpriteMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
+    dynamicSprite_t* ai;
+
+    for(int i = 0; i < ATTACK_CONE_SIZE; i++)
+    {
+        bool found;
+        ai = G_GetFromDynamicSpriteMap(player.level, player.attackConeGridPos[i].y, player.attackConeGridPos[i].x);
+        
+        // We found one
+        if(ai != NULL)
+        {
+            float anglediff = (int)((player.angle * (180/M_PI)) - ai->base.angle + 180 + 360) % 360 - 180;
+
+            bool inFront = (anglediff <= ATTACK_CONE_MAX_DIFF && anglediff>=-ATTACK_CONE_MAX_DIFF);
+        
+            if(!inFront)
+                ai= NULL;
+            else
+                break;
+        }
+    }
 
     if(ai != NULL && ai->base.dist < PLAYER_AI_HIT_DISTANCE)
     {
@@ -560,4 +684,10 @@ static bool I_PlayerAttack(int attackType)
         printf("Hit the air.\n");
         return false;
     }
+}
+
+static void I_SetAttackCone(int id, int x, int y)
+{
+    player.attackConeGridPos[id].x = x;
+    player.attackConeGridPos[id].y = y;
 }

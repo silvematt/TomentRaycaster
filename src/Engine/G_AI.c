@@ -77,6 +77,9 @@ void G_AIUpdate(void)
 
         cur->base.gridPos.x = cur->base.centeredPos.x / TILE_SIZE;
         cur->base.gridPos.y = cur->base.centeredPos.y / TILE_SIZE;
+
+        cur->base.angle = ((atan2(-cur->base.pSpacePos.y, cur->base.pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
+        FIX_ANGLES_DEGREES(cur->base.angle);
         
         // Set the target as the player
         cur->targetPos = &player.centeredPos;

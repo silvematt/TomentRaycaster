@@ -58,6 +58,8 @@ typedef struct sprite_s
     bool active;            // used for dynamics
     
     vector2_t pos;          // position in world
+    float angle;
+    
     vector2_t centeredPos;  // position in world centered
     vector2Int_t gridPos;   // position in grid
     vector2_t pSpacePos;    // position in player space        

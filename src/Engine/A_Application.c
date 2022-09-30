@@ -24,7 +24,9 @@ void A_InitApplication(void)
 
     SDL_Init(SDL_INIT_EVERYTHING);
 
+    //uint32_t winFlags = SDL_WINDOW_FULLSCREEN; 
     uint32_t winFlags = 0; 
+
     application.win = SDL_CreateWindow("Toment", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, winFlags);
     win_surface = SDL_GetWindowSurface(application.win);
 
