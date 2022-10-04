@@ -402,4 +402,7 @@ void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, b
         current->next->next = NULL;
         newNode->previous = current;
     }
+
+    // Play idle anim
+    G_AIPlayAnimationLoop(&newNode->this, ANIM_IDLE);
 }

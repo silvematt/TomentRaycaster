@@ -207,6 +207,30 @@ void G_AIPlayAnimationOnce(dynamicSprite_t* cur, objectanimationsID_e animID)
 
     switch(animID)
     {
+        case ANIM_IDLE:
+            cur->state = DS_STATE_IDLE;
+            break;
+
+        case ANIM_DIE:
+            cur->state = DS_STATE_DEAD;
+            break;
+    }
+
+    cur->animPlay = true;
+}
+
+void G_AIPlayAnimationLoop(dynamicSprite_t* cur, objectanimationsID_e animID)
+{
+    cur->animTimer->Start(cur->animTimer);
+    cur->animPlayOnce = false;
+    cur->animFrame = 0;
+
+    switch(animID)
+    {
+        case ANIM_IDLE:
+            cur->state = DS_STATE_IDLE;
+            break;
+
         case ANIM_DIE:
             cur->state = DS_STATE_DEAD;
             break;
