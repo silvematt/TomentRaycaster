@@ -20,7 +20,7 @@ Features:
 - AI and basic BFS Pathfinding
 - Projectiles & Player's spells
 - Support for Animated Sprites
-- Seamless Sky Rendering
+- Seamless Sky Rendering or Absolute Ceiling Rendering (or a mix of the two)
 - Shading and Map Lighting
 - Text Rendering of Bitmap Fonts
 - Game Menus
