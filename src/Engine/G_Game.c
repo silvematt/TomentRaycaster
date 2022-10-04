@@ -25,6 +25,12 @@ float doorpositionsLevel0[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position 
 float doorpositionsLevel1[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 float doorpositionsLevel2[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 
+// Projectiles travelling in the world
+projectileNode_t* projectilesHead = NULL;
+
+// Projectiles that hit something and are exploding
+projectileNode_t* explodingProjectilesHead = NULL;
+
 //-------------------------------------
 // Initialize game related stuff 
 //-------------------------------------
@@ -49,6 +55,21 @@ void G_InitGame(void)
             doorpositionsLevel1[y][x] = DOOR_FULLY_CLOSED;
             doorpositionsLevel2[y][x] = DOOR_FULLY_CLOSED;
         }
+
+    // Empty projectile list
+    if(projectilesHead != NULL)
+    {
+        projectileNode_t* current = projectilesHead;
+
+        while(current != NULL)
+        {
+            projectileNode_t* tmp = current;
+            current = current->next;
+            free(tmp);
+        }
+        
+        projectilesHead = NULL;
+    }
 
     P_PhysicsInit();
 
@@ -89,16 +110,16 @@ void G_StateGameLoop(void)
     G_PlayerTick();
     G_UpdateDoors();
     G_AIUpdate();
+    G_UpdateProjectiles();
     
     P_PhysicsEndTick();
-    
+
     // Render
     // Creates the frame
     R_ComposeFrame();
 
     // Displays it on the screen
     R_FinishUpdate();
-
     oldTime = curTime;
 }
 
@@ -254,4 +275,131 @@ void G_ChangeMap(char* mapID)
 {
     M_LoadMapAsCurrent(mapID);
     G_InitPlayer();
+}
+
+void G_UpdateProjectiles(void)
+{   
+    projectileNode_t* cur = projectilesHead;
+    int i = 0;
+    while(cur != NULL)
+    {
+        // Update base info needed for rendering
+        cur->this.base.centeredPos.x = cur->this.base.pos.x;
+        cur->this.base.centeredPos.y = cur->this.base.pos.y;
+
+        cur->this.base.pSpacePos.x = cur->this.base.centeredPos.x - player.centeredPos.x;
+        cur->this.base.pSpacePos.y = cur->this.base.centeredPos.y - player.centeredPos.y;
+
+        cur->this.base.gridPos.x = cur->this.base.centeredPos.x / TILE_SIZE;
+        cur->this.base.gridPos.y = cur->this.base.centeredPos.y / TILE_SIZE;
+
+        cur->this.base.dist = sqrt(cur->this.base.pSpacePos.x*cur->this.base.pSpacePos.x + cur->this.base.pSpacePos.y*cur->this.base.pSpacePos.y);
+
+        // If the projectile hasnt hit anything, check for hit
+        if(!cur->this.isBeingDestroyed)
+        {
+            // Update pos
+            cur->this.base.pos.x += cos(cur->this.base.angle) * cur->this.speed;
+            cur->this.base.pos.y += sin(cur->this.base.angle) * cur->this.speed;
+
+            // Check if projectile is not out of map
+            bool insideMap = cur->this.base.gridPos.x >= 0 && cur->this.base.gridPos.y >= 0 && cur->this.base.gridPos.x < MAP_WIDTH && cur->this.base.gridPos.y < MAP_HEIGHT;
+
+            // Destroy condition
+            if(G_CheckCollisionMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x) || !insideMap)
+            {
+                cur->this.isBeingDestroyed = true;
+                G_AIPlayAnimationOnce(&cur->this, ANIM_DIE);
+                return;
+            }
+
+            dynamicSprite_t* sprite = NULL;
+            if((sprite = G_GetFromDynamicSpriteMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x)) != NULL)
+            {
+                // Damage sprite
+                G_AITakeDamage(sprite, 50.0f);
+
+                cur->this.isBeingDestroyed = true;
+                G_AIPlayAnimationOnce(&cur->this, ANIM_DIE);
+                return;
+            }
+        }
+        // The projectile has hit, wait for the death animation to play
+        else
+        {
+            if(cur->this.animFrame >= tomentdatapack.sprites[cur->this.base.spriteID]->animations->animDieSheetLength-1)
+            {
+                // Destroy this
+                if(projectilesHead == cur)
+                    projectilesHead = cur->next;
+
+                if(cur->next != NULL)
+                    cur->next->previous = cur->previous;
+
+                if(cur->previous != NULL)
+                    cur->previous->next = cur->next;
+
+                free(cur->this.animTimer);
+                free(cur);
+            }
+        }
+
+        i++;
+        cur = cur->next;
+    }
+}
+
+void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, bool isOfPlayer)
+{
+    // Allocate a node
+    projectileNode_t* newNode = (projectileNode_t*)malloc(sizeof(projectileNode_t));
+
+    // Set initial data like pos, dir and speed
+    newNode->this.type = DS_TYPE_PROJECTILE;
+    newNode->this.animPlay = true;
+    newNode->this.state = ANIM_IDLE;
+    newNode->this.animTimer = U_TimerCreateNew();
+    newNode->this.isBeingDestroyed = false;
+
+    newNode->this.base.spriteID = id;
+    newNode->this.base.sheetLength = tomentdatapack.spritesSheetsLenghtTable[id];
+    newNode->this.speed = 10.0f;
+
+    newNode->this.base.active = true;
+    newNode->this.base.angle = angle;
+    newNode->this.base.level = level;
+
+    newNode->this.base.pos.x = posx;
+    newNode->this.base.pos.y = posy;
+
+    newNode->this.base.gridPos.x = posx / TILE_SIZE;
+    newNode->this.base.gridPos.y = posy / TILE_SIZE;
+
+    newNode->this.base.centeredPos.x = newNode->this.base.pos.x + (TILE_SIZE / 2);
+    newNode->this.base.centeredPos.y = newNode->this.base.pos.y + (TILE_SIZE / 2);
+    
+    newNode->this.base.pSpacePos.x = newNode->this.base.centeredPos.x - player.centeredPos.x;
+    newNode->this.base.pSpacePos.y = newNode->this.base.centeredPos.y - player.centeredPos.y;
+
+    newNode->this.isOfPlayer = isOfPlayer;
+    
+    newNode->next = NULL;
+    if(projectilesHead == NULL)
+    {
+        projectilesHead = newNode;
+        projectilesHead->next = NULL;
+        projectilesHead->previous = NULL;
+    }
+    else
+    {
+        projectileNode_t* current = projectilesHead;
+
+        while(current->next != NULL)
+            current = current->next;
+
+        // Now we can add
+        current->next = newNode;
+        current->next->next = NULL;
+        newNode->previous = current;
+    }
 }

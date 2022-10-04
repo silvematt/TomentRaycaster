@@ -31,7 +31,8 @@
 typedef enum playerState_e
 {
     PSTATE_IDLE = 0,
-    PSTATE_ATTACKING
+    PSTATE_ATTACKING1,
+    PSTATE_CASTSPELL
 } playerState_e;
 
 // ----------------------------------------------------
@@ -72,7 +73,11 @@ typedef struct player_s
     bool animPlay;
     int animFrame;
     bool animPlayOnce;
+    int playedFrames;
 
+    // Spells
+    bool hasToCast;
+    bool hasCasted;
 } player_t;
 
 
@@ -128,5 +133,7 @@ void G_PlayerCollisionCheck();
 void G_PlayerRender(void);
 
 void G_PlayerPlayAnimationOnce(objectanimationsID_e animID);
+
+bool G_PlayerCanAttack(void);
 
 #endif

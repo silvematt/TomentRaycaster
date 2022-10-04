@@ -91,6 +91,12 @@ typedef enum dynamicSpriteState_e
     DS_STATE_DEAD
 } dynamicSpriteState_e;
 
+typedef enum dynamicSpriteType_e
+{
+    DS_TYPE_AI = 0,
+    DS_TYPE_PROJECTILE
+} dynamicSpriteType_e;
+
 // -------------------------------
 // Dynamic Sprite data structure, represents dynamic sprites such as AI or projectiles
 // -------------------------------
@@ -99,6 +105,7 @@ typedef struct dynamicSprite_s
     sprite_t base;
 
     // Dnyamic-Specific
+    dynamicSpriteType_e type;
     dynamicSpriteState_e state;
     bool isAlive;
     float speed;
@@ -115,6 +122,10 @@ typedef struct dynamicSprite_s
     circle_t* targetColl;
 
     path_t* path;
+
+    // Used for projectiles to distinguish between player's projectiles and AI's projectiles
+    bool isOfPlayer;
+    bool isBeingDestroyed; // called when a projectile hits and awaits the explosion animation to be removed from the list
 } dynamicSprite_t;
 
 // -------------------------------
@@ -174,6 +185,15 @@ typedef struct drawabledata_s
     // Quick access varaibles
     float dist;
 } drawabledata_t;
+
+typedef struct projectileNode_s
+{
+    dynamicSprite_t this;
+
+    struct projectileNode_s* next;
+    struct projectileNode_s* previous;
+} projectileNode_t;
+
 
 typedef enum orientation_e
 {

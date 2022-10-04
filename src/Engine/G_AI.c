@@ -16,6 +16,8 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
       //---------------------
       // Base
       //---------------------
+      cur->type = DS_TYPE_AI;
+      
       cur->base.active = true;
       cur->base.level = level;
 

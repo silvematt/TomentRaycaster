@@ -15,6 +15,7 @@ static void I_DetermineInFrontGrid(void);
 static void I_SetAttackCone(int id, int x, int y);
 
 static bool I_PlayerAttack(int attackType);
+static bool I_PlayerCastSpell(int attackType);
 
 // ----------------------------------------------------
 // Sets an SDL_Rect
@@ -244,18 +245,23 @@ void G_PlayerRender(void)
     switch(player.state)
     {
         case PSTATE_IDLE:
-            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animIdle;
-            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animIdleSheetLength;
+            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animIdle;
+            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animIdleSheetLength;
             break;
 
-        case PSTATE_ATTACKING:
-            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animAttack;
-            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animAttackSheetLength;
+        case PSTATE_ATTACKING1:
+            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animAttack;
+            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animAttackSheetLength;
+            break;
+
+        case PSTATE_CASTSPELL:
+            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animCastSpell;
+            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animCastSpellSheetLength;
             break;
 
         default:
-            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animIdle;
-            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS_IDLE]->animations->animIdleSheetLength;
+            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animIdle;
+            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animIdleSheetLength;
             break;
     }
 
@@ -266,14 +272,27 @@ void G_PlayerRender(void)
             if(curAnimLength > 0)
                 player.animFrame = ((int)floor(player.animTimer->GetTicks(player.animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
 
+            // Spawn projectile at the right frame
+            if(player.state == PSTATE_CASTSPELL && player.animFrame == 4 && player.hasToCast && !player.hasCasted)
+            {
+                // Spawn a projectile
+                G_SpawnProjectile(S_Fireball1, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, true);
+                player.hasCasted = true;
+                player.hasToCast = false;
+            }
+
             // Prevent loop
             if(player.animFrame >= curAnimLength-1)
             {
                 player.animPlay = false;
                 
                 // Go back to idle
-                if(player.state == PSTATE_ATTACKING)
-                    player.state = PSTATE_IDLE;
+                if(player.state == PSTATE_ATTACKING1 ||
+                   player.state == PSTATE_CASTSPELL)
+                   {
+                        player.state = PSTATE_IDLE;
+                        player.hasToCast = false;
+                   }
             }
         }
         else
@@ -303,10 +322,10 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
         case SDL_MOUSEBUTTONUP:
             if(e->button.button == SDL_BUTTON_LEFT)
             {
-                if(player.state != PSTATE_ATTACKING)
+                if(G_PlayerCanAttack())
                     I_PlayerAttack(0);
             }
-            break;
+
 
         case SDL_KEYUP:
             // Space player's interacions
@@ -346,6 +365,12 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                     if(tomentdatapack.walls[wallID]->Callback != NULL)
                         tomentdatapack.walls[wallID]->Callback(tomentdatapack.walls[wallID]->data);
                 }
+            }
+
+            if(e->key.keysym.sym == SDLK_c)
+            {
+                if(G_PlayerCanAttack())
+                    I_PlayerCastSpell(0);
             }
 
             if(e->key.keysym.sym == SDLK_ESCAPE)
@@ -640,8 +665,12 @@ void G_PlayerPlayAnimationOnce(objectanimationsID_e animID)
 
     switch(animID)
     {
-        case ANIM_ATTACK:
-            player.state = PSTATE_ATTACKING;
+        case ANIM_ATTACK1:
+            player.state = PSTATE_ATTACKING1;
+            break;
+
+        case ANIM_CAST_SPELL:
+            player.state = PSTATE_CASTSPELL;
             break;
     }
 
@@ -650,7 +679,7 @@ void G_PlayerPlayAnimationOnce(objectanimationsID_e animID)
 
 static bool I_PlayerAttack(int attackType)
 {
-    G_PlayerPlayAnimationOnce(ANIM_ATTACK);
+    G_PlayerPlayAnimationOnce(ANIM_ATTACK1);
 
     dynamicSprite_t* ai;
 
@@ -661,9 +690,9 @@ static bool I_PlayerAttack(int attackType)
         
         // We found one
         if(ai != NULL)
-        {
+        {   
+            // Check if AI is in front
             float anglediff = (int)((player.angle * (180/M_PI)) - ai->base.angle + 180 + 360) % 360 - 180;
-
             bool inFront = (anglediff <= ATTACK_CONE_MAX_DIFF && anglediff>=-ATTACK_CONE_MAX_DIFF);
         
             if(!inFront)
@@ -686,8 +715,20 @@ static bool I_PlayerAttack(int attackType)
     }
 }
 
+static bool I_PlayerCastSpell(int attackType)
+{
+    G_PlayerPlayAnimationOnce(ANIM_CAST_SPELL);
+    player.hasToCast = true;
+    player.hasCasted = false;
+}
+
 static void I_SetAttackCone(int id, int x, int y)
 {
     player.attackConeGridPos[id].x = x;
     player.attackConeGridPos[id].y = y;
+}
+
+bool G_PlayerCanAttack(void)
+{
+    return (player.state != PSTATE_ATTACKING1 && player.state != PSTATE_CASTSPELL);
 }

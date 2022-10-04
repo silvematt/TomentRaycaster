@@ -13,6 +13,7 @@
 #include "G_MainMenu.h"
 #include "G_Pathfinding.h"
 #include "G_AI.h"
+#include "G_Game.h"
 
 uint32_t r_blankColor;           // Color shown when nothing else is in the renderer
 uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
@@ -1785,31 +1786,37 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
 {
     // Done in degrees to avoid computations (even if I could cache radians values and stuff)
     // Calculate angle and convert to degrees (*-1 makes sure it uses SDL screen space coordinates for unit circle and quadrants)
-    sprite->base.angle = ((atan2(-sprite->base.pSpacePos.y, sprite->base.pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
-    FIX_ANGLES_DEGREES(sprite->base.angle);
+    float angle;
+
+    // AI should always face the player, projectiles should be drawn like normal sprites
+    if(sprite->type == DS_TYPE_AI)
+        angle = sprite->base.angle = ((atan2(-sprite->base.pSpacePos.y, sprite->base.pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
+    else
+        angle = ((atan2(-sprite->base.pSpacePos.y, sprite->base.pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
+
+    FIX_ANGLES_DEGREES(angle);
     
-
     float playerAngle = player.angle * RADIAN_TO_DEGREE;
-    float yTemp = playerAngle + (PLAYER_FOV / 2) - sprite->base.angle;
+    float yTemp = playerAngle + (PLAYER_FOV / 2) - angle;
 
-    if(sprite->base.angle > 270 && playerAngle < 90)
-        yTemp = playerAngle + (PLAYER_FOV / 2) - sprite->base.angle + 360;
+    if(angle > 270 && playerAngle < 90)
+        yTemp = playerAngle + (PLAYER_FOV / 2) - angle + 360;
 
-    if(playerAngle > 270 && sprite->base.angle < 90)
-        yTemp = playerAngle + (PLAYER_FOV / 2) - sprite->base.angle - 360;
+    if(playerAngle > 270 && angle < 90)
+        yTemp = playerAngle + (PLAYER_FOV / 2) - angle - 360;
 
     float spriteX = yTemp * (PROJECTION_PLANE_WIDTH / PLAYER_FOV_F);
     float spriteY = PROJECTION_PLANE_HEIGHT / 2;
     
     // Calculate distance and fix fisheye
-    float fixedAngle = ((sprite->base.angle*RADIAN) - player.angle);
+    float fixedAngle = ((angle*RADIAN) - player.angle);
     float dist = (sprite->base.dist * cos(fixedAngle));
 
     sprite->base.height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
 
     float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-(TILE_SIZE/2)));
     int spriteOffset = (PROJECTION_PLANE_CENTER) - floor(sprite->base.height / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
-    
+
     if(sprite->base.height <= 0)
         return;
 
@@ -1863,7 +1870,6 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
                 sprite->animFrame = ((int)floor(sprite->animTimer->GetTicks(sprite->animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
         }
     }
-    
 
     for(int j = 0; j < sprite->base.height; j++)
     {
@@ -1905,6 +1911,13 @@ void R_DrawDrawables(void)
                 R_DrawDynamicSprite(allDrawables[i].dynamicSpritePtr);
                 break;
         }
+    }
+
+    projectileNode_t* cur = projectilesHead;
+    while(cur != NULL)
+    {
+        R_DrawDynamicSprite(&cur->this);
+        cur = cur->next;
     }
 
     //printf("DRAWN %d\n", counter);

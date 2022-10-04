@@ -56,7 +56,8 @@ typedef enum spritesObjectID_e
     // 0 = Empty
     S_Barrel1 = 1,
     S_Campfire,
-    DS_Skeleton
+    DS_Skeleton,
+    S_Fireball1
 } spritesObjectID_t;
 
 // All sprites
@@ -69,8 +70,9 @@ typedef enum skiesObjectID_e
 typedef enum objectanimationsID_e
 {
     ANIM_IDLE = 0,
-    ANIM_ATTACK,
-    ANIM_DIE
+    ANIM_ATTACK1,
+    ANIM_DIE,
+    ANIM_CAST_SPELL
 } objectanimationsID_e;
 
 // Specific object data for AI
@@ -86,6 +88,10 @@ typedef struct objectAnimations_s
 
     SDL_Surface* animAttack;
     unsigned animAttackSheetLength;
+
+    SDL_Surface* animCastSpell;
+    unsigned animCastSpellSheetLength;
+
 } objectanimations_t;
 
 typedef struct object_s
@@ -140,11 +146,10 @@ typedef enum menuAssetsID_e
     M_ASSET_TITLE,
 } menuAssetsID_e;
 
-// Player IDs
+// FP Player IDs
 typedef enum playerFPID_e
 {
-    PLAYER_FP_HANDS_IDLE = 0,
-    PLAYER_FP_HANDS_ATTACK1
+    PLAYER_FP_HANDS = 0,
 } playerFPID_e;
 
 
@@ -215,7 +220,10 @@ typedef enum imgIDs_e
     IMG_ID_WT_CASTLE_DOORS,
     IMG_ID_AI_SKELETON,
     IMG_ID_AI_SKELETON_DEATH,
-    IMG_ID_P_HANDS_ATTACK
+    IMG_ID_P_HANDS_ATTACK,
+    IMG_ID_P_HANDS_CASTSPELL,
+    IMG_ID_SPELL_FIREBALL1,
+    IMG_ID_SPELL_FIREBALL1_EXPLOSION
 } imgIDs_e;
 
 typedef struct archt_s

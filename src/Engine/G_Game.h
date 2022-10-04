@@ -29,6 +29,9 @@ extern float doorpositionsLevel0[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the po
 extern float doorpositionsLevel1[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 extern float doorpositionsLevel2[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the position of the door
 
+extern projectileNode_t* projectilesHead;
+extern projectileNode_t* explodingProjectilesHead;
+
 
 //-------------------------------------
 // Initialize game related stuff 
@@ -50,5 +53,9 @@ void G_StateGameLoop(void);
 void G_UpdateDoors(void);
 
 void G_ChangeMap(char* mapID);
+
+void G_UpdateProjectiles(void);
+
+void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, bool isOfPlayer);
 
 #endif
