@@ -1,7 +1,7 @@
 # TomentRaycaster
 A Software Rendering Raycaster Engine written in C and SDL2.
 
-![alt text](https://i.imgur.com/zMBKoPU.png)
+![alt text](https://i.imgur.com/57G4FY1.png)
 
 I've written this raycaster following Permadi's paper and Wolfenstein 3D code (and Black Book), as a pilgrimage to my God John Carmack.
 
@@ -18,6 +18,7 @@ Features:
 - Vertical Motion
 - Sprites Rendering & Collisions
 - AI and basic BFS Pathfinding
+- Projectiles & Player's spells
 - Support for Animated Sprites
 - Seamless Sky Rendering
 - Shading and Map Lighting
