@@ -55,7 +55,10 @@ typedef struct map_s
     float floorLight;
     int skyID;
 
-    int maxCeilingHeight;
+    // A level with Abs Ceiling has ceiling for the whole map
+    bool hasAbsCeiling;
+    // At which level we have abs ceiling
+    int absCeilingLevel;
 
     // Map Dynamics, values are cached in multiple matrixes to avoid having to calculate them each time
     // These values can change during runtime

@@ -724,7 +724,9 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
         if(level == 0)
             R_FloorCasting(end, rayAngle, x, wallHeight);
         
-        //R_CeilingCasting(start, rayAngle, x, wallHeight);
+        if(currentMap.hasAbsCeiling)
+            R_CeilingCasting(currentMap.absCeilingLevel, start, rayAngle, x, wallHeight);
+
         //R_DrawPixel(x, start, r_debugColor);
     }
 }
@@ -1499,17 +1501,17 @@ void R_FloorCasting(float end, float rayAngle, int x, float wallHeight)
     }
 }
 
-void R_CeilingCasting(float start, float rayAngle, int x, float wallHeight)
+void R_CeilingCasting(int level, float start, float rayAngle, int x, float wallHeight)
 {
     // Floor Casting & Ceiling
     float beta = (player.angle - rayAngle);
     FIX_ANGLES(beta);
-
+    float ceilingHeight = TILE_SIZE * (level+1);
     // If the current ceiling height is greater than 1, ceiling needs to be calculated on its own
     for(int y = floor(start); y >= 0; y--)
     {
         // Get distance
-        float straightlinedist = ((player.z * DISTANCE_TO_PROJECTION) / (PROJECTION_PLANE_CENTER-y));
+        float straightlinedist = (((ceilingHeight - player.z)* DISTANCE_TO_PROJECTION) / (PROJECTION_PLANE_CENTER-y));
         float d = straightlinedist / cos(beta);
 
         // Get coordinates
@@ -1520,7 +1522,7 @@ void R_CeilingCasting(float start, float rayAngle, int x, float wallHeight)
         int curGridX = floor(floorx / TILE_SIZE);
         int curGridY = floor(floory / TILE_SIZE);
 
-        straightlinedist = ((player.z * DISTANCE_TO_PROJECTION) / (PROJECTION_PLANE_CENTER-y));
+        straightlinedist = (((ceilingHeight - player.z)* DISTANCE_TO_PROJECTION) / (PROJECTION_PLANE_CENTER-y));
         d = straightlinedist / cos(beta);
 
         // Calculate lighting intensity

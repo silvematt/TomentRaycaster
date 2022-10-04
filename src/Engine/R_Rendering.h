@@ -202,7 +202,7 @@ void R_FloorCasting(float end, float rayAngle, int x, float wallHeight);
 // - rayAngle = the current rayangle
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
-void R_CeilingCasting(float start, float rayAngle, int x, float wallHeight);
+void R_CeilingCasting(int level, float start, float rayAngle, int x, float wallHeight);
 
 //-------------------------------------
 // Adds a sprite to the visible sprite array and adds its corresponding drawable
