@@ -48,8 +48,11 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
       cur->animFrame = 0;
       cur->animPlayOnce = false;
 
-      cur->attributes.maxhealth = 100.0f;
-      cur->attributes.curHealth = cur->attributes.maxhealth;
+      cur->attributes.maxHealth = 100.0f;
+      cur->attributes.curHealth = cur->attributes.maxHealth;
+      
+      cur->attributes.maxMana = 100.0f;
+      cur->attributes.curMana = cur->attributes.maxMana;
 
       // Add it to the dynamic sprite list
       allDynamicSprites[allDynamicSpritesLength] = cur;

@@ -98,7 +98,7 @@ void D_InitAssetManager(void)
 
     D_OpenArchs();
 
-    D_InitMenuAssets();
+    D_InitUIAssets();
     D_InitFontSheets();
 
     D_InitEnginesDefaults();
@@ -113,7 +113,7 @@ void D_InitAssetManager(void)
     D_CloseArchs();
 }
 
-void D_InitMenuAssets(void)
+void D_InitUIAssets(void)
 {    
     // Create Objects
 
@@ -128,10 +128,10 @@ void D_InitMenuAssets(void)
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MENU_SELECT_CURSOR].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_SELECT_CURSOR))
-        tomentdatapack.menuAssets[M_ASSET_SELECT_CURSOR].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
-    SDL_SetColorKey(tomentdatapack.menuAssets[M_ASSET_SELECT_CURSOR].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
     // MENU_TITLE
@@ -139,10 +139,60 @@ void D_InitMenuAssets(void)
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MENU_TITLE].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_TITLE))
-        tomentdatapack.menuAssets[M_ASSET_TITLE].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        tomentdatapack.uiAssets[M_ASSET_TITLE].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
-    SDL_SetColorKey(tomentdatapack.menuAssets[M_ASSET_TITLE].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_TITLE].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_FreeSurface(temp1);
+
+    // HEALTHBAR_EMPTY
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_HEALTHBAR_EMPTY].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_HEALTHBAR_EMPTY].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_HEALTHBAR_EMPTY))
+        tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_FreeSurface(temp1);
+
+    // HEALTHBAR_FILL
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_HEALTHBAR_FILL].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_HEALTHBAR_FILL].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_HEALTHBAR_FILL))
+    {
+        tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_FreeSurface(temp1);
+
+    // MANABAR_EMPTY
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_MANABAR_EMPTY].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MANABAR_EMPTY].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_MANABAR_EMPTY))
+    {
+        tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_FreeSurface(temp1);
+
+    // MANABAR_FILL
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_MANABAR_FILL].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MANABAR_FILL].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_MANABAR_FILL))
+    {
+        tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 }
 

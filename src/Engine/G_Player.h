@@ -67,6 +67,7 @@ typedef struct player_s
     float startingRot;
 
     playerState_e state;
+    entityattributes_t attributes;
 
     // Animation
     Timer* animTimer;
@@ -131,6 +132,8 @@ int G_GetFromObjectTMap(int level, int y, int x);
 void G_PlayerCollisionCheck();
 
 void G_PlayerRender(void);
+
+void G_PlayerUIRender(void);
 
 void G_PlayerPlayAnimationOnce(objectanimationsID_e animID);
 

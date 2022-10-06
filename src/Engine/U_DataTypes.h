@@ -79,7 +79,10 @@ typedef struct sprite_s
 typedef struct entityattributes_s
 {
     float curHealth;
-    float maxhealth;
+    float maxHealth;
+
+    float curMana;
+    float maxMana;
 } entityattributes_t;
 
 typedef enum dynamicSpriteState_e

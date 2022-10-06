@@ -45,16 +45,23 @@ void G_InitPlayer(void)
     player.level = currentMap.playerStartingLevel;
     player.gridPosition.x = currentMap.playerStartingGridX;
     player.gridPosition.y = currentMap.playerStartingGridY;
-    player.collisionCircle.r = 32;
+    player.collisionCircle.r = TILE_SIZE / 2;
 
+    // Init anim
     player.state = PSTATE_IDLE;
     player.animTimer = U_TimerCreateNew();
     player.animFrame = 0;
     player.animPlay = true;
     player.animPlayOnce = false;
-    
     player.animTimer->Start(player.animTimer);
 
+    // Init attributes
+    player.attributes.maxHealth = 100.0f;
+    player.attributes.curHealth = player.attributes.maxHealth;
+      
+    player.attributes.maxMana = 100.0f;
+    player.attributes.curMana = player.attributes.maxMana;
+    
     // Rect for minimap
     SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
 
@@ -226,6 +233,26 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
         if(player.z < 191)
             player.z += 1.0f; 
 
+    if(keyboardState[SDL_SCANCODE_KP_MINUS])
+    {
+        player.attributes.curHealth -= 1.0f;
+    }
+
+    if(keyboardState[SDL_SCANCODE_KP_PLUS])
+    {
+        player.attributes.curHealth += 1.0f;
+    }
+
+    if(keyboardState[SDL_SCANCODE_KP_3])
+    {
+        player.attributes.curMana -= 1.0f;
+    }
+
+    if(keyboardState[SDL_SCANCODE_KP_6])
+    {
+        player.attributes.curMana += 1.0f;
+    }
+
 
     //playerinput.input.x = SDL_clamp(playerinput.input.x, -1.0f , 1.0f);
     playerinput.input.y = SDL_clamp(playerinput.input.y, -1.0f , 1.0f);
@@ -305,9 +332,49 @@ void G_PlayerRender(void)
         size.x = (PROJECTION_PLANE_WIDTH/2) * player.animFrame; 
     }
 
+    // Blit FP
     R_BlitIntoScreenScaled(&size, curAnim, &screenPos);
 }
 
+// -----------------------------------
+// Renders Player's UI
+// -----------------------------------
+void G_PlayerUIRender(void)
+{
+    // HEALTH BAR
+    SDL_Rect healthbarEmptyScreenPos = {105, 5, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect healthbarEmptySize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+
+    R_BlitIntoScreenScaled(&healthbarEmptySize, tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY].texture, &healthbarEmptyScreenPos);
+
+    SDL_Rect healthbarFillScreenPos = {105, 5, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect healthbarFillSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+
+    healthbarFillSize.x = player.attributes.maxHealth-player.attributes.curHealth;
+
+    // Fix bar border
+    if(healthbarFillSize.x > 3)
+        healthbarFillScreenPos.x+=3;
+
+    R_BlitIntoScreenScaled(&healthbarFillSize, tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL].texture, &healthbarFillScreenPos);
+
+    // MANA BAR
+    SDL_Rect manabarEmptyScreenPos = {105, 34, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect manabarEmptySize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+
+    R_BlitIntoScreenScaled(&manabarEmptySize, tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY].texture, &manabarEmptyScreenPos);
+
+    SDL_Rect manabarFillScreenPos = {105, 34, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect manabarFillSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+
+    manabarFillSize.x = player.attributes.maxMana-player.attributes.curMana;
+
+    // Fix bar border
+    if(manabarFillSize.x > 3)
+        manabarFillScreenPos.x+=3;
+
+    R_BlitIntoScreenScaled(&manabarFillSize, tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL].texture, &manabarFillScreenPos);
+}
 //-------------------------------------
 // Handles Input from the player while doing the Event Input Handling
 //-------------------------------------
@@ -372,6 +439,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 if(G_PlayerCanAttack())
                     I_PlayerCastSpell(0);
             }
+
 
             if(e->key.keysym.sym == SDLK_ESCAPE)
             {

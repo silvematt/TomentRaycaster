@@ -75,7 +75,7 @@ void R_RenderDev(void)
 
     // Render UI
     R_DrawMinimap();
-
+    G_PlayerUIRender();
 
     T_DisplayTextScaled(FONT_BLKCRY, "This is an alert  message!", 360, 10, 1.0f);
 }

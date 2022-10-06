@@ -128,10 +128,10 @@ typedef struct fontSheet_s
     int glyphsWidth[FONT_MAX_ELEMENTS_HEIGHT][FONT_MAX_ELEMENTS_WIDTH];        // The actual used width of each glyph, used for text-spacing
 } fontsheet_t;
 
-typedef struct menuAssets_s
+typedef struct uiAssets_s
 {
     SDL_Surface* texture;
-} menuAssets_t;
+} uiAssets_t;
 
 // All Fonts IDS
 typedef enum fontsID_e
@@ -140,11 +140,15 @@ typedef enum fontsID_e
 } fontsID_t;
 
 // Menu Assets IDS
-typedef enum menuAssetsID_e
+typedef enum uiAssetsID_e
 {
     M_ASSET_SELECT_CURSOR = 0,
     M_ASSET_TITLE,
-} menuAssetsID_e;
+    G_ASSET_HEALTHBAR_EMPTY,
+    G_ASSET_HEALTHBAR_FILL,
+    G_ASSET_MANABAR_EMPTY,
+    G_ASSET_MANABAR_FILL
+} uiAssetsID_e;
 
 // FP Player IDs
 typedef enum playerFPID_e
@@ -223,7 +227,11 @@ typedef enum imgIDs_e
     IMG_ID_P_HANDS_ATTACK,
     IMG_ID_P_HANDS_CASTSPELL,
     IMG_ID_SPELL_FIREBALL1,
-    IMG_ID_SPELL_FIREBALL1_EXPLOSION
+    IMG_ID_SPELL_FIREBALL1_EXPLOSION,
+    IMG_ID_HEALTHBAR_EMPTY,
+    IMG_ID_HEALTHBAR_FILL,
+    IMG_ID_MANABAR_EMPTY,
+    IMG_ID_MANABAR_FILL
 } imgIDs_e;
 
 typedef struct archt_s
@@ -252,9 +260,9 @@ typedef struct tomentdatapack_s
     unsigned fontsheetsLenghth;
 
     // -------------------------------
-    // Menu assets
+    // UI
     // -------------------------------
-    menuAssets_t menuAssets[OBJECTARRAY_DEFAULT_SIZE];
+    uiAssets_t uiAssets[OBJECTARRAY_DEFAULT_SIZE];
 
     // -------------------------------
     // In Game Assets
@@ -314,7 +322,7 @@ void D_CloseArchs(void);
 
 void D_InitEnginesDefaults(void);
 void D_InitFontSheets(void);
-void D_InitMenuAssets(void);
+void D_InitUIAssets(void);
 void D_InitLoadWalls(void);
 void D_InitLoadFloors(void);
 void D_InitLoadCeilings(void);
