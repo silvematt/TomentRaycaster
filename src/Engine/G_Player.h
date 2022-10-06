@@ -139,4 +139,6 @@ void G_PlayerPlayAnimationOnce(objectanimationsID_e animID);
 
 bool G_PlayerCanAttack(void);
 
+void G_PlayerTakeDamage(float dmg);
+
 #endif

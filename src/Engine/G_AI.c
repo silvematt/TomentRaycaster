@@ -39,7 +39,7 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
       //---------------------
       // Dynamic-Specific
       //---------------------
-      cur->state = DS_STATE_NULL;
+      cur->state = DS_STATE_IDLE;
       cur->isAlive = true;
       cur->speed = 2.0f;
       
@@ -94,7 +94,8 @@ void G_AIUpdate(void)
         // Calculate the distance to player
         cur->base.dist = sqrt(cur->base.pSpacePos.x*cur->base.pSpacePos.x + cur->base.pSpacePos.y*cur->base.pSpacePos.y);
 
-        if(cur->isAlive)
+        // Movements
+        if(cur->isAlive && G_AICanAttack(cur))
         {
             path_t path = G_PerformPathfinding(cur->base.level, cur->base.gridPos, *(cur->targetGridPos), cur);
             cur->path = &path;
@@ -182,6 +183,14 @@ void G_AIUpdate(void)
             // Update collision circle
             cur->base.collisionCircle.pos.x = cur->base.centeredPos.x;
             cur->base.collisionCircle.pos.y = cur->base.centeredPos.y;
+
+            // Check Attack
+            if(cur->base.dist < AI_ATTACK_DISTANCE)
+            {
+                // In range for attacking
+                G_AIPlayAnimationOnce(cur, ANIM_ATTACK1);
+                G_AIAttackPlayer(cur);
+            }
         }
     }
 }
@@ -202,6 +211,26 @@ void G_AIDie(dynamicSprite_t* cur)
     G_ClearFromDynamicSpriteMap(cur->base.level, cur->base.gridPos.y, cur->base.gridPos.x);
 }
 
+
+void G_AIAttackPlayer(dynamicSprite_t* cur)
+{
+    float dmg = 0;
+
+    switch(cur->base.spriteID)
+    {
+        case DS_Skeleton:
+            dmg = 5.0f;
+            break;
+
+        default:
+            dmg = 5.0f;
+            break;
+    }
+
+    G_PlayerTakeDamage(dmg);
+}
+
+
 void G_AIPlayAnimationOnce(dynamicSprite_t* cur, objectanimationsID_e animID)
 {
     cur->animTimer->Start(cur->animTimer);
@@ -212,10 +241,17 @@ void G_AIPlayAnimationOnce(dynamicSprite_t* cur, objectanimationsID_e animID)
     {
         case ANIM_IDLE:
             cur->state = DS_STATE_IDLE;
+            cur->animSpeed = ANIMATION_SPEED_DIVIDER;
             break;
 
         case ANIM_DIE:
             cur->state = DS_STATE_DEAD;
+            cur->animSpeed = ANIMATION_SPEED_DIVIDER;
+            break;
+
+        case ANIM_ATTACK1:
+            cur->state = DS_STATE_ATTACKING;
+            cur->animSpeed = ANIMATION_ATTACK_SPEED_DIVIDER;
             break;
     }
 
@@ -232,10 +268,12 @@ void G_AIPlayAnimationLoop(dynamicSprite_t* cur, objectanimationsID_e animID)
     {
         case ANIM_IDLE:
             cur->state = DS_STATE_IDLE;
+            cur->animSpeed = ANIMATION_SPEED_DIVIDER;
             break;
 
         case ANIM_DIE:
             cur->state = DS_STATE_DEAD;
+            cur->animSpeed = ANIMATION_SPEED_DIVIDER;
             break;
     }
 
@@ -254,4 +292,9 @@ void G_AITakeDamage(dynamicSprite_t* cur, float amount)
             G_AIDie(cur);
         }
     }
+}
+
+bool G_AICanAttack(dynamicSprite_t* cur)
+{
+    return (cur->state != DS_STATE_ATTACKING && cur->state != DS_STATE_DEAD);
 }

@@ -117,6 +117,7 @@ typedef struct dynamicSprite_s
     bool animPlay;
     int animFrame;
     bool animPlayOnce;
+    float animSpeed;
 
     entityattributes_t attributes;
 

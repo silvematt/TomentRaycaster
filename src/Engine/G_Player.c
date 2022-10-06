@@ -350,10 +350,18 @@ void G_PlayerUIRender(void)
     SDL_Rect healthbarFillScreenPos = {105, 5, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect healthbarFillSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
 
-    healthbarFillSize.x = player.attributes.maxHealth-player.attributes.curHealth;
+    // Fill size.x of 0 means full health
+    // Fill size.x of 160 means 0 health
+    // H = 100 means B = 0
+    // H = 0 means B = 160
+    // The formula is the equation of the line between these two points
+    healthbarFillSize.x = (-8*player.attributes.curHealth)/5.0f + 160;
 
     // Fix bar border
-    if(healthbarFillSize.x > 3)
+    if(healthbarFillSize.x == 2)
+        healthbarFillScreenPos.x+=2;
+
+    if(healthbarFillSize.x >=3)
         healthbarFillScreenPos.x+=3;
 
     R_BlitIntoScreenScaled(&healthbarFillSize, tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL].texture, &healthbarFillScreenPos);
@@ -367,10 +375,13 @@ void G_PlayerUIRender(void)
     SDL_Rect manabarFillScreenPos = {105, 34, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect manabarFillSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
 
-    manabarFillSize.x = player.attributes.maxMana-player.attributes.curMana;
+    manabarFillSize.x = (-8*player.attributes.curMana)/5.0f + 160;
 
     // Fix bar border
-    if(manabarFillSize.x > 3)
+    if(manabarFillSize.x == 2)
+        manabarFillScreenPos.x+=2;
+        
+    if(manabarFillSize.x >= 3)
         manabarFillScreenPos.x+=3;
 
     R_BlitIntoScreenScaled(&manabarFillSize, tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL].texture, &manabarFillScreenPos);
@@ -472,6 +483,13 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
 
         break;
     }
+}
+
+void G_PlayerTakeDamage(float dmg)
+{
+    player.attributes.curHealth -= dmg;
+    player.attributes.curHealth = SDL_clamp(player.attributes.curHealth, 0, player.attributes.maxHealth);
+    printf("%f\n", player.attributes.curHealth);
 }
 
 //-------------------------------------

@@ -4,6 +4,8 @@
 #include "D_AssetsManager.h"
 #include "U_DataTypes.h"
 
+#define AI_ATTACK_DISTANCE 100.0f
+
 // Dynamic AI list
 extern dynamicSprite_t* allDynamicSprites[OBJECTARRAY_DEFAULT_SIZE];
 extern unsigned int allDynamicSpritesLength;
@@ -14,5 +16,7 @@ void G_AIDie(dynamicSprite_t* cur);
 void G_AIPlayAnimationOnce(dynamicSprite_t* cur, objectanimationsID_e animID);
 void G_AIPlayAnimationLoop(dynamicSprite_t* cur, objectanimationsID_e animID);
 void G_AITakeDamage(dynamicSprite_t* cur, float amount);
+bool G_AICanAttack(dynamicSprite_t* cur);
+void G_AIAttackPlayer(dynamicSprite_t* cur);
 
 #endif

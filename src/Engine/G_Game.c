@@ -299,8 +299,8 @@ void G_UpdateProjectiles(void)
         if(!cur->this.isBeingDestroyed)
         {
             // Update pos
-            cur->this.base.pos.x += cos(cur->this.base.angle) * cur->this.speed;
-            cur->this.base.pos.y += sin(cur->this.base.angle) * cur->this.speed;
+            cur->this.base.pos.x += cos(cur->this.base.angle) * cur->this.speed * deltaTime;
+            cur->this.base.pos.y += sin(cur->this.base.angle) * cur->this.speed * deltaTime;
 
             // Check if projectile is not out of map
             bool insideMap = cur->this.base.gridPos.x >= 0 && cur->this.base.gridPos.y >= 0 && cur->this.base.gridPos.x < MAP_WIDTH && cur->this.base.gridPos.y < MAP_HEIGHT;
@@ -363,7 +363,7 @@ void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, b
 
     newNode->this.base.spriteID = id;
     newNode->this.base.sheetLength = tomentdatapack.spritesSheetsLenghtTable[id];
-    newNode->this.speed = 10.0f;
+    newNode->this.speed = 500.0f;
 
     newNode->this.base.active = true;
     newNode->this.base.angle = angle;

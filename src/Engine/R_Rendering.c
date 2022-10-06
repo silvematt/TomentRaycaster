@@ -1848,6 +1848,11 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
             curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animDieSheetLength;
             break;
 
+        case DS_STATE_ATTACKING:
+            curAnim = tomentdatapack.sprites[sprite->base.spriteID]->animations->animAttack;
+            curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animAttackSheetLength;
+            break;
+
         default:
             curAnim = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdle;
             curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdleSheetLength;
@@ -1859,17 +1864,25 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
         if(sprite->animPlayOnce)
         {
             if(curAnimLength > 0)
-                sprite->animFrame = ((int)floor(sprite->animTimer->GetTicks(sprite->animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
+                sprite->animFrame = ((int)floor(sprite->animTimer->GetTicks(sprite->animTimer) / sprite->animSpeed) % curAnimLength);
 
             // Prevent loop
             if(sprite->animFrame >= curAnimLength-1)
+            {
                 sprite->animPlay = false;
+
+                // Go back to idle
+                if(sprite->state == DS_STATE_ATTACKING)
+                {
+                    G_AIPlayAnimationLoop(sprite, ANIM_IDLE);
+                }
+            }
         }
         else
         {
             // Allow loop
              if(curAnimLength > 0)
-                sprite->animFrame = ((int)floor(sprite->animTimer->GetTicks(sprite->animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
+                sprite->animFrame = ((int)floor(sprite->animTimer->GetTicks(sprite->animTimer) / sprite->animSpeed) % curAnimLength);
         }
     }
 

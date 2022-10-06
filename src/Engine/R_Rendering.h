@@ -33,6 +33,7 @@
 #define MAXVISABLE 50 // * MAX_FLOORS, the visibleSprites array and visibleTiles are reused each time
 #define MAX_SPRITE_HEIGHT 1000
 #define ANIMATION_SPEED_DIVIDER 200
+#define ANIMATION_ATTACK_SPEED_DIVIDER 300
 
 // Visible Sprite Determination
 extern bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];

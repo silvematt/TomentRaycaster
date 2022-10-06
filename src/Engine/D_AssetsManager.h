@@ -231,7 +231,8 @@ typedef enum imgIDs_e
     IMG_ID_HEALTHBAR_EMPTY,
     IMG_ID_HEALTHBAR_FILL,
     IMG_ID_MANABAR_EMPTY,
-    IMG_ID_MANABAR_FILL
+    IMG_ID_MANABAR_FILL,
+    IMG_ID_AI_SKELETON_ATTACK
 } imgIDs_e;
 
 typedef struct archt_s

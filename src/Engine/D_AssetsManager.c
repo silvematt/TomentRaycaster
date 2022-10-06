@@ -486,8 +486,16 @@ void D_InitLoadSprites(void)
         SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
         tomentdatapack.sprites[DS_Skeleton]->animations->animDie = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
         tomentdatapack.sprites[DS_Skeleton]->animations->animDieSheetLength = 4;
-
         SDL_FreeSurface(animTemp1);
+
+        // Skeleton Attack
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_ATTACK].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_ATTACK].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_Skeleton]->animations->animAttack = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_Skeleton]->animations->animAttackSheetLength = 4;
+        SDL_FreeSurface(animTemp1);
+
     }
     else
         tomentdatapack.sprites[DS_Skeleton]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
