@@ -56,18 +56,22 @@ void G_InitPlayer(void)
     player.animPlayOnce = false;
     player.animTimer->Start(player.animTimer);
 
-    // Init attributes
-    player.attributes.maxHealth = 100.0f;
-    player.attributes.curHealth = player.attributes.maxHealth;
-      
-    player.attributes.maxMana = 100.0f;
-    player.attributes.curMana = player.attributes.maxMana;
+    // Absolute initialization, should not be repeted on next G_InitPlayer calls
+    if(!player.hasBeenInitialized)
+    {
+        player.attributes.maxHealth = 100.0f;
+        player.attributes.curHealth = player.attributes.maxHealth;
+        
+        player.attributes.maxMana = 100.0f;
+        player.attributes.curMana = player.attributes.maxMana;
+
+        player.curWeapon = PLAYER_FP_HANDS;
+        player.curSpell = SPELL_FIREBALL1;
+        player.hasBeenInitialized = true;
+    }
     
     // Rect for minimap
     SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
-
-    player.curWeapon = PLAYER_FP_HANDS;
-    player.curSpell = SPELL_FIREBALL1;
 
     // Do one tick
     G_PlayerTick();
@@ -150,6 +154,7 @@ void G_PlayerTick(void)
         {
             R_SetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
             R_SetValueFromCollisionMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
+            G_SetObjectTMap(player.level, player.gridPosition.y, player.gridPosition.x, ObjT_Empty);
         }
     }
 }
@@ -461,6 +466,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                         {
                             R_SetValueFromSpritesMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, 0);
                             R_SetValueFromCollisionMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, 0);
+                            G_SetObjectTMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, ObjT_Empty);
                         }
                     }
                 }
@@ -626,6 +632,24 @@ int G_GetFromObjectTMap(int level, int y, int x)
 
         case 2:
             return currentMap.objectTMapLevel2[y][x];
+    }
+}
+
+//-------------------------------------
+// Sets object T map at player's level
+//-------------------------------------
+void G_SetObjectTMap(int level, int y, int x, int value)
+{
+    switch(level)
+    {
+        case 0:
+            currentMap.objectTMapLevel0[y][x] = value;
+
+        case 1:
+            currentMap.objectTMapLevel1[y][x] = value;
+
+        case 2:
+            currentMap.objectTMapLevel2[y][x] = value;
     }
 }
 

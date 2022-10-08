@@ -93,6 +93,8 @@ typedef struct player_s
     // Spells
     bool hasToCast;
     bool hasCasted;
+
+    bool hasBeenInitialized;
 } player_t;
 
 
@@ -142,6 +144,8 @@ float G_GetDoorPosition(int level, int y, int x);
 // Checks object T map at player's level and returns what found
 //-------------------------------------
 int G_GetFromObjectTMap(int level, int y, int x);
+
+void G_SetObjectTMap(int level, int y, int x, int value);
 
 void G_PlayerCollisionCheck();
 

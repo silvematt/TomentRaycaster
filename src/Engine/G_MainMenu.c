@@ -92,6 +92,9 @@ void G_InMenuInputHandling(SDL_Event* e)
 //-------------------------------------
 static void CALLBACK_MAINMENU_NewGame(void)
 {
+    // Initialize the player
+    player.hasBeenInitialized = false;
+
     G_InitGame();
     A_ChangeState(GSTATE_GAME);
 }

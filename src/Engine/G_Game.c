@@ -76,7 +76,6 @@ void G_InitGame(void)
     G_ChangeMap("devmap");
     
     gameTimer->Start(gameTimer);
-
 }
 
 //-------------------------------------
@@ -317,7 +316,7 @@ void G_UpdateProjectiles(void)
             if((sprite = G_GetFromDynamicSpriteMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x)) != NULL)
             {
                 float damage = 0.0f;
-                
+
                 // Damage sprite
                 switch(cur->this.base.spriteID)
                 {
