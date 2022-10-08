@@ -60,7 +60,8 @@ typedef enum spritesObjectID_e
     S_Fireball1,
     S_PickupAxe,
     S_PickupHealthPotion,
-    S_PickupManaPotion
+    S_PickupManaPotion,
+    S_IceDart1
 } spritesObjectID_t;
 
 // All sprites
@@ -85,16 +86,19 @@ typedef struct objectAnimations_s
     
     SDL_Surface* animIdle;
     unsigned animIdleSheetLength;
+    unsigned animIdleActionFrame;
 
     SDL_Surface* animDie;
     unsigned animDieSheetLength;
+    unsigned animDieActionFrame;
 
     SDL_Surface* animAttack;
     unsigned animAttackSheetLength;
+    unsigned animAttackActionFrame;
 
     SDL_Surface* animCastSpell;
     unsigned animCastSpellSheetLength;
-
+    unsigned animCastSpellActionFrame;
 } objectanimations_t;
 
 typedef struct object_s
@@ -150,7 +154,12 @@ typedef enum uiAssetsID_e
     G_ASSET_HEALTHBAR_EMPTY,
     G_ASSET_HEALTHBAR_FILL,
     G_ASSET_MANABAR_EMPTY,
-    G_ASSET_MANABAR_FILL
+    G_ASSET_MANABAR_FILL,
+    G_ASSET_ICON_FISTS,
+    G_ASSET_ICON_AXE,
+    G_ASSET_ICON_SPELL_FIREBALL1,
+    G_ASSET_UI_CROSSHAIR,
+    G_ASSET_ICON_SPELL_ICEDART1
 } uiAssetsID_e;
 
 // FP Player IDs
@@ -245,7 +254,14 @@ typedef enum imgIDs_e
     IMG_ID_PICKUP_HEALTH_POTION,
     IMG_ID_PICKUP_MANA_POTION,
     IMG_ID_P_AXE_IDLE,
-    IMG_ID_P_AXE_ATTACK1
+    IMG_ID_P_AXE_ATTACK1,
+    IMG_ID_ICON_FISTS,
+    IMG_ID_ICON_AXE,
+    IMG_ID_ICON_SPELL_FIREBALL1,
+    IMG_ID_UI_CROSSHAIR,
+    IMG_ID_SPELL_ICEDART1,
+    IMG_ID_SPELL_ICEDART_EXPLOSION,
+    IMG_ID_ICON_SPELL_ICEDART1
 } imgIDs_e;
 
 typedef struct archt_s

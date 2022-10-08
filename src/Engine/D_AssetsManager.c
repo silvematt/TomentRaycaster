@@ -194,6 +194,73 @@ void D_InitUIAssets(void)
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
+
+    // Load Icons
+
+    // Icon Fist
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_FISTS].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_FISTS].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_FISTS))
+    {
+        tomentdatapack.uiAssets[G_ASSET_ICON_FISTS].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_FISTS].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_FreeSurface(temp1);
+
+    // Icon Axe
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_AXE].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_AXE].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_AXE))
+    {
+        tomentdatapack.uiAssets[G_ASSET_ICON_AXE].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_AXE].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_FreeSurface(temp1);
+
+    // Icon Spell Fireball
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_SPELL_FIREBALL1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_SPELL_FIREBALL1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_SPELL_FIREBALL1))
+    {
+        tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_FreeSurface(temp1);
+
+    // Crosshair
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_UI_CROSSHAIR].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_UI_CROSSHAIR].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_UI_CROSSHAIR))
+    {
+        tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_FreeSurface(temp1);
+
+    // Icon Spell Ice Dart
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_SPELL_ICEDART1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_SPELL_ICEDART1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_SPELL_ICEDART1))
+    {
+        tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_FreeSurface(temp1);
 }
 
 
@@ -419,8 +486,9 @@ void D_InitLoadSprites(void)
     object_t* pickupAxe = (object_t*)malloc(sizeof(object_t));
     object_t* pickupHealthPotion = (object_t*)malloc(sizeof(object_t));
     object_t* pickupManaPotion = (object_t*)malloc(sizeof(object_t));
+    object_t* spellIceDart1 = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.spritesLength = 7; // Set length
+    tomentdatapack.spritesLength = 8; // Set length
 
     D_InitObject(spritesBarrel1);
     D_InitObject(spritesCampfire);
@@ -429,6 +497,7 @@ void D_InitLoadSprites(void)
     D_InitObject(pickupAxe);
     D_InitObject(pickupHealthPotion);
     D_InitObject(pickupManaPotion);
+    D_InitObject(spellIceDart1);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
@@ -438,6 +507,7 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_PickupAxe] = pickupAxe;
     tomentdatapack.sprites[S_PickupHealthPotion] = pickupHealthPotion;
     tomentdatapack.sprites[S_PickupManaPotion] = pickupManaPotion;
+    tomentdatapack.sprites[S_IceDart1] = spellIceDart1;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -558,7 +628,6 @@ void D_InitLoadSprites(void)
 
     // Callback
     tomentdatapack.sprites[S_Fireball1]->Callback = NULL;
-
     SDL_FreeSurface(temp1);
 
     // Pickup axe
@@ -611,6 +680,42 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_PickupManaPotion]->data = "PICKUP_MANA";
     SDL_FreeSurface(temp1);
 
+    // Spell IceDart1
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SPELL_ICEDART1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_SPELL_ICEDART1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_SPELL_ICEDART1))
+    {
+        tomentdatapack.sprites[S_IceDart1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+
+        // Load animations as well
+        tomentdatapack.sprites[S_IceDart1]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[S_IceDart1]->animations->belongsTo = tomentdatapack.sprites[S_IceDart1];
+
+        // Idle = Normal
+        tomentdatapack.sprites[S_IceDart1]->animations->animIdle = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[S_IceDart1]->animations->animIdleSheetLength = 6;
+
+        // Skeleton Death
+        int animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SPELL_ICEDART_EXPLOSION].startingOffset);
+        SDL_RWops* animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_SPELL_ICEDART_EXPLOSION].size);
+        SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[S_IceDart1]->animations->animDie = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[S_IceDart1]->animations->animDieSheetLength = 5;
+
+        SDL_FreeSurface(animTemp1);
+    }
+    else
+        tomentdatapack.sprites[S_IceDart1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[S_IceDart1]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[S_IceDart1]->flags, 1); // Set animated sprite bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_IceDart1] = 6;
+
+    // Callback
+    tomentdatapack.sprites[S_IceDart1]->Callback = NULL;
+    SDL_FreeSurface(temp1);
+
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
@@ -618,6 +723,8 @@ void D_InitLoadSprites(void)
     D_SetObject(pickupAxe, S_PickupAxe, tomentdatapack.sprites[S_PickupAxe]->texture, NULL);
     D_SetObject(pickupHealthPotion, S_PickupHealthPotion, tomentdatapack.sprites[S_PickupHealthPotion]->texture, NULL);
     D_SetObject(pickupManaPotion, S_PickupManaPotion, tomentdatapack.sprites[S_PickupManaPotion]->texture, NULL);
+    D_SetObject(spellIceDart1, S_IceDart1, tomentdatapack.sprites[S_IceDart1]->texture, NULL);
+
 }
 
 
@@ -787,6 +894,7 @@ void D_InitLoadPlayersFP(void)
         SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
         tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animAttack = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
         tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animAttackSheetLength = 4;
+        tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animAttackActionFrame = 3;
         SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animAttack, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
         SDL_FreeSurface(animTemp1);
 
@@ -796,6 +904,7 @@ void D_InitLoadPlayersFP(void)
         animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
         tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animCastSpell = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
         tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animCastSpellSheetLength = 6;
+        tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animCastSpellActionFrame = 4;
         SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animCastSpell, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
         SDL_FreeSurface(animTemp1);
 
@@ -829,6 +938,7 @@ void D_InitLoadPlayersFP(void)
         SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
         tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animAttack = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
         tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animAttackSheetLength = 6;
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animAttackActionFrame = 3;
         SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animAttack, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
         SDL_FreeSurface(animTemp1);
 
@@ -838,6 +948,7 @@ void D_InitLoadPlayersFP(void)
         animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
         tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animCastSpell = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
         tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animCastSpellSheetLength = 6;
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animCastSpellActionFrame = 4;
         SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animCastSpell, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
         SDL_FreeSurface(animTemp1);
 

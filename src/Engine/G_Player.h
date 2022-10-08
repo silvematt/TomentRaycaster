@@ -43,7 +43,8 @@ typedef enum playerAttacks_e
 
 typedef enum playerSpells_e
 {
-    SPELL_FIREBALL1 = 4 // Needs to be the same as the corresponding sprite that will be instantiated as the projectile
+    SPELL_FIREBALL1 = 4, // Needs to be the same as the corresponding sprite that will be instantiated as the projectile
+    SPELL_ICEDART1 = 8
 } playerSpells_e;
 
 // ----------------------------------------------------
@@ -72,6 +73,8 @@ typedef struct player_s
     float angle;
 
     // Loaded at runtime
+    bool hasBeenInitialized;
+
     // The grid the player starts in (loaded from map)
     int startingGridX; 
     int startingGridY;
@@ -90,11 +93,17 @@ typedef struct player_s
     bool animPlayOnce;
     int playedFrames;
 
-    // Spells
+    // Has to attack/cast a spell, used to not attack more than once while playing the animation
     bool hasToCast;
     bool hasCasted;
 
-    bool hasBeenInitialized;
+
+    // Weapons
+    bool hasAxe;
+
+    // Spells
+    bool hasIceDart;
+
 } player_t;
 
 

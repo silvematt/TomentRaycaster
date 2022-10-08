@@ -212,8 +212,8 @@ spritesMapLevel2=
 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}];
-wallLighting=80.0f;
-floorLighting=40.0f;
+wallLighting=120.0f;
+floorLighting=80.0f;
 skyID=0;
 hasAbsCeiling=1;
 absCeilingLevel=0;

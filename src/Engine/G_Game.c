@@ -324,6 +324,10 @@ void G_UpdateProjectiles(void)
                         damage = 55.65f;
                         break;
 
+                    case S_IceDart1:
+                        damage = 10.0f;
+                        break;
+
                     default:
                         damage = 0.0f;
                         break;

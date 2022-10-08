@@ -13,6 +13,7 @@ void D_CallbackPickup(char* data)
     if(strcmp(data, "WEAPON_AXE") == 0)
     {
         printf("Adding axe to player's inventory\n");
+        player.hasAxe = true;
         player.curWeapon = PLAYER_FP_AXE;
     }
     else if(strcmp(data, "PICKUP_HEALTH") == 0)

@@ -68,6 +68,9 @@ void G_InitPlayer(void)
         player.curWeapon = PLAYER_FP_HANDS;
         player.curSpell = SPELL_FIREBALL1;
         player.hasBeenInitialized = true;
+
+        player.hasAxe = false;
+        player.hasIceDart = true;
     }
     
     // Rect for minimap
@@ -293,27 +296,32 @@ void G_PlayerRender(void)
     // Select Animation
     SDL_Surface* curAnim;
     int curAnimLength = 0;
+    int curAnimActionFrame = 0;
 
     switch(player.state)
     {
         case PSTATE_IDLE:
             curAnim = tomentdatapack.playersFP[player.curWeapon]->animations->animIdle;
             curAnimLength = tomentdatapack.playersFP[player.curWeapon]->animations->animIdleSheetLength;
+            curAnimActionFrame = tomentdatapack.playersFP[player.curWeapon]->animations->animIdleActionFrame;
             break;
 
         case PSTATE_ATTACKING1:
             curAnim = tomentdatapack.playersFP[player.curWeapon]->animations->animAttack;
             curAnimLength = tomentdatapack.playersFP[player.curWeapon]->animations->animAttackSheetLength;
+            curAnimActionFrame = tomentdatapack.playersFP[player.curWeapon]->animations->animAttackActionFrame;
             break;
 
         case PSTATE_CASTSPELL:
             curAnim = tomentdatapack.playersFP[player.curWeapon]->animations->animCastSpell;
             curAnimLength = tomentdatapack.playersFP[player.curWeapon]->animations->animCastSpellSheetLength;
+            curAnimActionFrame = tomentdatapack.playersFP[player.curWeapon]->animations->animCastSpellActionFrame;
             break;
 
         default:
             curAnim = tomentdatapack.playersFP[player.curWeapon]->animations->animIdle;
             curAnimLength = tomentdatapack.playersFP[player.curWeapon]->animations->animIdleSheetLength;
+            curAnimActionFrame = tomentdatapack.playersFP[player.curWeapon]->animations->animIdleActionFrame;
             break;
     }
 
@@ -325,10 +333,18 @@ void G_PlayerRender(void)
                 player.animFrame = ((int)floor(player.animTimer->GetTicks(player.animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
 
             // Spawn projectile at the right frame
-            if(player.state == PSTATE_CASTSPELL && player.animFrame == 4 && player.hasToCast && !player.hasCasted)
+            if(player.state == PSTATE_CASTSPELL && player.animFrame == curAnimActionFrame && player.hasToCast && !player.hasCasted)
             {
                 // Spawn a projectile
                 G_SpawnProjectile(player.curSpell, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, true);
+                player.hasCasted = true;
+                player.hasToCast = false;
+            }
+
+            // Attack
+            if(player.state == PSTATE_ATTACKING1 && player.animFrame == curAnimActionFrame && player.hasToCast && !player.hasCasted)
+            {
+                I_PlayerAttack(0);
                 player.hasCasted = true;
                 player.hasToCast = false;
             }
@@ -410,6 +426,62 @@ void G_PlayerUIRender(void)
         manabarFillScreenPos.x+=3;
 
     R_BlitIntoScreenScaled(&manabarFillSize, tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL].texture, &manabarFillScreenPos);
+
+    // Render the selected weapon
+    SDL_Surface* curWeapon;
+    SDL_Surface* curSpell;
+
+    // Select the weapon
+    switch(player.curWeapon)
+    {
+        case PLAYER_FP_HANDS:
+            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_FISTS].texture;
+            break;
+
+        case PLAYER_FP_AXE:
+            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_AXE].texture;
+            break;
+
+        default:
+            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_FISTS].texture;
+            break;
+    }
+
+    // Select the spell
+    switch(player.curSpell)
+    {
+        case SPELL_FIREBALL1:
+            curSpell = tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1].texture;
+            break;
+
+        case SPELL_ICEDART1:
+            curSpell = tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1].texture;
+            break;
+
+        default:
+            curSpell = tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1].texture;
+            break;
+    }
+
+    // Render icons
+
+    // Render weapon
+    SDL_Rect weaponIconScreenPos = {105, 63, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect weaponIconSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+
+    R_BlitIntoScreenScaled(&weaponIconSize, curWeapon, &weaponIconScreenPos);
+
+    // Render weapon
+    SDL_Rect spellIconScreenPos = {143, 63, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect spellIconSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+
+    R_BlitIntoScreenScaled(&spellIconSize, curSpell, &spellIconScreenPos);
+
+    // Render crosshair
+    SDL_Rect crosshairScreenPos = {(PROJECTION_PLANE_WIDTH / 2) - 6, (PROJECTION_PLANE_HEIGHT / 2) - 6, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect crosshairSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+
+    R_BlitIntoScreenScaled(&crosshairSize, tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR].texture, &crosshairScreenPos);
 }
 //-------------------------------------
 // Handles Input from the player while doing the Event Input Handling
@@ -426,7 +498,11 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
             if(e->button.button == SDL_BUTTON_LEFT)
             {
                 if(G_PlayerCanAttack())
-                    I_PlayerAttack(0);
+                {
+                    G_PlayerPlayAnimationOnce(ANIM_ATTACK1);
+                    player.hasToCast = true;
+                    player.hasCasted = false;
+                }
             }
 
 
@@ -519,6 +595,16 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
 
                 r_debugPathfinding = false;
             }
+
+            // Change Weapons
+            if(G_PlayerCanAttack() && e->key.keysym.sym == SDLK_1)
+                player.curWeapon = PLAYER_FP_HANDS;
+            else if(G_PlayerCanAttack() && player.hasAxe && e->key.keysym.sym == SDLK_2)
+                player.curWeapon = PLAYER_FP_AXE;
+            else if(G_PlayerCanAttack() && e->key.keysym.sym == SDLK_3)
+                player.curSpell = SPELL_FIREBALL1;
+            else if(G_PlayerCanAttack() && player.hasIceDart && e->key.keysym.sym == SDLK_4)
+                player.curSpell = SPELL_ICEDART1;
 
         break;
     }
@@ -841,8 +927,6 @@ void G_PlayerDrainMana(float amount)
 
 static bool I_PlayerAttack(int attackType)
 {
-    G_PlayerPlayAnimationOnce(ANIM_ATTACK1);
-
     dynamicSprite_t* ai;
 
     for(int i = 0; i < ATTACK_CONE_SIZE; i++)
@@ -906,6 +990,11 @@ static bool I_PlayerCastSpell(playerSpells_e spell)
     {
         case SPELL_FIREBALL1:
             manaNeeded = 23.5f;
+            checkSpell = true;
+            break;
+
+        case SPELL_ICEDART1:
+            manaNeeded = 3.0f;
             checkSpell = true;
             break;
 
