@@ -1204,64 +1204,68 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         float leveledStart = start-1 - floor(wallHeight)*level;
         float leveledEnd = end - floor(wallHeight)*level;
 
-        // Check if start and end are offscreen, if so, don't draw the walls, but draw the bottom/top regardless
-        bool isOffScreenBottom = (leveledStart > PROJECTION_PLANE_HEIGHT);
-        if(leveledEnd > PROJECTION_PLANE_HEIGHT)
-            leveledEnd = PROJECTION_PLANE_HEIGHT;
-
-        //printf("LEVEL %1d - Start %6f - End %6f\n", level, start-1 - floor(wallHeight)*level, end - floor(wallHeight)*level+1);
-
-        // Calculate lighting intensity
-        float wallLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.wallLight)  / finalDistance;
-        wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
-
-        object_t* curObject = tomentdatapack.walls[toDraw[tD].idHit];
-        
-        // Draw the walls as column of pixels
-        if(!toDraw[tD].isVertical && !isOffScreenBottom) 
+        // If stuff is not offscreen
+        if(!(leveledStart < 0 && leveledEnd < 0))
         {
-            // Texture offset (shifted if it's a door)
-            // Note:
-            // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
-            // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
-            // but this calculation lets us slide the texture offset too for the doors
+            // Check if start and end are offscreen, if so, don't draw the walls, but draw the bottom/top regardless
+            bool isOffScreenBottom = (leveledStart > PROJECTION_PLANE_HEIGHT);
+            if(leveledEnd > PROJECTION_PLANE_HEIGHT)
+                leveledEnd = PROJECTION_PLANE_HEIGHT;
 
-            int offset = (int)(toDraw[tD].curX) % TILE_SIZE; 
-            offset = SDL_clamp(offset, 0, TILE_SIZE);
+            //printf("LEVEL %1d - Start %6f - End %6f\n", level, start-1 - floor(wallHeight)*level, end - floor(wallHeight)*level+1);
 
-            // If looking down, flip the texture offset
-            if(rayAngle < M_PI)
-                offset = (TILE_SIZE-1) - offset;
+            // Calculate lighting intensity
+            float wallLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.wallLight)  / finalDistance;
+            wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
+
+            object_t* curObject = tomentdatapack.walls[toDraw[tD].idHit];
             
-            R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
-
-            if(debugRendering)
+            // Draw the walls as column of pixels
+            if(!toDraw[tD].isVertical && !isOffScreenBottom) 
             {
-                SDL_Delay(10);
-                SDL_UpdateWindowSurface(application.win);
+                // Texture offset (shifted if it's a door)
+                // Note:
+                // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
+                // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
+                // but this calculation lets us slide the texture offset too for the doors
+
+                int offset = (int)(toDraw[tD].curX) % TILE_SIZE; 
+                offset = SDL_clamp(offset, 0, TILE_SIZE);
+
+                // If looking down, flip the texture offset
+                if(rayAngle < M_PI)
+                    offset = (TILE_SIZE-1) - offset;
+                
+                R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+
+                if(debugRendering)
+                {
+                    SDL_Delay(10);
+                    SDL_UpdateWindowSurface(application.win);
+                }
             }
-        }
-        else if(!isOffScreenBottom)
-        {
-            // Texture offset (shifted if it's a door)
-            // Note:
-            // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
-            // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
-            // but this calculation lets us slide the texture offse too for the doors
-            int offset = (int)(toDraw[tD].curY) % TILE_SIZE;
-
-            offset = SDL_clamp(offset, 0, TILE_SIZE);
-
-            // If looking left, flip the texture offset
-            if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
-                offset = (TILE_SIZE-1) - offset;
-
-            R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
-
-            if(debugRendering)
+            else if(!isOffScreenBottom)
             {
-                SDL_Delay(10);
-                SDL_UpdateWindowSurface(application.win);
+                // Texture offset (shifted if it's a door)
+                // Note:
+                // For walls or closed doors the '- doorpos[]...' is always going to shift the curx 64.0 units
+                // This is not a problem since it rounds back, shifting the offset by 64 puts us in the exact same place as if we never shifted, 
+                // but this calculation lets us slide the texture offse too for the doors
+                int offset = (int)(toDraw[tD].curY) % TILE_SIZE;
+
+                offset = SDL_clamp(offset, 0, TILE_SIZE);
+
+                // If looking left, flip the texture offset
+                if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
+                    offset = (TILE_SIZE-1) - offset;
+
+                R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+
+                if(debugRendering)
+                {
+                    SDL_Delay(10);
+                    SDL_UpdateWindowSurface(application.win);
+                }
             }
         }
 

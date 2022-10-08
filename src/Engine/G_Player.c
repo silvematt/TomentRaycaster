@@ -72,9 +72,11 @@ void G_InitPlayer(void)
         player.hasAxe = false;
         player.hasIceDart = true;
     }
-    
     // Rect for minimap
     SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
+
+    player.crosshairHit = false;
+    player.crosshairTimer = U_TimerCreateNew();
 
     // Do one tick
     G_PlayerTick();
@@ -158,6 +160,16 @@ void G_PlayerTick(void)
             R_SetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
             R_SetValueFromCollisionMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
             G_SetObjectTMap(player.level, player.gridPosition.y, player.gridPosition.x, ObjT_Empty);
+        }
+    }
+
+    // Check to restore the crosshair
+    if(player.crosshairHit)
+    {
+        if(player.crosshairTimer->GetTicks(player.crosshairTimer) > CROSSHAIR_HIT_TIME_SECONDS*1000)
+        {
+            player.crosshairTimer->Stop(player.crosshairTimer);
+            player.crosshairHit = false;
         }
     }
 }
@@ -480,8 +492,8 @@ void G_PlayerUIRender(void)
     // Render crosshair
     SDL_Rect crosshairScreenPos = {(PROJECTION_PLANE_WIDTH / 2) - 6, (PROJECTION_PLANE_HEIGHT / 2) - 6, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect crosshairSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-
-    R_BlitIntoScreenScaled(&crosshairSize, tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR].texture, &crosshairScreenPos);
+    
+    R_BlitIntoScreenScaled(&crosshairSize, player.crosshairHit ? tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT].texture : tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR].texture, &crosshairScreenPos);
 }
 //-------------------------------------
 // Handles Input from the player while doing the Event Input Handling
@@ -988,6 +1000,10 @@ static bool I_PlayerAttack(int attackType)
     if(ai != NULL && ai->base.dist < PLAYER_AI_HIT_DISTANCE)
     {
         printf("Hit an enemy.\n");
+
+        player.crosshairHit = true;
+        player.crosshairTimer->Start(player.crosshairTimer);
+
         G_AITakeDamage(ai, damage);
         return true;
     }

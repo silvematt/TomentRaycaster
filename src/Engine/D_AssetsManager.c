@@ -115,8 +115,6 @@ void D_InitAssetManager(void)
 
 void D_InitUIAssets(void)
 {    
-    // Create Objects
-
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
     SDL_Surface *temp1;     // Surface
@@ -196,7 +194,6 @@ void D_InitUIAssets(void)
     SDL_FreeSurface(temp1);
 
     // Load Icons
-
     // Icon Fist
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_FISTS].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_FISTS].size);
@@ -257,6 +254,19 @@ void D_InitUIAssets(void)
     {
         tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_FreeSurface(temp1);
+
+    // Crosshair Hit
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_UI_CROSSHAIR_HIT].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_UI_CROSSHAIR_HIT].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_UI_CROSSHAIR_HIT))
+    {
+        tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -529,7 +539,6 @@ void D_InitLoadSprites(void)
 
     // Callback
     tomentdatapack.sprites[S_Barrel1]->Callback = NULL;
-
     SDL_FreeSurface(temp1);
 
     // Campfire

@@ -31,7 +31,7 @@
 // Sprites
 // =========================================
 #define MAXVISABLE 50 // * MAX_FLOORS, the visibleSprites array and visibleTiles are reused each time
-#define MAX_SPRITE_HEIGHT 1000
+#define MAX_SPRITE_HEIGHT 2000
 #define ANIMATION_SPEED_DIVIDER 200
 #define ANIMATION_ATTACK_SPEED_DIVIDER 300
 

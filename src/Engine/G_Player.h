@@ -28,6 +28,8 @@
 #define ATTACK_CONE_SIZE 4
 #define ATTACK_CONE_MAX_DIFF 25
 
+#define CROSSHAIR_HIT_TIME_SECONDS 0.35f
+
 typedef enum playerState_e
 {
     PSTATE_IDLE = 0,
@@ -97,6 +99,9 @@ typedef struct player_s
     bool hasToCast;
     bool hasCasted;
 
+    // Timer used by the crosshair to change its color when the player hits an enemy
+    bool crosshairHit;
+    Timer* crosshairTimer;
 
     // Weapons
     bool hasAxe;

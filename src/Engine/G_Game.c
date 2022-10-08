@@ -333,6 +333,12 @@ void G_UpdateProjectiles(void)
                         break;
                 }
 
+                if(cur->this.isOfPlayer)
+                {
+                    player.crosshairHit = true;
+                    player.crosshairTimer->Start(player.crosshairTimer);
+                }
+
                 G_AITakeDamage(sprite, damage);
 
                 cur->this.isBeingDestroyed = true;
