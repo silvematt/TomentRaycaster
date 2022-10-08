@@ -1233,7 +1233,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             if(rayAngle < M_PI)
                 offset = (TILE_SIZE-1) - offset;
             
-            R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -1256,7 +1256,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
                 offset = (TILE_SIZE-1) - offset;
 
-            R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -1437,7 +1437,7 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
             if(wallID >= 1)
             {                
                 // Draw floor
-                R_DrawPixelShaded(wall->x, y, R_GetPixelFromSurface(*tomentdatapack.walls[wallID]->topTexture, textureX, textureY), floorLighting, straightlinedist-1.0f);
+                R_DrawColumnOfPixelShaded(wall->x, y-1, y+1, R_GetPixelFromSurface(*tomentdatapack.walls[wallID]->topTexture, textureX, textureY), floorLighting, straightlinedist-1.0f);
 
                 startedDrawing = true;
             }

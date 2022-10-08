@@ -746,7 +746,7 @@ static void I_DetermineInFrontGrid(void)
     if(player.angle < (2*M_PI)/3 && player.angle > M_PI/3)
     {
         player.inFrontGridPosition.x = player.gridPosition.x;
-        player.inFrontGridPosition.y = player.gridPosition.y +1;
+        player.inFrontGridPosition.y = player.gridPosition.y+1;
 
         // Set Attack Cone
         // Center Cell
@@ -767,6 +767,10 @@ static void I_DetermineInFrontGrid(void)
     {
         player.inFrontGridPosition.x = player.gridPosition.x;
         player.inFrontGridPosition.y = player.gridPosition.y -1;
+
+        // Prevent going outside boundaries
+        if(player.inFrontGridPosition.y < 0)
+            player.inFrontGridPosition.y = 0;
 
         // Set Attack Cone
         // Center Cell
@@ -806,6 +810,9 @@ static void I_DetermineInFrontGrid(void)
         player.inFrontGridPosition.x = player.gridPosition.x -1;
         player.inFrontGridPosition.y = player.gridPosition.y;
 
+        if(player.inFrontGridPosition.x < 0)
+            player.inFrontGridPosition.x = 0;
+
         // Set Attack Cone
         // Center Cell
         I_SetAttackCone(0, player.gridPosition.x, player.gridPosition.y);
@@ -824,6 +831,10 @@ static void I_DetermineInFrontGrid(void)
     {
         player.inFrontGridPosition.x = player.gridPosition.x +1;
         player.inFrontGridPosition.y = player.gridPosition.y -1;
+        
+        // Prevent going outside boundaries
+        if(player.inFrontGridPosition.y < 0)
+            player.inFrontGridPosition.y = 0;
 
         // Set Attack Cone
         // Center Cell
@@ -843,6 +854,12 @@ static void I_DetermineInFrontGrid(void)
     {
         player.inFrontGridPosition.x = player.gridPosition.x -1;
         player.inFrontGridPosition.y = player.gridPosition.y -1;
+
+        // Prevent going outside boundaries
+        if(player.inFrontGridPosition.y < 0)
+            player.inFrontGridPosition.y = 0;
+        if(player.inFrontGridPosition.x < 0)
+            player.inFrontGridPosition.x = 0;
 
         // Set Attack Cone
         // Center Cell
@@ -881,6 +898,9 @@ static void I_DetermineInFrontGrid(void)
     {
         player.inFrontGridPosition.x = player.gridPosition.x -1;
         player.inFrontGridPosition.y = player.gridPosition.y +1;
+
+        if(player.inFrontGridPosition.x < 0)
+            player.inFrontGridPosition.x = 0;
 
         // Set Attack Cone
         // Center Cell
@@ -1021,6 +1041,12 @@ static bool I_PlayerCastSpell(playerSpells_e spell)
 
 static void I_SetAttackCone(int id, int x, int y)
 {
+    // Prevent setting negative values that can cause going out of boundaries (negative grids values), hence crash 
+    if(x < 0)
+        x = 0;
+    if(y < 0)
+        y = 0;
+
     player.attackConeGridPos[id].x = x;
     player.attackConeGridPos[id].y = y;
 }
