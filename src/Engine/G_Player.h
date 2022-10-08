@@ -35,6 +35,12 @@ typedef enum playerState_e
     PSTATE_CASTSPELL
 } playerState_e;
 
+typedef enum playerAttacks_e
+{
+    P_ATTACK_MELEE_1 = 0,
+    P_ATTACK_CAST_FIREBALL1
+} playerAttacks_e;
+
 // ----------------------------------------------------
 // Sets an SDL_Rect
 // ----------------------------------------------------
@@ -140,5 +146,11 @@ void G_PlayerPlayAnimationOnce(objectanimationsID_e animID);
 bool G_PlayerCanAttack(void);
 
 void G_PlayerTakeDamage(float dmg);
+
+void G_PlayerDrainMana(float amount);
+
+void G_PlayerGainHealth(float amount);
+void G_PlayerGainMana(float amount);
+
 
 #endif

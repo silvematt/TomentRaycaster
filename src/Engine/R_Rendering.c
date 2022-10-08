@@ -1763,7 +1763,7 @@ void R_DrawSprite(sprite_t* sprite)
     // Draw
     int offset, drawX, drawYStart, drawYEnd, currentFrame = 0;
 
-    if(sprite->sheetLength > 0)
+    if(sprite->sheetLength > 0 && U_GetBit(&tomentdatapack.sprites[sprite->spriteID]->flags, 1) == 1)
         currentFrame = ((int)floor(curTime / ANIMATION_SPEED_DIVIDER) % sprite->sheetLength);
 
     for(int j = 0; j < sprite->height; j++)
@@ -1988,6 +1988,31 @@ int R_GetValueFromSpritesMap(int level, int y, int x)
     else
     {
         return 0;
+    }
+}
+
+void R_SetValueFromSpritesMap(int level, int y, int x, int value)
+{
+    if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
+    {
+        switch(level)
+        {
+            case 0:
+                currentMap.spritesMapLevel0[y][x] = value;
+                break;
+
+            case 1:
+                currentMap.spritesMapLevel1[y][x] = value;
+                break;
+
+            case 2:
+                currentMap.spritesMapLevel2[y][x] = value;
+                break;
+
+            default:
+                //printf("WARNING! Level get was out of max/min level size\n");
+               break;
+        }
     }
 }
 

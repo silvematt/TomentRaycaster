@@ -3,4 +3,6 @@
 
 void D_CallbackChangeMap(char* data);
 
+void D_CallbackPickup(char* data);
+
 #endif

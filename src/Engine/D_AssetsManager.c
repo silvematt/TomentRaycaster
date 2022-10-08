@@ -416,19 +416,28 @@ void D_InitLoadSprites(void)
     object_t* spritesCampfire = (object_t*)malloc(sizeof(object_t));
     object_t* aiSkeleton = (object_t*)malloc(sizeof(object_t));
     object_t* spellFireball1 = (object_t*)malloc(sizeof(object_t));
+    object_t* pickupAxe = (object_t*)malloc(sizeof(object_t));
+    object_t* pickupHealthPotion = (object_t*)malloc(sizeof(object_t));
+    object_t* pickupManaPotion = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.spritesLength = 4; // Set length
+    tomentdatapack.spritesLength = 7; // Set length
 
     D_InitObject(spritesBarrel1);
     D_InitObject(spritesCampfire);
     D_InitObject(aiSkeleton);
     D_InitObject(spellFireball1);
+    D_InitObject(pickupAxe);
+    D_InitObject(pickupHealthPotion);
+    D_InitObject(pickupManaPotion);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
     tomentdatapack.sprites[S_Campfire] = spritesCampfire;
     tomentdatapack.sprites[DS_Skeleton] = aiSkeleton;
     tomentdatapack.sprites[S_Fireball1] = spellFireball1;
+    tomentdatapack.sprites[S_PickupAxe] = pickupAxe;
+    tomentdatapack.sprites[S_PickupHealthPotion] = pickupHealthPotion;
+    tomentdatapack.sprites[S_PickupManaPotion] = pickupManaPotion;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -447,6 +456,10 @@ void D_InitLoadSprites(void)
     U_SetBit(&tomentdatapack.sprites[S_Barrel1]->flags, 0); // Set collision bit flag to 1
     // Sprite-Specific, set the lookup table for the sprite sheets length
     tomentdatapack.spritesSheetsLenghtTable[S_Barrel1] = 0;
+
+    // Callback
+    tomentdatapack.sprites[S_Barrel1]->Callback = NULL;
+
     SDL_FreeSurface(temp1);
 
     // Campfire
@@ -461,6 +474,10 @@ void D_InitLoadSprites(void)
     U_SetBit(&tomentdatapack.sprites[S_Campfire]->flags, 1); // Set animated sprite bit flag to 1
     // Sprite-Specific, set the lookup table for the sprite sheets length
     tomentdatapack.spritesSheetsLenghtTable[S_Campfire] = 4;
+
+    // Callback
+    tomentdatapack.sprites[S_Campfire]->Callback = NULL;
+
     SDL_FreeSurface(temp1);
 
     // LOAD DYNAMIC
@@ -501,6 +518,10 @@ void D_InitLoadSprites(void)
         tomentdatapack.sprites[DS_Skeleton]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     U_SetBit(&tomentdatapack.sprites[DS_Skeleton]->flags, 0); // Set collision bit flag to 1
     U_SetBit(&tomentdatapack.sprites[DS_Skeleton]->flags, 2); // Set dynamic bit flag to 1
+
+    // Callback
+    tomentdatapack.sprites[DS_Skeleton]->Callback = NULL;
+
     SDL_FreeSurface(temp1);
 
     // Spell Fireball1
@@ -534,13 +555,69 @@ void D_InitLoadSprites(void)
     U_SetBit(&tomentdatapack.sprites[S_Fireball1]->flags, 1); // Set animated sprite bit flag to 1
     // Sprite-Specific, set the lookup table for the sprite sheets length
     tomentdatapack.spritesSheetsLenghtTable[S_Fireball1] = 4;
+
+    // Callback
+    tomentdatapack.sprites[S_Fireball1]->Callback = NULL;
+
     SDL_FreeSurface(temp1);
 
+    // Pickup axe
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_PICKUP_AXE].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_PICKUP_AXE].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_PICKUP_AXE))
+        tomentdatapack.sprites[S_PickupAxe]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[S_PickupAxe]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[S_PickupAxe]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[S_PickupAxe]->flags, 1); // Set animated sprite bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_PickupAxe] = 6;
+
+    // Callback
+    tomentdatapack.sprites[S_PickupAxe]->Callback = D_CallbackPickup;
+    tomentdatapack.sprites[S_PickupAxe]->data = "WEAPON_AXE";
+    SDL_FreeSurface(temp1);
+
+    // Pickup Health Potion
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_PICKUP_HEALTH_POTION].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_PICKUP_HEALTH_POTION].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_PICKUP_HEALTH_POTION))
+        tomentdatapack.sprites[S_PickupHealthPotion]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[S_PickupHealthPotion]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+
+    U_SetBit(&tomentdatapack.sprites[S_PickupHealthPotion]->flags, 3); // Auto call callback upon player's collision (to pickup the potion by touching it)
+
+    // Callback
+    tomentdatapack.sprites[S_PickupHealthPotion]->Callback = D_CallbackPickup;
+    tomentdatapack.sprites[S_PickupHealthPotion]->data = "PICKUP_HEALTH";
+    SDL_FreeSurface(temp1);
+
+    // Pickup Mana Potion
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_PICKUP_MANA_POTION].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_PICKUP_MANA_POTION].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_PICKUP_MANA_POTION))
+        tomentdatapack.sprites[S_PickupManaPotion]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[S_PickupManaPotion]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+
+    U_SetBit(&tomentdatapack.sprites[S_PickupManaPotion]->flags, 3); // Auto call callback upon player's collision (to pickup the potion by touching it)
+
+    // Callback
+    tomentdatapack.sprites[S_PickupManaPotion]->Callback = D_CallbackPickup;
+    tomentdatapack.sprites[S_PickupManaPotion]->data = "PICKUP_MANA";
+    SDL_FreeSurface(temp1);
 
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
     D_SetObject(aiSkeleton, DS_Skeleton, tomentdatapack.sprites[DS_Skeleton]->texture, NULL);
+    D_SetObject(pickupAxe, S_PickupAxe, tomentdatapack.sprites[S_PickupAxe]->texture, NULL);
+    D_SetObject(pickupHealthPotion, S_PickupHealthPotion, tomentdatapack.sprites[S_PickupHealthPotion]->texture, NULL);
+    D_SetObject(pickupManaPotion, S_PickupManaPotion, tomentdatapack.sprites[S_PickupManaPotion]->texture, NULL);
 }
 
 

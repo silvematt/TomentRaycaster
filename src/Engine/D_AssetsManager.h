@@ -57,7 +57,10 @@ typedef enum spritesObjectID_e
     S_Barrel1 = 1,
     S_Campfire,
     DS_Skeleton,
-    S_Fireball1
+    S_Fireball1,
+    S_PickupAxe,
+    S_PickupHealthPotion,
+    S_PickupManaPotion
 } spritesObjectID_t;
 
 // All sprites
@@ -193,6 +196,10 @@ typedef enum playerFPID_e
     // 00000  0 00
     //         \
     //          1 = Dynamic sprite: A dynamic sprite is a sprite that can move in the world and update the sprites maps, used for AI
+
+        // 0000 0  000
+    //          \
+    //           1 = Auto call callback (if present) upon player's collision
 */
 
 // Table of Content elements for opening archives (MUST BE IN SYNCH WITH ARCH)
@@ -232,7 +239,10 @@ typedef enum imgIDs_e
     IMG_ID_HEALTHBAR_FILL,
     IMG_ID_MANABAR_EMPTY,
     IMG_ID_MANABAR_FILL,
-    IMG_ID_AI_SKELETON_ATTACK
+    IMG_ID_AI_SKELETON_ATTACK,
+    IMG_ID_PICKUP_AXE,
+    IMG_ID_PICKUP_HEALTH_POTION,
+    IMG_ID_PICKUP_MANA_POTION
 } imgIDs_e;
 
 typedef struct archt_s

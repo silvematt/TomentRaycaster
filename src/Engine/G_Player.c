@@ -7,6 +7,7 @@
 #include "P_Physics.h"
 #include "U_Utilities.h"
 #include "G_Pathfinding.h"
+#include "D_ObjectsCallbacks.h"
 #include "G_AI.h"
 
 player_t player;    // Player
@@ -15,7 +16,7 @@ static void I_DetermineInFrontGrid(void);
 static void I_SetAttackCone(int id, int x, int y);
 
 static bool I_PlayerAttack(int attackType);
-static bool I_PlayerCastSpell(int attackType);
+static bool I_PlayerCastSpell(playerAttacks_e attackType);
 
 // ----------------------------------------------------
 // Sets an SDL_Rect
@@ -132,6 +133,21 @@ void G_PlayerTick(void)
     player.collisionCircle.pos.y = player.centeredPos.y;
 
     I_DetermineInFrontGrid();
+
+    // Check for auto-callbacks upon collision
+    int spriteID = R_GetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x);
+    
+    if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 3) && tomentdatapack.sprites[spriteID]->Callback != NULL)
+    {
+        // Call callback
+        tomentdatapack.sprites[spriteID]->Callback(tomentdatapack.sprites[spriteID]->data);
+                        
+        // If the tapped sprite was a pickup, destroy it from the map after the player took it
+        if(tomentdatapack.sprites[spriteID]->Callback == D_CallbackPickup)
+        {
+            R_SetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
+        }
+    }
 }
 
 
@@ -430,6 +446,18 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 else if(objType == ObjT_Sprite)
                 {
                     printf("Tapped a sprite\n");
+                    
+                    int spriteID = R_GetValueFromSpritesMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
+                    if(tomentdatapack.sprites[spriteID]->Callback != NULL && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 3) == 0)
+                    {
+                        tomentdatapack.sprites[spriteID]->Callback(tomentdatapack.sprites[spriteID]->data);
+                        
+                        // If the tapped sprite was a pickup, destroy it from the map after the player took it
+                        if(tomentdatapack.sprites[spriteID]->Callback == D_CallbackPickup)
+                        {
+                            R_SetValueFromSpritesMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, 0);
+                        }
+                    }
                 }
                 else if(objType == ObjT_Wall)
                 {
@@ -448,7 +476,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
             if(e->key.keysym.sym == SDLK_c)
             {
                 if(G_PlayerCanAttack())
-                    I_PlayerCastSpell(0);
+                    I_PlayerCastSpell(P_ATTACK_CAST_FIREBALL1);
             }
 
 
@@ -489,7 +517,18 @@ void G_PlayerTakeDamage(float dmg)
 {
     player.attributes.curHealth -= dmg;
     player.attributes.curHealth = SDL_clamp(player.attributes.curHealth, 0, player.attributes.maxHealth);
-    printf("%f\n", player.attributes.curHealth);
+}
+
+void G_PlayerGainHealth(float amount)
+{
+    player.attributes.curHealth += amount;
+    player.attributes.curHealth = SDL_clamp(player.attributes.curHealth, 0, player.attributes.maxHealth);
+}
+
+void G_PlayerGainMana(float amount)
+{
+    player.attributes.curMana += amount;
+    player.attributes.curMana = SDL_clamp(player.attributes.curMana, 0, player.attributes.maxMana);
 }
 
 //-------------------------------------
@@ -763,6 +802,14 @@ void G_PlayerPlayAnimationOnce(objectanimationsID_e animID)
     player.animPlay = true;
 }
 
+void G_PlayerDrainMana(float amount)
+{
+    player.attributes.curMana -= amount;
+
+    if(player.attributes.curMana < 0.0f)
+        player.attributes.curMana = 0;
+}
+
 static bool I_PlayerAttack(int attackType)
 {
     G_PlayerPlayAnimationOnce(ANIM_ATTACK1);
@@ -801,11 +848,33 @@ static bool I_PlayerAttack(int attackType)
     }
 }
 
-static bool I_PlayerCastSpell(int attackType)
+static bool I_PlayerCastSpell(playerAttacks_e attackType)
 {
-    G_PlayerPlayAnimationOnce(ANIM_CAST_SPELL);
-    player.hasToCast = true;
-    player.hasCasted = false;
+    float manaNeeded = 9999.9f;
+
+    // Check if player has enough mana
+    switch(attackType)
+    {
+        case P_ATTACK_CAST_FIREBALL1:
+            manaNeeded = 23.5f;
+            break;
+
+        default:
+            break;
+    }
+
+    if(player.attributes.curMana > manaNeeded)
+    {
+        G_PlayerPlayAnimationOnce(ANIM_CAST_SPELL);
+        player.hasToCast = true;
+        player.hasCasted = false;
+        G_PlayerDrainMana(manaNeeded);
+    }
+    else
+    {
+        // TODO, alert no mana
+    }
+    
 }
 
 static void I_SetAttackCone(int id, int x, int y)
