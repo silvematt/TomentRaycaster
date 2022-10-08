@@ -185,7 +185,7 @@ void G_AIUpdate(void)
             cur->base.collisionCircle.pos.y = cur->base.centeredPos.y;
 
             // Check Attack
-            if(cur->base.dist < AI_ATTACK_DISTANCE)
+            if(cur->base.dist < AI_ATTACK_DISTANCE && cur->base.level == player.level)
             {
                 // In range for attacking
                 G_AIPlayAnimationOnce(cur, ANIM_ATTACK1);

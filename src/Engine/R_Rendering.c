@@ -1752,7 +1752,6 @@ void R_DrawSprite(sprite_t* sprite)
     sprite->height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
 
     float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-(TILE_SIZE/2)));
-    int spriteOffset = (PROJECTION_PLANE_CENTER) - floor(sprite->height / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
 
     if(sprite->height <= 0)
         return;
@@ -1775,8 +1774,8 @@ void R_DrawSprite(sprite_t* sprite)
         offset = j*TILE_SIZE/sprite->height + (UNIT_SIZE*currentFrame);
         drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(sprite->height/2);
 
-        drawYStart = spriteOffset;
-        drawYEnd = spriteOffset+sprite->height;
+        drawYStart = (PROJECTION_PLANE_CENTER) - (sprite->height / 2) + screenZ;
+        drawYEnd = (PROJECTION_PLANE_CENTER) + (sprite->height / 2) + screenZ;
 
         R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->height*sprite->level), drawYEnd-(sprite->height*sprite->level), tomentdatapack.sprites[sprite->spriteID]->texture,offset, sprite->height, lighting, dist);
     }
@@ -1821,7 +1820,6 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
     sprite->base.height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
 
     float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-(TILE_SIZE/2)));
-    int spriteOffset = (PROJECTION_PLANE_CENTER) - floor(sprite->base.height / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
 
     if(sprite->base.height <= 0)
         return;
@@ -1895,8 +1893,8 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
         offset = j*TILE_SIZE/sprite->base.height + (UNIT_SIZE*sprite->animFrame);
         drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(sprite->base.height/2);
 
-        drawYStart = spriteOffset;
-        drawYEnd = spriteOffset+sprite->base.height;
+        drawYStart = (PROJECTION_PLANE_CENTER) - (sprite->base.height / 2) + screenZ;
+        drawYEnd = (PROJECTION_PLANE_CENTER) + (sprite->base.height / 2) + screenZ;
 
         R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->base.height*sprite->base.level), drawYEnd-(sprite->base.height*sprite->base.level), curAnim,offset, sprite->base.height, lighting, dist);
     }
