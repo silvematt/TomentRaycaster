@@ -157,6 +157,7 @@ typedef enum uiAssetsID_e
 typedef enum playerFPID_e
 {
     PLAYER_FP_HANDS = 0,
+    PLAYER_FP_AXE
 } playerFPID_e;
 
 
@@ -242,7 +243,9 @@ typedef enum imgIDs_e
     IMG_ID_AI_SKELETON_ATTACK,
     IMG_ID_PICKUP_AXE,
     IMG_ID_PICKUP_HEALTH_POTION,
-    IMG_ID_PICKUP_MANA_POTION
+    IMG_ID_PICKUP_MANA_POTION,
+    IMG_ID_P_AXE_IDLE,
+    IMG_ID_P_AXE_ATTACK1
 } imgIDs_e;
 
 typedef struct archt_s

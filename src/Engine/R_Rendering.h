@@ -242,6 +242,8 @@ int R_GetValueFromSpritesMap(int level, int y, int x);
 
 void R_SetValueFromSpritesMap(int level, int y, int x, int value);
 
+void R_SetValueFromCollisionMap(int level, int y, int x, int value);
+
 //-------------------------------------
 // Draws a column of pixels with texture mapping
 //-------------------------------------

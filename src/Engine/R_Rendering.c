@@ -2016,6 +2016,31 @@ void R_SetValueFromSpritesMap(int level, int y, int x, int value)
     }
 }
 
+void R_SetValueFromCollisionMap(int level, int y, int x, int value)
+{
+    if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
+    {
+        switch(level)
+        {
+            case 0:
+                currentMap.collisionMapLevel0[y][x] = value;
+                break;
+
+            case 1:
+                currentMap.collisionMapLevel1[y][x] = value;
+                break;
+
+            case 2:
+                currentMap.collisionMapLevel2[y][x] = value;
+                break;
+
+            default:
+                //printf("WARNING! Level get was out of max/min level size\n");
+               break;
+        }
+    }
+}
+
 //-------------------------------------
 // Gets a pixel from a surface
 //-------------------------------------

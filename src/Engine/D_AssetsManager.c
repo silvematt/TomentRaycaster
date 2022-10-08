@@ -744,14 +744,17 @@ void D_InitLoadSkies(void)
 void D_InitLoadPlayersFP(void)
 {
     // Create Objects
-    object_t* playerFPHandsIdle = (object_t*)malloc(sizeof(object_t));
+    object_t* playerFPHands = (object_t*)malloc(sizeof(object_t));
+    object_t* playerFPAxe = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.playersFPLength = 1; // Set length
+    tomentdatapack.playersFPLength = 2; // Set length
 
-    D_InitObject(playerFPHandsIdle);
+    D_InitObject(playerFPHands);
+    D_InitObject(playerFPAxe);
 
     // Put objects in the datapack
-    tomentdatapack.playersFP[PLAYER_FP_HANDS] = playerFPHandsIdle;
+    tomentdatapack.playersFP[PLAYER_FP_HANDS] = playerFPHands;
+    tomentdatapack.playersFP[PLAYER_FP_AXE] = playerFPAxe;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -801,9 +804,51 @@ void D_InitLoadPlayersFP(void)
         tomentdatapack.playersFP[PLAYER_FP_HANDS]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
-    // Final sets
-    D_SetObject(playerFPHandsIdle, PLAYER_FP_HANDS, tomentdatapack.playersFP[PLAYER_FP_HANDS]->texture, NULL);
+    // FP Axe
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_P_AXE_IDLE].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_P_AXE_IDLE].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_P_AXE_IDLE))
+    {
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_AXE]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
 
+        // Load animations as well
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->belongsTo = tomentdatapack.playersFP[0];
+
+        // Idle = Normal
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animIdle = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animIdleSheetLength = 0;
+
+        SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animIdle, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+
+        // Attack
+        int animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_P_AXE_ATTACK1].startingOffset);
+        SDL_RWops* animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_P_AXE_ATTACK1].size);
+        SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animAttack = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animAttackSheetLength = 6;
+        SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animAttack, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        SDL_FreeSurface(animTemp1);
+
+        // Cast Spell
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_P_HANDS_CASTSPELL].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_P_HANDS_CASTSPELL].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animCastSpell = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animCastSpellSheetLength = 6;
+        SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->animCastSpell, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        SDL_FreeSurface(animTemp1);
+
+    }
+    else
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    SDL_FreeSurface(temp1);
+
+    // Final sets
+    D_SetObject(playerFPHands, PLAYER_FP_HANDS, tomentdatapack.playersFP[PLAYER_FP_HANDS]->texture, NULL);
+    D_SetObject(playerFPAxe, PLAYER_FP_AXE, tomentdatapack.playersFP[PLAYER_FP_AXE]->texture, NULL);
 }
 
 //-------------------------------------

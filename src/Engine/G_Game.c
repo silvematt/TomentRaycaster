@@ -316,8 +316,21 @@ void G_UpdateProjectiles(void)
             dynamicSprite_t* sprite = NULL;
             if((sprite = G_GetFromDynamicSpriteMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x)) != NULL)
             {
+                float damage = 0.0f;
+                
                 // Damage sprite
-                G_AITakeDamage(sprite, 50.0f);
+                switch(cur->this.base.spriteID)
+                {
+                    case S_Fireball1:
+                        damage = 55.65f;
+                        break;
+
+                    default:
+                        damage = 0.0f;
+                        break;
+                }
+
+                G_AITakeDamage(sprite, damage);
 
                 cur->this.isBeingDestroyed = true;
                 G_AIPlayAnimationOnce(&cur->this, ANIM_DIE);

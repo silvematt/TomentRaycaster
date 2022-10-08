@@ -16,7 +16,7 @@ static void I_DetermineInFrontGrid(void);
 static void I_SetAttackCone(int id, int x, int y);
 
 static bool I_PlayerAttack(int attackType);
-static bool I_PlayerCastSpell(playerAttacks_e attackType);
+static bool I_PlayerCastSpell(playerSpells_e attackType);
 
 // ----------------------------------------------------
 // Sets an SDL_Rect
@@ -65,6 +65,9 @@ void G_InitPlayer(void)
     
     // Rect for minimap
     SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
+
+    player.curWeapon = PLAYER_FP_HANDS;
+    player.curSpell = SPELL_FIREBALL1;
 
     // Do one tick
     G_PlayerTick();
@@ -146,6 +149,7 @@ void G_PlayerTick(void)
         if(tomentdatapack.sprites[spriteID]->Callback == D_CallbackPickup)
         {
             R_SetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
+            R_SetValueFromCollisionMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
         }
     }
 }
@@ -288,23 +292,23 @@ void G_PlayerRender(void)
     switch(player.state)
     {
         case PSTATE_IDLE:
-            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animIdle;
-            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animIdleSheetLength;
+            curAnim = tomentdatapack.playersFP[player.curWeapon]->animations->animIdle;
+            curAnimLength = tomentdatapack.playersFP[player.curWeapon]->animations->animIdleSheetLength;
             break;
 
         case PSTATE_ATTACKING1:
-            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animAttack;
-            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animAttackSheetLength;
+            curAnim = tomentdatapack.playersFP[player.curWeapon]->animations->animAttack;
+            curAnimLength = tomentdatapack.playersFP[player.curWeapon]->animations->animAttackSheetLength;
             break;
 
         case PSTATE_CASTSPELL:
-            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animCastSpell;
-            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animCastSpellSheetLength;
+            curAnim = tomentdatapack.playersFP[player.curWeapon]->animations->animCastSpell;
+            curAnimLength = tomentdatapack.playersFP[player.curWeapon]->animations->animCastSpellSheetLength;
             break;
 
         default:
-            curAnim = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animIdle;
-            curAnimLength = tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->animIdleSheetLength;
+            curAnim = tomentdatapack.playersFP[player.curWeapon]->animations->animIdle;
+            curAnimLength = tomentdatapack.playersFP[player.curWeapon]->animations->animIdleSheetLength;
             break;
     }
 
@@ -319,7 +323,7 @@ void G_PlayerRender(void)
             if(player.state == PSTATE_CASTSPELL && player.animFrame == 4 && player.hasToCast && !player.hasCasted)
             {
                 // Spawn a projectile
-                G_SpawnProjectile(S_Fireball1, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, true);
+                G_SpawnProjectile(player.curSpell, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, true);
                 player.hasCasted = true;
                 player.hasToCast = false;
             }
@@ -456,6 +460,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                         if(tomentdatapack.sprites[spriteID]->Callback == D_CallbackPickup)
                         {
                             R_SetValueFromSpritesMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, 0);
+                            R_SetValueFromCollisionMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, 0);
                         }
                     }
                 }
@@ -476,7 +481,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
             if(e->key.keysym.sym == SDLK_c)
             {
                 if(G_PlayerCanAttack())
-                    I_PlayerCastSpell(P_ATTACK_CAST_FIREBALL1);
+                    I_PlayerCastSpell(player.curSpell);
             }
 
 
@@ -835,10 +840,27 @@ static bool I_PlayerAttack(int attackType)
         }
     }
 
+    float damage = 15.0f;
+
+    switch(player.curWeapon)
+    {
+        case PLAYER_FP_HANDS:
+            damage = 15.0f;
+            break;
+
+        case PLAYER_FP_AXE:
+            damage = 33.5f;
+            break;
+
+        default:
+            damage = 15.0f;
+            break;
+    }
+
     if(ai != NULL && ai->base.dist < PLAYER_AI_HIT_DISTANCE)
     {
         printf("Hit an enemy.\n");
-        G_AITakeDamage(ai, 10.0f);
+        G_AITakeDamage(ai, damage);
         return true;
     }
     else
@@ -848,33 +870,40 @@ static bool I_PlayerAttack(int attackType)
     }
 }
 
-static bool I_PlayerCastSpell(playerAttacks_e attackType)
+static bool I_PlayerCastSpell(playerSpells_e spell)
 {
-    float manaNeeded = 9999.9f;
+    float manaNeeded = 9999999.9f;
+
+    // Checks if the passed spell exists, it does if the next switch case doesn't fall in the default case
+    bool checkSpell = false;
 
     // Check if player has enough mana
-    switch(attackType)
+    switch(spell)
     {
-        case P_ATTACK_CAST_FIREBALL1:
+        case SPELL_FIREBALL1:
             manaNeeded = 23.5f;
+            checkSpell = true;
             break;
 
         default:
+            checkSpell = false;
             break;
     }
 
-    if(player.attributes.curMana > manaNeeded)
+    if(checkSpell)
     {
-        G_PlayerPlayAnimationOnce(ANIM_CAST_SPELL);
-        player.hasToCast = true;
-        player.hasCasted = false;
-        G_PlayerDrainMana(manaNeeded);
+        if(player.attributes.curMana > manaNeeded)
+        {
+            G_PlayerPlayAnimationOnce(ANIM_CAST_SPELL);
+            player.hasToCast = true;
+            player.hasCasted = false;
+            G_PlayerDrainMana(manaNeeded);
+        }
+        else
+        {
+            // TODO, alert no mana
+        }
     }
-    else
-    {
-        // TODO, alert no mana
-    }
-    
 }
 
 static void I_SetAttackCone(int id, int x, int y)

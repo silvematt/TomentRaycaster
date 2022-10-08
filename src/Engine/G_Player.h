@@ -41,6 +41,11 @@ typedef enum playerAttacks_e
     P_ATTACK_CAST_FIREBALL1
 } playerAttacks_e;
 
+typedef enum playerSpells_e
+{
+    SPELL_FIREBALL1 = 4 // Needs to be the same as the corresponding sprite that will be instantiated as the projectile
+} playerSpells_e;
+
 // ----------------------------------------------------
 // Sets an SDL_Rect
 // ----------------------------------------------------
@@ -73,6 +78,9 @@ typedef struct player_s
     float startingRot;
 
     playerState_e state;
+    playerFPID_e curWeapon;
+    playerSpells_e curSpell;
+
     entityattributes_t attributes;
 
     // Animation
