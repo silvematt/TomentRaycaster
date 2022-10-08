@@ -18,7 +18,9 @@ Features:
 - Vertical Motion
 - Sprites Rendering & Collisions
 - AI and basic BFS Pathfinding
+- Player and AI combat
 - Projectiles & Player's spells
+- Pickups of weapons and consumables (potions) for the player
 - Support for Animated Sprites
 - Seamless Sky Rendering or Absolute Ceiling Rendering (or a mix of the two)
 - Shading and Map Lighting
