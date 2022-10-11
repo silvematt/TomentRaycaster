@@ -430,6 +430,8 @@ void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, b
 
     // Set initial data like pos, dir and speed
     newNode->this.type = DS_TYPE_PROJECTILE;
+    newNode->this.curAnim = NULL;
+    newNode->this.curAnimLength = 0;
     newNode->this.animPlay = true;
     newNode->this.state = ANIM_IDLE;
     newNode->this.animTimer = U_TimerCreateNew();
