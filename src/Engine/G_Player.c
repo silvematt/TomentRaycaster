@@ -65,7 +65,7 @@ void G_InitPlayer(void)
         player.attributes.maxMana = 100.0f;
         player.attributes.curMana = player.attributes.maxMana;
 
-        player.curWeapon = PLAYER_FP_HANDS;
+        G_PlayerSetWeapon(PLAYER_FP_HANDS);
         player.curSpell = SPELL_FIREBALL1;
         player.hasBeenInitialized = true;
 
@@ -610,9 +610,9 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
 
             // Change Weapons
             if(G_PlayerCanAttack() && e->key.keysym.sym == SDLK_1)
-                player.curWeapon = PLAYER_FP_HANDS;
+                G_PlayerSetWeapon(PLAYER_FP_HANDS);
             else if(G_PlayerCanAttack() && player.hasAxe && e->key.keysym.sym == SDLK_2)
-                player.curWeapon = PLAYER_FP_AXE;
+                G_PlayerSetWeapon(PLAYER_FP_AXE);
             else if(G_PlayerCanAttack() && e->key.keysym.sym == SDLK_3)
                 player.curSpell = SPELL_FIREBALL1;
             else if(G_PlayerCanAttack() && player.hasIceDart && e->key.keysym.sym == SDLK_4)
@@ -770,8 +770,17 @@ static void I_DetermineInFrontGrid(void)
         // Right
         I_SetAttackCone(2, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y);
 
-        // Leeft 
+        // Left 
         I_SetAttackCone(3, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
+
+        // Set extra forward
+        I_SetAttackCone(4, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
+
+        // Set extra forward right
+        I_SetAttackCone(5, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y+1);
+
+        // Set extra forward left
+        I_SetAttackCone(6, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y+1);
         
     }
     // Top cell
@@ -796,6 +805,15 @@ static void I_DetermineInFrontGrid(void)
 
         // Left 
         I_SetAttackCone(3, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
+
+        // Set extra forward
+        I_SetAttackCone(4, player.inFrontGridPosition.x, player.inFrontGridPosition.y-1);
+
+        // Set extra forward right
+        I_SetAttackCone(5, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y-1);
+
+        // Set extra forward left
+        I_SetAttackCone(6, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y-1);
     }
     // Right cell
     else if(player.angle < M_PI/6 || player.angle > (11*M_PI) / 6)
@@ -815,6 +833,15 @@ static void I_DetermineInFrontGrid(void)
 
         // Bottom 
         I_SetAttackCone(3, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
+
+        // Set extra forward
+        I_SetAttackCone(4, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y);
+
+        // Set extra forward up
+        I_SetAttackCone(5, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y-1);
+
+        // Set extra forward down
+        I_SetAttackCone(6, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y+1);
     }
     // Left Cell
     else if(player.angle > (5*M_PI)/6 && player.angle < (7*M_PI)/6)
@@ -837,6 +864,15 @@ static void I_DetermineInFrontGrid(void)
 
         // Bottom 
         I_SetAttackCone(3, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
+
+        // Set extra forward
+        I_SetAttackCone(4, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
+
+        // Set extra forward up
+        I_SetAttackCone(5, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y-1);
+
+        // Set extra forward down
+        I_SetAttackCone(6, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y+1);
     }
     // Top Right Cell
     else if(player.angle < (11*M_PI) / 6 && player.angle > (5*M_PI)/3)
@@ -860,6 +896,15 @@ static void I_DetermineInFrontGrid(void)
 
         // Bottom 
         I_SetAttackCone(3, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
+
+        // Set extra forward
+        I_SetAttackCone(4, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y-1);
+
+        // Set extra forward right
+        I_SetAttackCone(5, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y);
+
+        // Set extra left
+        I_SetAttackCone(6, player.inFrontGridPosition.x, player.inFrontGridPosition.y-1);
     }
     // Top Left Cell
     else if(player.angle > (7*M_PI) / 6 && player.angle < (4*M_PI)/3)
@@ -885,6 +930,16 @@ static void I_DetermineInFrontGrid(void)
 
         // Bottom 
         I_SetAttackCone(3, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
+
+        // Set extra forward
+        I_SetAttackCone(4, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y-1);
+
+        // Set extra forward right
+        I_SetAttackCone(5, player.inFrontGridPosition.x, player.inFrontGridPosition.y-1);
+
+        // Set extra forward down
+        I_SetAttackCone(6, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
+
     }
     // Bottom Right Cell
     else if(player.angle < M_PI/3 && player.angle > M_PI/6)
@@ -904,6 +959,16 @@ static void I_DetermineInFrontGrid(void)
 
         // Left 
         I_SetAttackCone(3, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
+
+        // Set extra forward
+        I_SetAttackCone(4, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y+1);
+
+        // Set extra forward up
+        I_SetAttackCone(5, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y);
+
+        // Set extra forward left
+        I_SetAttackCone(6, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
+
     }
     // Bottom Left Cell
     else if(player.angle > (2*M_PI)/3 && player.angle < (M_PI*5)/6)
@@ -926,6 +991,15 @@ static void I_DetermineInFrontGrid(void)
 
         // Right 
         I_SetAttackCone(3, player.inFrontGridPosition.x+1, player.inFrontGridPosition.y);
+
+        // Set extra forward
+        I_SetAttackCone(4, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y+1);
+
+        // Set extra forward up
+        I_SetAttackCone(5, player.inFrontGridPosition.x-1, player.inFrontGridPosition.y);
+
+        // Set extra forward right
+        I_SetAttackCone(6, player.inFrontGridPosition.x, player.inFrontGridPosition.y+1);
     }
 }
 
@@ -972,9 +1046,10 @@ static bool I_PlayerAttack(int attackType)
             // Check if AI is in front
             float anglediff = (int)((player.angle * (180/M_PI)) - ai->base.angle + 180 + 360) % 360 - 180;
             bool inFront = (anglediff <= ATTACK_CONE_MAX_DIFF && anglediff>=-ATTACK_CONE_MAX_DIFF);
-        
-            if(!inFront)
-                ai= NULL;
+            bool inRange = (ai->base.dist <= player.weaponDistance);
+
+            if(!inFront || !inRange)
+                ai = NULL;
             else
                 break;
         }
@@ -1070,4 +1145,25 @@ static void I_SetAttackCone(int id, int x, int y)
 bool G_PlayerCanAttack(void)
 {
     return (player.state != PSTATE_ATTACKING1 && player.state != PSTATE_CASTSPELL);
+}
+
+void G_PlayerSetWeapon(playerFPID_e weaponID)
+{
+    switch(weaponID)
+    {
+        case PLAYER_FP_HANDS:
+            player.curWeapon = PLAYER_FP_HANDS;
+            player.weaponDistance = 90.0f;
+            break;
+        
+        case PLAYER_FP_AXE:
+            player.curWeapon = PLAYER_FP_AXE;
+            player.weaponDistance = 110.0f;
+            break;
+
+        default:
+            player.curWeapon = PLAYER_FP_HANDS;
+            player.weaponDistance = 100.0f;
+            break;
+    }
 }

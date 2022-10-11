@@ -51,6 +51,12 @@ extern int visibleSpritesLength;
 extern walldata_t currentThinWalls[PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
 extern unsigned visibleThinWallsLength;
 
+// Alert message
+#define ALERT_MESSAGE_DEF_X 360
+#define ALERT_MESSAGE_DEF_Y 10
+
+extern alertMessage_t* alertMessagesHead;
+
 
 // =========================================
 // Debug
@@ -253,5 +259,8 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
 // Draws a column of pixels with texture mapping and shading
 //-------------------------------------
 void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist);
+
+void R_QueueAlertMessage(alertMessage_t* m, int x, int y, char* msg, float duration, float size);
+void R_UpdateAlertMessages(void);
 
 #endif

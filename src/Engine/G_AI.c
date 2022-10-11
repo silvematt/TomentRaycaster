@@ -13,50 +13,77 @@ unsigned int allDynamicSpritesLength = 0;
 // Switch on the spriteID to be able to configure parameters for each entity, could be done in a file to avoid having to recompile to change stuff like speed
 void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
 {
-      //---------------------
-      // Base
-      //---------------------
-      cur->type = DS_TYPE_AI;
-      
-      cur->base.active = true;
-      cur->base.level = level;
+    //---------------------
+    // Base
+    //---------------------
+    cur->type = DS_TYPE_AI;
+    
+    cur->base.active = true;
+    cur->base.level = level;
 
-      cur->base.gridPos.x = x;
-      cur->base.gridPos.y = y;
+    cur->base.gridPos.x = x;
+    cur->base.gridPos.y = y;
 
-      // Get World Pos
-      cur->base.pos.x = x * TILE_SIZE;
-      cur->base.pos.y = y * TILE_SIZE;
+    // Get World Pos
+    cur->base.pos.x = x * TILE_SIZE;
+    cur->base.pos.y = y * TILE_SIZE;
 
-      cur->base.collisionCircle.pos.x = cur->base.pos.x;
-      cur->base.collisionCircle.pos.y = cur->base.pos.y;
-      cur->base.collisionCircle.r = 32;
+    cur->base.collisionCircle.pos.x = cur->base.pos.x;
+    cur->base.collisionCircle.pos.y = cur->base.pos.y;
+    cur->base.collisionCircle.r = 32;
 
-      // Get ID
-      cur->base.spriteID = spriteID;
-      cur->base.sheetLength = tomentdatapack.spritesSheetsLenghtTable[spriteID];
+    // Get ID
+    cur->base.spriteID = spriteID;
+    cur->base.sheetLength = tomentdatapack.spritesSheetsLenghtTable[spriteID];
 
-      //---------------------
-      // Dynamic-Specific
-      //---------------------
-      cur->state = DS_STATE_IDLE;
-      cur->isAlive = true;
-      cur->speed = 2.0f;
-      
-      cur->animTimer = U_TimerCreateNew();
-      cur->animPlay = false;
-      cur->animFrame = 0;
-      cur->animPlayOnce = false;
+    //---------------------
+    // Dynamic-Specific
+    //---------------------
+    cur->state = DS_STATE_IDLE;
+    cur->isAlive = true;
+    cur->speed = 2.0f;
 
-      cur->attributes.maxHealth = 100.0f;
-      cur->attributes.curHealth = cur->attributes.maxHealth;
-      
-      cur->attributes.maxMana = 100.0f;
-      cur->attributes.curMana = cur->attributes.maxMana;
+    cur->curAnim = NULL;
+    cur->curAnimLength = 0;
+    cur->animTimer = U_TimerCreateNew();
+    cur->animPlay = false;
+    cur->animFrame = 0;
+    cur->animPlayOnce = false;
+    
+    // Init attributes based on the sprite
+    switch(cur->base.spriteID)
+    {
+        case DS_Skeleton:
+            cur->attributes.maxHealth = 100.0f;
+            cur->attributes.curHealth = cur->attributes.maxHealth;
 
-      // Add it to the dynamic sprite list
-      allDynamicSprites[allDynamicSpritesLength] = cur;
-      allDynamicSpritesLength++;
+            cur->attributes.maxMana = 100.0f;
+            cur->attributes.curMana = cur->attributes.maxMana;
+
+            cur->attributes.baseDamage = 5.0f;
+            cur->attributes.attackChance = 80;
+            cur->attributes.criticalChance = 5;
+            cur->attributes.criticalModifier = 1.5f;
+            break;
+
+        default:
+            cur->attributes.maxHealth = 100.0f;
+            cur->attributes.curHealth = cur->attributes.maxHealth;
+
+            cur->attributes.maxMana = 100.0f;
+            cur->attributes.curMana = cur->attributes.maxMana;
+
+            cur->attributes.baseDamage = 5.0f;
+            cur->attributes.attackChance = 80;
+            cur->attributes.criticalChance = 5;
+            cur->attributes.criticalModifier = 1.5f;
+        break;
+    }
+    
+
+    // Add it to the dynamic sprite list
+    allDynamicSprites[allDynamicSpritesLength] = cur;
+    allDynamicSpritesLength++;
 }
 
 void G_AIUpdate(void)
@@ -104,7 +131,7 @@ void G_AIUpdate(void)
             float deltaY = 0.0f; 
 
             // Check if path is valid and if there's space to follow it
-            if(path.isValid && path.nodesLength-1 > 0 && path.nodes[path.nodesLength-1] != NULL &&
+            if(path.isValid && path.nodesLength-1 >= 0 && path.nodes[path.nodesLength-1] != NULL &&
                 G_CheckDynamicSpriteMap(cur->base.level, path.nodes[path.nodesLength-1]->gridPos.y, path.nodes[path.nodesLength-1]->gridPos.x) == false)
             {
                 deltaX = (path.nodes[path.nodesLength-1]->gridPos.x * TILE_SIZE + (TILE_SIZE/2)) - cur->base.centeredPos.x;
@@ -112,7 +139,7 @@ void G_AIUpdate(void)
 
                 // Check if we're far away from the target
                 if(P_CheckCircleCollision(&cur->base.collisionCircle, cur->targetColl) < 0 && 
-                    P_GetDistance((*cur->targetPos).x, (*cur->targetPos).y, cur->base.centeredPos.x + ((deltaX * cur->speed) * deltaTime), cur->base.centeredPos.y + ((deltaX * cur->speed) * deltaTime)) > TILE_SIZE)
+                    P_GetDistance((*cur->targetPos).x, (*cur->targetPos).y, cur->base.centeredPos.x + ((deltaX * cur->speed) * deltaTime), cur->base.centeredPos.y + ((deltaX * cur->speed) * deltaTime)) > AI_STOP_DISTANCE)
                     {
                         cur->base.pos.x += (deltaX * cur->speed) * deltaTime;
                         cur->base.pos.y += (deltaY * cur->speed) * deltaTime; 
@@ -192,6 +219,57 @@ void G_AIUpdate(void)
                 G_AIAttackPlayer(cur);
             }
         }
+
+        // Select Animation & Play it
+        switch(cur->state)
+        {
+            case DS_STATE_IDLE:
+                cur->curAnim = tomentdatapack.sprites[cur->base.spriteID]->animations->animIdle;
+                cur->curAnimLength = tomentdatapack.sprites[cur->base.spriteID]->animations->animIdleSheetLength;
+                break;
+
+            case DS_STATE_DEAD:
+                cur->curAnim = tomentdatapack.sprites[cur->base.spriteID]->animations->animDie;
+                cur->curAnimLength = tomentdatapack.sprites[cur->base.spriteID]->animations->animDieSheetLength;
+                break;
+
+            case DS_STATE_ATTACKING:
+                cur->curAnim = tomentdatapack.sprites[cur->base.spriteID]->animations->animAttack;
+                cur->curAnimLength = tomentdatapack.sprites[cur->base.spriteID]->animations->animAttackSheetLength;
+                break;
+
+            default:
+                cur->curAnim = tomentdatapack.sprites[cur->base.spriteID]->animations->animIdle;
+                cur->curAnimLength = tomentdatapack.sprites[cur->base.spriteID]->animations->animIdleSheetLength;
+                break;
+            }
+
+            if(cur->animPlay)
+            {
+                if(cur->animPlayOnce)
+                {
+                    if(cur->curAnimLength > 0)
+                        cur->animFrame = ((int)floor(cur->animTimer->GetTicks(cur->animTimer) / cur->animSpeed) % cur->curAnimLength);
+
+                    // Prevent loop
+                    if(cur->animFrame >= cur->curAnimLength-1)
+                    {
+                        cur->animPlay = false;
+
+                        // Go back to idle if it was attacking
+                        if(cur->state == DS_STATE_ATTACKING)
+                        {
+                            G_AIPlayAnimationLoop(cur, ANIM_IDLE);
+                        }
+                    }
+                }
+                else
+                {
+                    // Allow loop
+                    if(cur->curAnimLength > 0)
+                        cur->animFrame = ((int)floor(cur->animTimer->GetTicks(cur->animTimer) / cur->animSpeed) % cur->curAnimLength);
+                }
+            }
     }
 }
 
@@ -214,20 +292,19 @@ void G_AIDie(dynamicSprite_t* cur)
 
 void G_AIAttackPlayer(dynamicSprite_t* cur)
 {
-    float dmg = 0;
+    // Attack chance
+    int attack      =  (rand() % (100)) + 1;
+    int critical    =  (rand() % (100)) + 1;
 
-    switch(cur->base.spriteID)
+    if(attack <= cur->attributes.attackChance)
     {
-        case DS_Skeleton:
-            dmg = 5.0f;
-            break;
+        float dmg = cur->attributes.baseDamage;
 
-        default:
-            dmg = 5.0f;
-            break;
+        if(critical <= cur->attributes.criticalChance)
+            dmg *= cur->attributes.criticalModifier;
+
+        G_PlayerTakeDamage(dmg);
     }
-
-    G_PlayerTakeDamage(dmg);
 }
 
 

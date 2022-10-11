@@ -366,10 +366,62 @@ void G_UpdateProjectiles(void)
             }
         }
 
+        // Select Animation & Play it
+        switch(cur->this.state)
+        {
+            case DS_STATE_IDLE:
+                cur->this.curAnim = tomentdatapack.sprites[cur->this.base.spriteID]->animations->animIdle;
+                cur->this.curAnimLength = tomentdatapack.sprites[cur->this.base.spriteID]->animations->animIdleSheetLength;
+                break;
+
+            case DS_STATE_DEAD:
+                cur->this.curAnim = tomentdatapack.sprites[cur->this.base.spriteID]->animations->animDie;
+                cur->this.curAnimLength = tomentdatapack.sprites[cur->this.base.spriteID]->animations->animDieSheetLength;
+                break;
+
+            case DS_STATE_ATTACKING:
+                cur->this.curAnim = tomentdatapack.sprites[cur->this.base.spriteID]->animations->animAttack;
+                cur->this.curAnimLength = tomentdatapack.sprites[cur->this.base.spriteID]->animations->animAttackSheetLength;
+                break;
+
+            default:
+                cur->this.curAnim = tomentdatapack.sprites[cur->this.base.spriteID]->animations->animIdle;
+                cur->this.curAnimLength = tomentdatapack.sprites[cur->this.base.spriteID]->animations->animIdleSheetLength;
+                break;
+        }
+
+        if(cur->this.animPlay)
+        {
+            if(cur->this.animPlayOnce)
+            {
+                if(cur->this.curAnimLength > 0)
+                    cur->this.animFrame = ((int)floor(cur->this.animTimer->GetTicks(cur->this.animTimer) / cur->this.animSpeed) % cur->this.curAnimLength);
+
+                // Prevent loop
+                if(cur->this.animFrame >= cur->this.curAnimLength-1)
+                {
+                    cur->this.animPlay = false;
+
+                    // Go back to idle if it was attacking
+                    if(cur->this.state == DS_STATE_ATTACKING)
+                    {
+                        G_AIPlayAnimationLoop(&cur->this, ANIM_IDLE);
+                    }
+                }
+            }
+            else
+            {
+                // Allow loop
+                if(cur->this.curAnimLength > 0)
+                    cur->this.animFrame = ((int)floor(cur->this.animTimer->GetTicks(cur->this.animTimer) / cur->this.animSpeed) % cur->this.curAnimLength);
+            }
+        }
+
         i++;
         cur = cur->next;
     }
 }
+
 
 void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, bool isOfPlayer)
 {

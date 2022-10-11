@@ -25,7 +25,7 @@
 
 #define PLAYER_AI_HIT_DISTANCE 110.0f
 
-#define ATTACK_CONE_SIZE 4
+#define ATTACK_CONE_SIZE 7
 #define ATTACK_CONE_MAX_DIFF 25
 
 #define CROSSHAIR_HIT_TIME_SECONDS 0.35f
@@ -104,6 +104,7 @@ typedef struct player_s
     Timer* crosshairTimer;
 
     // Weapons
+    float weaponDistance;
     bool hasAxe;
 
     // Spells
@@ -178,5 +179,6 @@ void G_PlayerDrainMana(float amount);
 void G_PlayerGainHealth(float amount);
 void G_PlayerGainMana(float amount);
 
+void G_PlayerSetWeapon(playerFPID_e weaponID);
 
 #endif

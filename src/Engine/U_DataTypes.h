@@ -83,6 +83,11 @@ typedef struct entityattributes_s
 
     float curMana;
     float maxMana;
+
+    float baseDamage;
+    int attackChance;
+    int criticalChance;
+    float criticalModifier;
 } entityattributes_t;
 
 typedef enum dynamicSpriteState_e
@@ -113,6 +118,9 @@ typedef struct dynamicSprite_s
     bool isAlive;
     float speed;
 
+    SDL_Surface* curAnim;
+    int curAnimLength;
+    
     Timer* animTimer;
     bool animPlay;
     int animFrame;
@@ -197,6 +205,16 @@ typedef struct projectileNode_s
     struct projectileNode_s* next;
     struct projectileNode_s* previous;
 } projectileNode_t;
+
+typedef struct alertMessage_s
+{
+    int x,y;
+    char* message;
+    float size, duration;
+    Timer* timer;
+    
+    struct alertMessage_s* next;
+} alertMessage_t;
 
 
 typedef enum orientation_e

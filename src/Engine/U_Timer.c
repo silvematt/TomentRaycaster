@@ -12,7 +12,8 @@ Timer* U_TimerCreateNew(void)
     timer->GetTicks = U_TimerGetTicks;
     timer->IsStarted = U_TimerIsStarted;
     timer->IsPaused = U_TimerIsPaused;
-
+    timer->Init(timer);
+    
     return timer;
 }
 

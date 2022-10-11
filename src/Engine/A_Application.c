@@ -36,6 +36,8 @@ void A_InitApplication(void)
     // Init Renderer
     R_InitRendering();
 
+    srand(time(NULL));
+
     // Define entry state for the application
     A_ChangeState(GSTATE_MENU);
 }

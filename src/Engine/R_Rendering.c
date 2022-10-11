@@ -40,6 +40,9 @@ int allDrawablesLength;
 bool debugRendering = false;
 bool r_debugPathfinding = false;
 
+alertMessage_t* alertMessagesHead;
+
+
 // =========================================
 // Static functions
 // =========================================
@@ -76,8 +79,7 @@ void R_RenderDev(void)
     // Render UI
     R_DrawMinimap();
     G_PlayerUIRender();
-
-    T_DisplayTextScaled(FONT_BLKCRY, "This is an alert  message!", 360, 10, 1.0f);
+    R_UpdateAlertMessages();
 }
 
 //-------------------------------------
@@ -1835,59 +1837,6 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
     int offset, drawX, drawYStart, drawYEnd;
 
     // Select Animation
-    SDL_Surface* curAnim;
-    int curAnimLength = 0;
-
-    switch(sprite->state)
-    {
-        case DS_STATE_IDLE:
-            curAnim = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdle;
-            curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdleSheetLength;
-            break;
-
-        case DS_STATE_DEAD:
-            curAnim = tomentdatapack.sprites[sprite->base.spriteID]->animations->animDie;
-            curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animDieSheetLength;
-            break;
-
-        case DS_STATE_ATTACKING:
-            curAnim = tomentdatapack.sprites[sprite->base.spriteID]->animations->animAttack;
-            curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animAttackSheetLength;
-            break;
-
-        default:
-            curAnim = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdle;
-            curAnimLength = tomentdatapack.sprites[sprite->base.spriteID]->animations->animIdleSheetLength;
-            break;
-    }
-
-    if(sprite->animPlay)
-    {
-        if(sprite->animPlayOnce)
-        {
-            if(curAnimLength > 0)
-                sprite->animFrame = ((int)floor(sprite->animTimer->GetTicks(sprite->animTimer) / sprite->animSpeed) % curAnimLength);
-
-            // Prevent loop
-            if(sprite->animFrame >= curAnimLength-1)
-            {
-                sprite->animPlay = false;
-
-                // Go back to idle
-                if(sprite->state == DS_STATE_ATTACKING)
-                {
-                    G_AIPlayAnimationLoop(sprite, ANIM_IDLE);
-                }
-            }
-        }
-        else
-        {
-            // Allow loop
-             if(curAnimLength > 0)
-                sprite->animFrame = ((int)floor(sprite->animTimer->GetTicks(sprite->animTimer) / sprite->animSpeed) % curAnimLength);
-        }
-    }
-
     for(int j = 0; j < sprite->base.height; j++)
     {
         offset = j*TILE_SIZE/sprite->base.height + (UNIT_SIZE*sprite->animFrame);
@@ -1896,7 +1845,8 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
         drawYStart = (PROJECTION_PLANE_CENTER) - (sprite->base.height / 2) + screenZ;
         drawYEnd = (PROJECTION_PLANE_CENTER) + (sprite->base.height / 2) + screenZ;
 
-        R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->base.height*sprite->base.level), drawYEnd-(sprite->base.height*sprite->base.level), curAnim,offset, sprite->base.height, lighting, dist);
+        if(sprite->curAnim != NULL)
+            R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->base.height*sprite->base.level), drawYEnd-(sprite->base.height*sprite->base.level), sprite->curAnim, offset, sprite->base.height, lighting, dist);
     }
 
     // Draws the center of the sprite
@@ -1910,7 +1860,6 @@ void R_DrawDrawables(void)
 {
     U_QuicksortDrawables(allDrawables, 0, allDrawablesLength-1);
 
-    int counter = 0;
     for(int i = 0; i < allDrawablesLength; i++)
     {
         switch(allDrawables[i].type)
@@ -1920,7 +1869,6 @@ void R_DrawDrawables(void)
                 break;
 
             case DRWB_SPRITE:
-                counter++;
                 R_DrawSprite(allDrawables[i].spritePtr);
                 break;
 
@@ -2091,6 +2039,61 @@ void R_BlitColorIntoScreen(int color, SDL_Rect* pos)
             // Put it into buffer
             pixels[(pos->x + x) + ((pos->y + y) * SCREEN_WIDTH)] = color;
         }
+}
+
+
+void R_QueueAlertMessage(alertMessage_t* m, int x, int y, char* msg, float duration, float size)
+{
+    m->x = x;
+    m->y = y;
+    m->message = msg;
+    m->duration = duration;
+    m->size = size;
+    m->timer = U_TimerCreateNew();
+
+    // Add message to the linked list
+    if(alertMessagesHead == NULL)
+    {
+        alertMessagesHead = m;
+        m->next = NULL;
+    }
+    else
+    {
+        alertMessage_t* current = alertMessagesHead;
+
+        while(current->next != NULL)
+            current = current->next;
+
+        // Now we can add
+        current->next = m;
+        current->next->next = NULL;
+    }
+}
+
+void R_UpdateAlertMessages(void)
+{
+    if(alertMessagesHead != NULL)
+    {
+        if(!alertMessagesHead->timer->isStarted)
+            alertMessagesHead->timer->Start(alertMessagesHead->timer);
+
+        // Display the text
+        T_DisplayTextScaled(FONT_BLKCRY, alertMessagesHead->message, alertMessagesHead->x, alertMessagesHead->y, alertMessagesHead->size);
+
+        // Check if the text should be removed
+        if(alertMessagesHead->timer->GetTicks(alertMessagesHead->timer) > alertMessagesHead->duration * 1000)
+        {
+            // Remove the head node and make the next head's node the head node
+            alertMessage_t* previousHead = alertMessagesHead;
+            if(alertMessagesHead->next != NULL)
+                alertMessagesHead = alertMessagesHead->next;
+            else
+                alertMessagesHead = NULL;
+            
+            free(previousHead->timer);
+            free(previousHead);
+        }
+    }
 }
 
 

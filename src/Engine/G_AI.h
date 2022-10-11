@@ -4,6 +4,7 @@
 #include "D_AssetsManager.h"
 #include "U_DataTypes.h"
 
+#define AI_STOP_DISTANCE 90.0f
 #define AI_ATTACK_DISTANCE 100.0f
 
 // Dynamic AI list
