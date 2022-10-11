@@ -1,7 +1,7 @@
 # TomentRaycaster
 A Software Rendering Raycaster Engine written in C and SDL2.
 
-![alt text](https://i.imgur.com/57G4FY1.png)
+![alt text](https://i.imgur.com/0YlbTOA.png)
 
 I've written this raycaster following Permadi's paper and Wolfenstein 3D code (and Black Book), as a pilgrimage to my God John Carmack.
 
@@ -25,6 +25,8 @@ Features:
 - Seamless Sky Rendering or Absolute Ceiling Rendering (or a mix of the two)
 - Shading and Map Lighting
 - Text Rendering of Bitmap Fonts
+- Weapon and Spell switching
+- Player HUD (Healthbar, Manabar, Equipped Weapon, Equipped Spell)
 - Game Menus
 - Load map from file
 - Assets Manager
