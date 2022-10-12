@@ -45,6 +45,7 @@ typedef enum playerAttacks_e
 
 typedef enum playerSpells_e
 {
+    SPELL_NULL = 0,
     SPELL_FIREBALL1 = 4, // Needs to be the same as the corresponding sprite that will be instantiated as the projectile
     SPELL_ICEDART1 = 8
 } playerSpells_e;
@@ -108,6 +109,7 @@ typedef struct player_s
     bool hasAxe;
 
     // Spells
+    bool hasFireball;
     bool hasIceDart;
 
 } player_t;
@@ -180,5 +182,6 @@ void G_PlayerGainHealth(float amount);
 void G_PlayerGainMana(float amount);
 
 void G_PlayerSetWeapon(playerFPID_e weaponID);
+void G_PlayerSetSpell(playerSpells_e spellID);
 
 #endif

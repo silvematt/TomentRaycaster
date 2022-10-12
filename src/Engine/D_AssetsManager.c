@@ -497,8 +497,10 @@ void D_InitLoadSprites(void)
     object_t* pickupHealthPotion = (object_t*)malloc(sizeof(object_t));
     object_t* pickupManaPotion = (object_t*)malloc(sizeof(object_t));
     object_t* spellIceDart1 = (object_t*)malloc(sizeof(object_t));
+    object_t* tomeFireball1 = (object_t*)malloc(sizeof(object_t));
+    object_t* tomeIceDart1 = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.spritesLength = 8; // Set length
+    tomentdatapack.spritesLength = 10; // Set length
 
     D_InitObject(spritesBarrel1);
     D_InitObject(spritesCampfire);
@@ -508,6 +510,8 @@ void D_InitLoadSprites(void)
     D_InitObject(pickupHealthPotion);
     D_InitObject(pickupManaPotion);
     D_InitObject(spellIceDart1);
+    D_InitObject(tomeFireball1);
+    D_InitObject(tomeIceDart1);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
@@ -518,6 +522,8 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_PickupHealthPotion] = pickupHealthPotion;
     tomentdatapack.sprites[S_PickupManaPotion] = pickupManaPotion;
     tomentdatapack.sprites[S_IceDart1] = spellIceDart1;
+    tomentdatapack.sprites[S_TomeFireball1] = tomeFireball1;
+    tomentdatapack.sprites[S_TomeIceDart1] = tomeIceDart1;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -725,6 +731,42 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_IceDart1]->Callback = NULL;
     SDL_FreeSurface(temp1);
 
+    // Pickup Tome Fireball1
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_TOME_FIREBALL01].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_TOME_FIREBALL01].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_TOME_FIREBALL01))
+        tomentdatapack.sprites[S_TomeFireball1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[S_TomeFireball1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[S_TomeFireball1]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[S_TomeFireball1]->flags, 1); // Set animated sprite bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_TomeFireball1] = 7;
+
+    // Callback
+    tomentdatapack.sprites[S_TomeFireball1]->Callback = D_CallbackPickup;
+    tomentdatapack.sprites[S_TomeFireball1]->data = "TOME_FIREBALL";
+    SDL_FreeSurface(temp1);
+
+    // Pickup Tome IceDart1
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_TOME_ICEDART01].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_TOME_ICEDART01].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_TOME_ICEDART01))
+        tomentdatapack.sprites[S_TomeIceDart1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[S_TomeIceDart1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[S_TomeIceDart1]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[S_TomeIceDart1]->flags, 1); // Set animated sprite bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_TomeIceDart1] = 7;
+
+    // Callback
+    tomentdatapack.sprites[S_TomeIceDart1]->Callback = D_CallbackPickup;
+    tomentdatapack.sprites[S_TomeIceDart1]->data = "TOME_ICEDART";
+    SDL_FreeSurface(temp1);
+
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
@@ -733,7 +775,8 @@ void D_InitLoadSprites(void)
     D_SetObject(pickupHealthPotion, S_PickupHealthPotion, tomentdatapack.sprites[S_PickupHealthPotion]->texture, NULL);
     D_SetObject(pickupManaPotion, S_PickupManaPotion, tomentdatapack.sprites[S_PickupManaPotion]->texture, NULL);
     D_SetObject(spellIceDart1, S_IceDart1, tomentdatapack.sprites[S_IceDart1]->texture, NULL);
-
+    D_SetObject(tomeFireball1, S_TomeFireball1, tomentdatapack.sprites[S_TomeFireball1]->texture, NULL);
+    D_SetObject(tomeIceDart1, S_TomeIceDart1, tomentdatapack.sprites[S_TomeIceDart1]->texture, NULL);
 }
 
 

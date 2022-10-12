@@ -66,11 +66,12 @@ void G_InitPlayer(void)
         player.attributes.curMana = player.attributes.maxMana;
 
         G_PlayerSetWeapon(PLAYER_FP_HANDS);
-        player.curSpell = SPELL_FIREBALL1;
+        G_PlayerSetSpell(SPELL_NULL);
         player.hasBeenInitialized = true;
 
         player.hasAxe = false;
-        player.hasIceDart = true;
+        player.hasFireball = true;
+        player.hasIceDart = false;
     }
     // Rect for minimap
     SDL_Rect_Set(&player.surfaceRect, (int)player.position.x, (int)player.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
@@ -462,6 +463,10 @@ void G_PlayerUIRender(void)
     // Select the spell
     switch(player.curSpell)
     {
+        case SPELL_NULL:
+            curSpell = NULL;
+            break;
+
         case SPELL_FIREBALL1:
             curSpell = tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1].texture;
             break;
@@ -471,7 +476,7 @@ void G_PlayerUIRender(void)
             break;
 
         default:
-            curSpell = tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1].texture;
+            curSpell = NULL;
             break;
     }
 
@@ -481,13 +486,15 @@ void G_PlayerUIRender(void)
     SDL_Rect weaponIconScreenPos = {105, 63, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect weaponIconSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
 
-    R_BlitIntoScreenScaled(&weaponIconSize, curWeapon, &weaponIconScreenPos);
+    if(curWeapon != NULL)
+        R_BlitIntoScreenScaled(&weaponIconSize, curWeapon, &weaponIconScreenPos);
 
-    // Render weapon
+    // Render spell icon
     SDL_Rect spellIconScreenPos = {143, 63, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect spellIconSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
 
-    R_BlitIntoScreenScaled(&spellIconSize, curSpell, &spellIconScreenPos);
+    if(curSpell != NULL)
+        R_BlitIntoScreenScaled(&spellIconSize, curSpell, &spellIconScreenPos);
 
     // Render crosshair
     SDL_Rect crosshairScreenPos = {(PROJECTION_PLANE_WIDTH / 2) - 6, (PROJECTION_PLANE_HEIGHT / 2) - 6, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
@@ -613,10 +620,10 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 G_PlayerSetWeapon(PLAYER_FP_HANDS);
             else if(G_PlayerCanAttack() && player.hasAxe && e->key.keysym.sym == SDLK_2)
                 G_PlayerSetWeapon(PLAYER_FP_AXE);
-            else if(G_PlayerCanAttack() && e->key.keysym.sym == SDLK_3)
-                player.curSpell = SPELL_FIREBALL1;
+            else if(G_PlayerCanAttack() &&  player.hasFireball && e->key.keysym.sym == SDLK_3)
+                G_PlayerSetSpell(SPELL_FIREBALL1);
             else if(G_PlayerCanAttack() && player.hasIceDart && e->key.keysym.sym == SDLK_4)
-                player.curSpell = SPELL_ICEDART1;
+                G_PlayerSetSpell(SPELL_ICEDART1);
 
         break;
     }
@@ -1099,6 +1106,10 @@ static bool I_PlayerCastSpell(playerSpells_e spell)
     // Check if player has enough mana
     switch(spell)
     {
+        case SPELL_NULL:
+            checkSpell = false;
+            break;
+
         case SPELL_FIREBALL1:
             manaNeeded = 23.5f;
             checkSpell = true;
@@ -1125,7 +1136,9 @@ static bool I_PlayerCastSpell(playerSpells_e spell)
         }
         else
         {
-            // TODO, alert no mana
+            // Alert no mana
+            alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
+            R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X, ALERT_MESSAGE_DEF_Y, "You need more  Mana", 2.0f, 1.0f);
         }
     }
 }
@@ -1164,6 +1177,28 @@ void G_PlayerSetWeapon(playerFPID_e weaponID)
         default:
             player.curWeapon = PLAYER_FP_HANDS;
             player.weaponDistance = 100.0f;
+            break;
+    }
+}
+
+void G_PlayerSetSpell(playerSpells_e spellID)
+{
+    switch(spellID)
+    {
+        case SPELL_NULL:
+            player.curSpell = SPELL_NULL;
+            break;
+        
+        case SPELL_FIREBALL1:
+            player.curSpell = SPELL_FIREBALL1;
+            break;
+    
+        case SPELL_ICEDART1:
+            player.curSpell = SPELL_ICEDART1;
+            break;
+
+        default:
+            player.curSpell = SPELL_NULL;
             break;
     }
 }

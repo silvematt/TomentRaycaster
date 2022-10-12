@@ -362,8 +362,16 @@ static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp)
             // Read columns
             while(curLine[indx] != '}')
             {
-                  map[column][row] = curLine[indx] - '0'; // Set int value
-                  indx++;  
+                  unsigned sum = 0;
+
+                  do
+                  {
+                        sum *= 10;
+                        sum += curLine[indx] - '0';
+                        map[column][row] = sum; // Set int value
+                        indx++;  
+                  } while(curLine[indx] != ',' && curLine[indx] != '}');
+
 
                   // If next is comma, continue and get next number
                   if(curLine[indx] == ',')

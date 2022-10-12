@@ -2044,6 +2044,17 @@ void R_BlitColorIntoScreen(int color, SDL_Rect* pos)
 
 void R_QueueAlertMessage(alertMessage_t* m, int x, int y, char* msg, float duration, float size)
 {
+    // Prevent to queue a message identical to the one that is currently displayed
+    // (Used for example when the player has no mana and spams the spell)
+    if(alertMessagesHead != NULL)
+    {
+        if(strcmp(msg, alertMessagesHead->message) == 0)
+        {
+            free(m);
+            return;
+        }
+    }
+
     m->x = x;
     m->y = y;
     m->message = msg;
