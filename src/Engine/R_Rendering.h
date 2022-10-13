@@ -239,7 +239,7 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite);
 //-------------------------------------
 // Given a level and the grid coordinates, returns what is in the map
 //-------------------------------------
-int R_GetValueFromLevel(int level, int y, int x);
+wallObject_t* R_GetWallObjectFromMap(int level, int y, int x);
 
 //-------------------------------------
 // Given a level and the grid coordinates, returns what is in the map

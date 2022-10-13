@@ -13,11 +13,23 @@ tomentdatapack_t tomentdatapack;
 void D_InitObject(object_t* obj)
 {
     obj->flags = 0;
-
-    obj->topTexture = &obj->texture;
-    obj->bottomTexture = &obj->texture;
-
     obj->animations = NULL;
+}
+
+//-------------------------------------
+// Sets defauls for an object
+//-------------------------------------
+void D_InitWallAsset(wallAsset_t* obj)
+{
+    obj->flags = 0;
+}
+
+//-------------------------------------
+// Sets defauls for an object
+//-------------------------------------
+void D_InitTextureAsset(textureObject_t* obj)
+{
+    obj->flags = 0;
 }
 
 //-------------------------------------
@@ -102,8 +114,7 @@ void D_InitAssetManager(void)
     D_InitFontSheets();
 
     D_InitEnginesDefaults();
-    D_InitLoadCeilings();
-    D_InitLoadFloors();
+    D_InitLoadTextures();
     D_InitLoadWalls();
     D_InitLoadSprites();
     D_InitLoadSkies();
@@ -115,6 +126,34 @@ void D_InitAssetManager(void)
 
 void D_InitUIAssets(void)
 {    
+    uiAssets_t* selectCursor = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* menuTitle = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* healthBarEmpty = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* healthBarFill = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* manaBarEmpty = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* manaBarFill = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* iconFists = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* iconAxe = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* iconSpellFireball1 = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* crosshair = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* iconSpellIceDart = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* crosshairHit = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+
+    tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR] = selectCursor;
+    tomentdatapack.uiAssets[M_ASSET_TITLE] = menuTitle;
+    tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY] = healthBarEmpty;
+    tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL] = healthBarFill;
+    tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY] = manaBarEmpty;
+    tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL] = manaBarFill;
+    tomentdatapack.uiAssets[G_ASSET_ICON_FISTS] = iconFists;
+    tomentdatapack.uiAssets[G_ASSET_ICON_AXE] = iconAxe;
+    tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1] = iconSpellFireball1;
+    tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR] = crosshair;
+    tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1] = iconSpellIceDart;
+    tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT] = crosshairHit;
+
+    tomentdatapack.uiAssetsLenght = 12;
+
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
     SDL_Surface *temp1;     // Surface
@@ -126,10 +165,10 @@ void D_InitUIAssets(void)
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MENU_SELECT_CURSOR].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_SELECT_CURSOR))
-        tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
-    SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
     // MENU_TITLE
@@ -137,10 +176,10 @@ void D_InitUIAssets(void)
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MENU_TITLE].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_TITLE))
-        tomentdatapack.uiAssets[M_ASSET_TITLE].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        tomentdatapack.uiAssets[M_ASSET_TITLE]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
-    SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_TITLE].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_TITLE]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
     // HEALTHBAR_EMPTY
@@ -148,10 +187,10 @@ void D_InitUIAssets(void)
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_HEALTHBAR_EMPTY].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_HEALTHBAR_EMPTY))
-        tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
-    SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
     // HEALTHBAR_FILL
@@ -160,8 +199,8 @@ void D_InitUIAssets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_HEALTHBAR_FILL))
     {
-        tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -173,8 +212,8 @@ void D_InitUIAssets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_MANABAR_EMPTY))
     {
-        tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -186,8 +225,8 @@ void D_InitUIAssets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_MANABAR_FILL))
     {
-        tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -200,8 +239,8 @@ void D_InitUIAssets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_FISTS))
     {
-        tomentdatapack.uiAssets[G_ASSET_ICON_FISTS].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_FISTS].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.uiAssets[G_ASSET_ICON_FISTS]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_FISTS]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -213,8 +252,8 @@ void D_InitUIAssets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_AXE))
     {
-        tomentdatapack.uiAssets[G_ASSET_ICON_AXE].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_AXE].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.uiAssets[G_ASSET_ICON_AXE]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_AXE]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -226,8 +265,8 @@ void D_InitUIAssets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_SPELL_FIREBALL1))
     {
-        tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -239,8 +278,8 @@ void D_InitUIAssets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_UI_CROSSHAIR))
     {
-        tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -252,8 +291,8 @@ void D_InitUIAssets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_SPELL_ICEDART1))
     {
-        tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -265,8 +304,8 @@ void D_InitUIAssets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_UI_CROSSHAIR_HIT))
     {
-        tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT].texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
@@ -306,32 +345,38 @@ void D_InitEnginesDefaults(void)
     D_SetObject(texturefallback, EDEFAULT_1, tomentdatapack.enginesDefaults[EDEFAULT_1]->texture, NULL);
 }
 
-void D_InitLoadWalls(void)
+void D_InitLoadTextures(void)
 {
     // Create Objects
-    object_t* wall1 = (object_t*)malloc(sizeof(object_t));
-    object_t* wall1Alt = (object_t*)malloc(sizeof(object_t));
-    object_t* wall2 = (object_t*)malloc(sizeof(object_t));
-    object_t* gate1 = (object_t*)malloc(sizeof(object_t));
-    object_t* gate1Alt = (object_t*)malloc(sizeof(object_t));
-    object_t* castleDoorsToLvl2 = (object_t*)malloc(sizeof(object_t));
+    textureObject_t* wallBrick1 = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* wallBrick1Dark = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* floorBrick1 = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* ceilingWood1 = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* wall2 = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* gate1 = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* gate1Alt = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* castleDoor = (textureObject_t*)malloc(sizeof(textureObject_t));
 
-    tomentdatapack.wallsLength = 9; // Set length
+    tomentdatapack.texturesLength = 8; // Set length
 
-    D_InitObject(wall1);
-    D_InitObject(wall1Alt);
-    D_InitObject(wall2);
-    D_InitObject(gate1);
-    D_InitObject(gate1Alt);
-    D_InitObject(castleDoorsToLvl2);
+    D_InitTextureAsset(wallBrick1);
+    D_InitTextureAsset(wallBrick1Dark);
+    D_InitTextureAsset(floorBrick1);
+    D_InitTextureAsset(ceilingWood1);
+    D_InitTextureAsset(wall2);
+    D_InitTextureAsset(gate1);
+    D_InitTextureAsset(gate1Alt);
+    D_InitTextureAsset(castleDoor);
 
     // Put objects in the datapack
-    tomentdatapack.walls[W_1] = wall1;
-    tomentdatapack.walls[W_1Alt] = wall1Alt;
-    tomentdatapack.walls[W_2] = wall2;
-    tomentdatapack.walls[WD_Gate1] = gate1;
-    tomentdatapack.walls[WD_Gate1Alt] = gate1Alt;
-    tomentdatapack.walls[WT_CastleDoorsLvl2] = castleDoorsToLvl2;
+    tomentdatapack.textures[TEXTURE_WallBrick1] = wallBrick1;
+    tomentdatapack.textures[TEXTURE_WallBrick1Dark] = wallBrick1Dark;
+    tomentdatapack.textures[TEXTURE_FloorBrick1] = floorBrick1;
+    tomentdatapack.textures[TEXTURE_CeilingWood1] = ceilingWood1;
+    tomentdatapack.textures[TEXTURE_Wall2] = wall2;
+    tomentdatapack.textures[TEXTURE_Gate1] = gate1;
+    tomentdatapack.textures[TEXTURE_Gate1Alt] = gate1Alt;
+    tomentdatapack.textures[TEXTURE_CastleDoor] = castleDoor;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -339,152 +384,162 @@ void D_InitLoadWalls(void)
     SDL_RWops* sdlWops;     // Structure to read bytes
     int offset;             // Offset in the img.archt
 
-    // W_1
+    // Wall Brick 1
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_W_1].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_W_1].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_W_1))
-    {
-        tomentdatapack.walls[W_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
-        tomentdatapack.walls[W_1]->bottomTexture = &tomentdatapack.ceilings[C_1]->texture;
-    }
+        tomentdatapack.textures[TEXTURE_WallBrick1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
     else
-        tomentdatapack.walls[W_1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+        tomentdatapack.textures[TEXTURE_WallBrick1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
-    // W_1Alt
+    // Wall Brick 1
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_W_1Alt].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_W_1Alt].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_W_1Alt))
-        tomentdatapack.walls[W_1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.textures[TEXTURE_WallBrick1Dark]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
     else
-        tomentdatapack.walls[W_1Alt]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+        tomentdatapack.textures[TEXTURE_WallBrick1Dark]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
-    // W_2
-    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_W_2].startingOffset);
-    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_W_2].size);
-    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_W_2))
-        tomentdatapack.walls[W_2]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
-    else
-        tomentdatapack.walls[W_2]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
-    SDL_FreeSurface(temp1);
-
-    // WD_Gate1
-    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1].startingOffset);
-    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1].size);
-    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_WD_Gate1))
-        tomentdatapack.walls[WD_Gate1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
-    else
-        tomentdatapack.walls[WD_Gate1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
-    U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
-    U_SetBit(&tomentdatapack.walls[WD_Gate1]->flags, 2); // Set Door bit flag to 1
-    SDL_FreeSurface(temp1);
-
-    // WD_Gate1Alt
-    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1Alt].startingOffset);
-    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1Alt].size);
-    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_WD_Gate1Alt))
-        tomentdatapack.walls[WD_Gate1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
-    else
-        tomentdatapack.walls[WD_Gate1Alt]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
-    U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 0); // Set Thin Wall bit flag to 1,
-    U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 1); // Set Vertical bit flag to 1
-    U_SetBit(&tomentdatapack.walls[WD_Gate1Alt]->flags, 2); // Set Door bit flag to 1
-    SDL_FreeSurface(temp1);
-
-    // WD_CastleDoorsLvl2
-    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WT_CASTLE_DOORS].startingOffset);
-    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WT_CASTLE_DOORS].size);
-    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_WT_CASTLE_DOORS))
-        tomentdatapack.walls[WT_CastleDoorsLvl2]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
-    else
-        tomentdatapack.walls[WT_CastleDoorsLvl2]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
-    U_SetBit(&tomentdatapack.walls[WT_CastleDoorsLvl2]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
-    U_SetBit(&tomentdatapack.walls[WT_CastleDoorsLvl2]->flags, 2); // Set Door bit flag to 1
-    U_SetBit(&tomentdatapack.walls[WT_CastleDoorsLvl2]->flags, 3); // Set Trigger bit flag to 1
-
-    // Set callback and data because this is a trigger
-    tomentdatapack.walls[WT_CastleDoorsLvl2]->Callback = D_CallbackChangeMap;
-    tomentdatapack.walls[WT_CastleDoorsLvl2]->data = "lvl2";
-    
-    SDL_FreeSurface(temp1);
-
-    // Final sets
-    D_SetObject(wall1, W_1, tomentdatapack.walls[W_1]->texture, wall1Alt);
-    D_SetObject(wall1Alt, W_1Alt, tomentdatapack.walls[W_1Alt]->texture, NULL);
-    D_SetObject(wall2, W_2, tomentdatapack.walls[W_2]->texture, NULL);
-    D_SetObject(gate1, WD_Gate1, tomentdatapack.walls[WD_Gate1]->texture, NULL);
-    D_SetObject(gate1Alt, WD_Gate1Alt, tomentdatapack.walls[WD_Gate1Alt]->texture, NULL);
-    D_SetObject(castleDoorsToLvl2, WT_CastleDoorsLvl2, tomentdatapack.walls[WT_CastleDoorsLvl2]->texture, NULL);
-}
-
-void D_InitLoadFloors(void)
-{
-    // Create Objects
-    object_t* floor1 = (object_t*)malloc(sizeof(object_t));
-    tomentdatapack.floorsLength = 1; // Set length
-
-    D_InitObject(floor1);
-
-    // Put objects in the datapack
-    tomentdatapack.floors[F_1] = floor1;
-
-    // Fill objects
-    // Convert all the surfaces that we will load in the same format as the win_surface
-    SDL_Surface *temp1;     // Surface
-    SDL_RWops* sdlWops;     // Structure to read bytes
-    int offset;             // Offset in the img.archt
-
-    // Floor 1
+    // Floor Brick 1
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_F_1].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_F_1].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_F_1))
-        tomentdatapack.floors[F_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.textures[TEXTURE_FloorBrick1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
     else
-        tomentdatapack.floors[F_1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+        tomentdatapack.textures[TEXTURE_FloorBrick1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
-    // Final sets
-    D_SetObject(floor1, F_1, tomentdatapack.floors[F_1]->texture, NULL);
-}
-
-void D_InitLoadCeilings(void)
-{
-    // Create Objects
-    object_t* ceiling1 = (object_t*)malloc(sizeof(object_t));
-    tomentdatapack.ceilingsLength = 1; // Set length
-
-    D_InitObject(ceiling1);
-
-    // Put objects in the datapack
-    tomentdatapack.ceilings[C_1] = ceiling1;
-
-    // Fill objects
-    // Convert all the surfaces that we will load in the same format as the win_surface
-    SDL_Surface *temp1;     // Surface
-    SDL_RWops* sdlWops;     // Structure to read bytes
-    int offset;             // Offset in the img.archt
-
-    // Ceiling 1
+    // Ceiling Wood 1
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_C_1].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_C_1].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_C_1))
-        tomentdatapack.ceilings[C_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.textures[TEXTURE_CeilingWood1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
     else
-        tomentdatapack.ceilings[C_1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+        tomentdatapack.textures[TEXTURE_CeilingWood1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    SDL_FreeSurface(temp1);
+
+    // Wall 2
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_W_2].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_W_2].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_W_2))
+        tomentdatapack.textures[TEXTURE_Wall2]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.textures[TEXTURE_Wall2]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    SDL_FreeSurface(temp1);
+
+    // Gate 1
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_WD_Gate1))
+        tomentdatapack.textures[TEXTURE_Gate1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.textures[TEXTURE_Gate1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    SDL_FreeSurface(temp1);
+
+    // Gate 2
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1Alt].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WD_Gate1Alt].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_WD_Gate1Alt))
+        tomentdatapack.textures[TEXTURE_Gate1Alt]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.textures[TEXTURE_Gate1Alt]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    SDL_FreeSurface(temp1);
+
+    // Castle Door
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WT_CASTLE_DOORS].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WT_CASTLE_DOORS].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_WT_CASTLE_DOORS))
+        tomentdatapack.textures[TEXTURE_CastleDoor]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.textures[TEXTURE_CastleDoor]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
     // Final sets
-    D_SetObject(ceiling1, C_1, tomentdatapack.ceilings[C_1]->texture, NULL);
+    wallBrick1->ID = TEXTURE_WallBrick1;
+    wallBrick1Dark->ID = TEXTURE_WallBrick1Dark;
+    floorBrick1->ID = TEXTURE_FloorBrick1;
+    ceilingWood1->ID = TEXTURE_CeilingWood1;
+    wall2->ID = TEXTURE_Wall2;
+    gate1->ID = TEXTURE_Gate1;
+    gate1Alt->ID = TEXTURE_Gate1Alt;
+    castleDoor->ID = TEXTURE_CastleDoor;
 }
+
+void D_InitLoadWalls(void)
+{
+    // Create Objects
+    wallAsset_t* wall = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+    wallAsset_t* thinWallHor = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+    wallAsset_t* thinWallVer = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+    wallAsset_t* doorHor = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+    wallAsset_t* doorVer = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+    wallAsset_t* wallTriggerChangeMap = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+
+    tomentdatapack.wallsLength = 6; // Set length
+
+    D_InitWallAsset(wall);
+    D_InitWallAsset(thinWallHor);
+    D_InitWallAsset(thinWallVer);
+    D_InitWallAsset(doorHor);
+    D_InitWallAsset(doorVer);
+    D_InitWallAsset(wallTriggerChangeMap);
+
+    // Put objects in the datapack
+    tomentdatapack.walls[W_Wall] = wall;
+    tomentdatapack.walls[W_ThinWallHor] = thinWallHor;
+    tomentdatapack.walls[W_ThinWallVer] = thinWallVer;
+    tomentdatapack.walls[W_DoorHor] = doorHor;
+    tomentdatapack.walls[W_DoorVer] = doorVer;
+    tomentdatapack.walls[W_WallTriggerChangeMap] = wallTriggerChangeMap;
+
+    // Set Wall
+    tomentdatapack.walls[W_Wall]->ID = W_Wall;
+    tomentdatapack.walls[W_Wall]->flags = 0;
+    tomentdatapack.walls[W_Wall]->Callback = NULL;
+
+    // Set Thin Wall Hor
+    tomentdatapack.walls[W_ThinWallHor]->ID = W_Wall;
+    U_SetBit(&tomentdatapack.walls[W_ThinWallHor]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
+    tomentdatapack.walls[W_ThinWallHor]->Callback = NULL;
+
+    // Set Thin Wall Ver
+    tomentdatapack.walls[W_ThinWallVer]->ID = W_DoorHor;
+    U_SetBit(&tomentdatapack.walls[W_ThinWallVer]->flags, 0); // Set Thin Wall bit flag to 1
+    U_SetBit(&tomentdatapack.walls[W_ThinWallVer]->flags, 1); // Set Vertical bit flag to 1
+    tomentdatapack.walls[W_ThinWallVer]->Callback = NULL;
+
+    // Set DoorHor
+    tomentdatapack.walls[W_DoorHor]->ID = W_DoorHor;
+    U_SetBit(&tomentdatapack.walls[W_DoorHor]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
+    U_SetBit(&tomentdatapack.walls[W_DoorHor]->flags, 2); // Set Door bit flag to 1
+    tomentdatapack.walls[W_DoorHor]->Callback = NULL;
+
+    // Set DoorVer
+    tomentdatapack.walls[W_DoorVer]->ID = W_DoorVer;
+    U_SetBit(&tomentdatapack.walls[W_DoorVer]->flags, 0); // Set Thin Wall bit flag to 1,
+    U_SetBit(&tomentdatapack.walls[W_DoorVer]->flags, 1); // Set Vertical bit flag to 1
+    U_SetBit(&tomentdatapack.walls[W_DoorVer]->flags, 2); // Set Door bit flag to 1
+    tomentdatapack.walls[W_DoorVer]->Callback = NULL;
+
+    // WD_CastleDoorsLvl2
+    tomentdatapack.walls[W_WallTriggerChangeMap]->ID = W_WallTriggerChangeMap;
+    U_SetBit(&tomentdatapack.walls[W_WallTriggerChangeMap]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
+    U_SetBit(&tomentdatapack.walls[W_WallTriggerChangeMap]->flags, 2); // Set Door bit flag to 1
+    U_SetBit(&tomentdatapack.walls[W_WallTriggerChangeMap]->flags, 3); // Set Trigger bit flag to 1
+    // Set callback and data because this is a trigger
+    tomentdatapack.walls[W_WallTriggerChangeMap]->Callback = D_CallbackChangeMap;
+}
+
 
 void D_InitLoadSprites(void)
 {
@@ -782,6 +837,12 @@ void D_InitLoadSprites(void)
 
 void D_InitFontSheets(void)
 {
+    fontsheet_t* fontBlckry = (fontsheet_t*)malloc(sizeof(fontsheet_t));
+
+    tomentdatapack.fontsheetsLength = 1;
+
+    tomentdatapack.fontsheets[FONT_BLKCRY] = fontBlckry;
+
     // Convert all the surfaces that we will load in the same format as the win_surface
     SDL_Surface *temp1;     // Surface
     SDL_RWops* sdlWops;     // Structure to read bytes
@@ -791,15 +852,13 @@ void D_InitFontSheets(void)
     glyphSurface = SDL_CreateRGBSurfaceWithFormat(0, 32, 32, 24, win_surface->format->format);
     SDL_FillRect(glyphSurface, NULL, r_transparencyColor);
 
-    tomentdatapack.fontsheetsLenghth = 1; // Set length
-
     // Load BLCKCRY font
     int width = 32;
     int nHorElements = 16;
     int nVerElements = 6;
-    tomentdatapack.fontsheets[FONT_BLKCRY].width = width;
-    tomentdatapack.fontsheets[FONT_BLKCRY].numHorElements = nHorElements;
-    tomentdatapack.fontsheets[FONT_BLKCRY].numVerElements = nVerElements;
+    tomentdatapack.fontsheets[FONT_BLKCRY]->width = width;
+    tomentdatapack.fontsheets[FONT_BLKCRY]->numHorElements = nHorElements;
+    tomentdatapack.fontsheets[FONT_BLKCRY]->numVerElements = nVerElements;
 
     // Load sheet and put it into texture
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_BLKCRY_TEXT_SHEET].startingOffset);
@@ -807,16 +866,16 @@ void D_InitFontSheets(void)
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
     if(D_CheckTextureLoaded(temp1, IMG_ID_BLKCRY_TEXT_SHEET))
     {
-        tomentdatapack.fontsheets[FONT_BLKCRY].texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
-        SDL_SetColorKey(tomentdatapack.fontsheets[FONT_BLKCRY].texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        tomentdatapack.fontsheets[FONT_BLKCRY]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        SDL_SetColorKey(tomentdatapack.fontsheets[FONT_BLKCRY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        tomentdatapack.fontsheets[FONT_BLKCRY].texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+        tomentdatapack.fontsheets[FONT_BLKCRY]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
 
     // Calculate Glyph Width (used for spacing)
-    SDL_Rect glyphSurfaceRect = {0, 0, tomentdatapack.fontsheets[FONT_BLKCRY].width, tomentdatapack.fontsheets[FONT_BLKCRY].width};
+    SDL_Rect glyphSurfaceRect = {0, 0, tomentdatapack.fontsheets[FONT_BLKCRY]->width, tomentdatapack.fontsheets[FONT_BLKCRY]->width};
     // For each element
     for(int y = 0; y < nVerElements; y++)
     {
@@ -825,7 +884,7 @@ void D_InitFontSheets(void)
                 // Glyph to analyze
                 SDL_Rect srcRect = {x*width, y*width, width, width};
                 // Put it in the glyphSurface
-                SDL_BlitSurface(tomentdatapack.fontsheets[FONT_BLKCRY].texture, &srcRect, glyphSurface, NULL);
+                SDL_BlitSurface(tomentdatapack.fontsheets[FONT_BLKCRY]->texture, &srcRect, glyphSurface, NULL);
 
                 // Analyze the glyphSurface and calculate width by reading each line of the glyph and selecting the biggest distance of pixels between the first found and last found
                 int start = 0, end = 0, length = 0;
@@ -854,12 +913,12 @@ void D_InitFontSheets(void)
                                 length = (end - start)+1;
 
                             // Save length in 
-                            tomentdatapack.fontsheets[FONT_BLKCRY].glyphsWidth[y][x] = length+1;   // +1 because for this font it looks better if each character is given an extra space
+                            tomentdatapack.fontsheets[FONT_BLKCRY]->glyphsWidth[y][x] = length+1;   // +1 because for this font it looks better if each character is given an extra space
                         }                    
                 }
 
                 // Override length of first character, it is always the space
-                tomentdatapack.fontsheets[FONT_BLKCRY].glyphsWidth[0][0] = width/4;
+                tomentdatapack.fontsheets[FONT_BLKCRY]->glyphsWidth[0][0] = width/4;
 
                 // Reset the glyphSurface
                 SDL_FillRect(glyphSurface, NULL, r_transparencyColor);

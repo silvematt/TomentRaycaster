@@ -4,6 +4,7 @@
 
 map_t currentMap;
 
+static void I_LoadWallMapFromFile(wallObject_t map[MAP_HEIGHT][MAP_WIDTH], FILE* fp);
 static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp);
 static void I_LoadIntFromFile(FILE* fp, int* toLoad);
 static void I_LoadBoolFromFile(FILE* fp, bool* toLoad);
@@ -90,9 +91,9 @@ void M_LoadMapAsCurrent(char* mapID)
       I_LoadFloatFromFile(fp, &currentMap.playerStartingRot);
 
       // Load Wall Map
-      I_LoadMapFromFile(currentMap.level0, fp);
-      I_LoadMapFromFile(currentMap.level1, fp);
-      I_LoadMapFromFile(currentMap.level2, fp);
+      I_LoadWallMapFromFile(currentMap.level0, fp);
+      I_LoadWallMapFromFile(currentMap.level1, fp);
+      I_LoadWallMapFromFile(currentMap.level2, fp);
 
       // Load Floor Map
       I_LoadMapFromFile(currentMap.floorMap, fp);
@@ -161,7 +162,7 @@ void M_LoadObjectTMap(void)
                         currentMap.objectTMapLevel0[y][x] = ObjT_Empty;
 
                         // Check if it's a wall
-                        int wallID = currentMap.level0[y][x];
+                        int wallID = currentMap.level0[y][x].assetID;
                         if(wallID > 0)
                         {
                               currentMap.objectTMapLevel0[y][x] = ObjT_Wall;
@@ -203,7 +204,7 @@ void M_LoadObjectTMap(void)
                         currentMap.objectTMapLevel1[y][x] = ObjT_Empty;
 
                         // Check if it's a wall
-                        wallID = currentMap.level1[y][x];
+                        wallID = currentMap.level1[y][x].assetID;
                         if(wallID > 0)
                         {
                               currentMap.objectTMapLevel1[y][x] = ObjT_Wall;
@@ -243,7 +244,7 @@ void M_LoadObjectTMap(void)
                         currentMap.objectTMapLevel2[y][x] = ObjT_Empty;
 
                         // Check if it's a wall
-                        wallID = currentMap.level2[y][x];
+                        wallID = currentMap.level2[y][x].assetID;
                         if(wallID > 0)
                         {
                               currentMap.objectTMapLevel2[y][x] = ObjT_Wall;
@@ -293,7 +294,7 @@ void M_LoadCollisionMaps(void)
                         currentMap.collisionMapLevel0[y][x] = 0;
 
                         // Check if it's a wall
-                        int wallID = currentMap.level0[y][x];
+                        int wallID = currentMap.level0[y][x].assetID;
                         if(wallID > 0)
                               currentMap.collisionMapLevel0[y][x] = 1;
 
@@ -309,7 +310,7 @@ void M_LoadCollisionMaps(void)
                         currentMap.collisionMapLevel1[y][x] = 0;
 
                         // Check if it's a wall
-                        wallID = currentMap.level1[y][x];
+                        wallID = currentMap.level1[y][x].assetID;
                         if(wallID > 0)
                               currentMap.collisionMapLevel1[y][x] = 1;
 
@@ -324,7 +325,7 @@ void M_LoadCollisionMaps(void)
                         currentMap.collisionMapLevel2[y][x] = 0;
 
                         // Check if it's a wall
-                        wallID = currentMap.level2[y][x];
+                        wallID = currentMap.level2[y][x].assetID;
                         if(wallID > 0)
                               currentMap.collisionMapLevel2[y][x] = 1;
 
@@ -334,6 +335,155 @@ void M_LoadCollisionMaps(void)
                               U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 0)
                               currentMap.collisionMapLevel2[y][x] = 1;
                   }
+}
+
+
+static void I_LoadWallMapFromFile(wallObject_t map[MAP_HEIGHT][MAP_WIDTH], FILE* fp)
+{
+      // Load Map
+      char curLine[MAX_STRL_R];   // Current line we're reading
+      char* str;                  // Used to strchr
+      int indx;                   // Index of the =
+      int i;                      // Index for writing in new string
+
+      fgets(curLine, MAX_STRL_R, fp); // Layout =
+      fgets(curLine, MAX_STRL_R, fp); // [ start of map
+      fgets(curLine, MAX_STRL_R, fp); // First Row
+
+      // Find the first row
+      str = strchr(curLine, '{');
+      indx = (int)(str - curLine) + 1; // '('
+
+      bool mapDone = false;
+      int column = 0;
+      int row = 0;
+
+      while(!mapDone)
+      {
+            // Read columns
+            while(curLine[indx] != '}')
+            {
+                  indx++;
+                  unsigned sum = 0;
+                  
+                  // Read Asset ID
+                  do
+                  {
+                        sum *= 10;
+                        sum += curLine[indx] - '0';
+                        map[column][row].assetID = sum; // Set int value
+                        indx++;  
+                  } while(curLine[indx] != ',' && curLine[indx] != ')');
+                  indx++;
+                  
+                  // Read Top Texture
+                  sum = 0;
+                  do
+                  {
+                        sum *= 10;
+                        sum += curLine[indx] - '0';
+                        map[column][row].texturesArray[TEXTURE_ARRAY_TOP] = sum; // Set int value
+                        indx++;  
+                  } while(curLine[indx] != ',' && curLine[indx] != ')');
+                  indx++;
+
+                  // Read Bottom Texture
+                  sum = 0;
+                  do
+                  {
+                        sum *= 10;
+                        sum += curLine[indx] - '0';
+                        map[column][row].texturesArray[TEXTURE_ARRAY_BOTTOM] = sum; // Set int value
+                        indx++;  
+                  } while(curLine[indx] != ',' && curLine[indx] != ')');
+                  indx++;
+
+                  // Read Left Texture
+                  sum = 0;
+                  do
+                  {
+                        sum *= 10;
+                        sum += curLine[indx] - '0';
+                        map[column][row].texturesArray[TEXTURE_ARRAY_LEFT] = sum; // Set int value
+                        indx++;  
+                  } while(curLine[indx] != ',' && curLine[indx] != ')');
+                  indx++;
+
+                  // Read Right Texture
+                  sum = 0;
+                  do
+                  {
+                        sum *= 10;
+                        sum += curLine[indx] - '0';
+                        map[column][row].texturesArray[TEXTURE_ARRAY_RIGHT] = sum; // Set int value
+                        indx++;  
+                  } while(curLine[indx] != ',' && curLine[indx] != ')');
+                  indx++;
+
+                  // Read Forward Texture
+                  sum = 0;
+                  do
+                  {
+                        sum *= 10;
+                        sum += curLine[indx] - '0';
+                        map[column][row].texturesArray[TEXTURE_ARRAY_UP] = sum; // Set int value
+                        indx++;  
+                  } while(curLine[indx] != ',' && curLine[indx] != ')');
+                  indx++;
+
+                  // Read Back Texture
+                  sum = 0;
+                  do
+                  {
+                        sum *= 10;
+                        sum += curLine[indx] - '0';
+                        map[column][row].texturesArray[TEXTURE_ARRAY_DOWN] = sum; // Set int value
+                        indx++;  
+                  } while(curLine[indx] != ',' && curLine[indx] != ')');
+                  indx++;
+
+                  // Read Data
+                  int dataIndex = 0;
+                  indx++;
+                  while(curLine[indx] != '"')
+                  {
+                        map[column][row].data[dataIndex] = curLine[indx];
+                        dataIndex++;
+                        indx++;
+                  }
+                  map[column][row].data[dataIndex] = '\0';
+                  indx++;
+                  indx++;
+
+                  // If next is comma, continue and get next number
+                  if(curLine[indx] == ',')
+                  {
+                        indx++;
+                        row++;
+                  }
+                  
+                  //printf("%c!\n", curLine[indx]);
+            }
+
+            // Row end, check if there's a next row or if it is finished
+            if(curLine[indx + 1] == ',')
+            {
+                  // There is a next column
+                  column++;
+                  indx = 1; // Move at the start of the next column
+                  row = 0;
+                  fgets(curLine, MAX_STRL_R, fp); // Get next line
+                  continue;
+            }
+            else if(curLine[indx + 1] == ']')
+            {
+                  // Map has finished loading
+                  mapDone = true;
+                  break;
+            }
+      }
+
+      printf("%s\n", map[0][0].data);
 }
 
 static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp)
@@ -355,7 +505,6 @@ static void I_LoadMapFromFile(int map[MAP_HEIGHT][MAP_WIDTH], FILE* fp)
       bool mapDone = false;
       int column = 0;
       int row = 0;
-      bool rowEnded = false;
 
       while(!mapDone)
       {
@@ -506,7 +655,6 @@ static void I_LoadFloatFromFile(FILE* fp, float* toLoad)
 
 static void I_ReadStringFromFile(FILE* fp, char toWrite[MAX_STRLEN])
 {
-      // Load Map
       char curLine[MAX_STRL_R];   // Current line we're reading
       char* str;                  // Used to strchr
       int indx;                   // Index of the =

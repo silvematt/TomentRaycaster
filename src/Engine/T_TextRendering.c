@@ -15,7 +15,7 @@ void T_DisplayText(int fontID, char* text, int x, int y)
     char curC = 0;
 
     // Width of the font
-    int width = tomentdatapack.fontsheets[fontID].width;
+    int width = tomentdatapack.fontsheets[fontID]->width;
 
     int curY = y; // y can be affected by \n
 
@@ -40,11 +40,11 @@ void T_DisplayText(int fontID, char* text, int x, int y)
             // Blit it on the screen
             SDL_Rect screenPos = {curDrawingX, curY, width, width};
             SDL_Rect size = {(texX * width), (texY * width), width, width};
-            R_BlitIntoScreen(&size, tomentdatapack.fontsheets[fontID].texture, &screenPos);
+            R_BlitIntoScreen(&size, tomentdatapack.fontsheets[fontID]->texture, &screenPos);
 
             // Next
             curCIndex++;
-            curDrawingX += tomentdatapack.fontsheets[fontID].glyphsWidth[texY][texX];
+            curDrawingX += tomentdatapack.fontsheets[fontID]->glyphsWidth[texY][texX];
         }
     }
 }
@@ -62,7 +62,7 @@ void T_DisplayTextScaled(int fontID, char* text, int x, int y, float scaleFactor
     char curC = 0;
 
     // Width of the font
-    int width = tomentdatapack.fontsheets[fontID].width;
+    int width = tomentdatapack.fontsheets[fontID]->width;
 
     int curY = y; // y can be affected by \n
 
@@ -87,11 +87,11 @@ void T_DisplayTextScaled(int fontID, char* text, int x, int y, float scaleFactor
             // Blit it on the screen
             SDL_Rect screenPos = {curDrawingX, curY, width * scaleFactor, width* scaleFactor};
             SDL_Rect size = {(texX * width), (texY * width), width, width};
-            R_BlitIntoScreenScaled(&size, tomentdatapack.fontsheets[fontID].texture, &screenPos);
+            R_BlitIntoScreenScaled(&size, tomentdatapack.fontsheets[fontID]->texture, &screenPos);
 
             // Next
             curCIndex++;
-            curDrawingX += tomentdatapack.fontsheets[fontID].glyphsWidth[texY][texX] * scaleFactor;
+            curDrawingX += tomentdatapack.fontsheets[fontID]->glyphsWidth[texY][texX] * scaleFactor;
         }
     }
 }

@@ -163,7 +163,7 @@ typedef struct walldata_s
     bool isVertical;
     vector2Int_t gridPos;
     float distance;
-    int idHit;
+    struct wallObject_s* objectHit;
     int level;
     
     // Extra Data

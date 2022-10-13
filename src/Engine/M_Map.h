@@ -17,6 +17,8 @@
 
 #define MAX_N_LEVELS 3
 
+#define MAX_MAP_NAME_LENGTH 16
+
 // Types of object
 typedef enum objectType_e
 {
@@ -40,9 +42,9 @@ typedef struct map_s
     float playerStartingRot;
     
     // Walls on levels
-    int level0[MAP_HEIGHT][MAP_WIDTH];
-    int level1[MAP_HEIGHT][MAP_WIDTH];
-    int level2[MAP_HEIGHT][MAP_WIDTH];
+    wallObject_t level0[MAP_HEIGHT][MAP_WIDTH];
+    wallObject_t level1[MAP_HEIGHT][MAP_WIDTH];
+    wallObject_t level2[MAP_HEIGHT][MAP_WIDTH];
 
     int floorMap[MAP_HEIGHT][MAP_WIDTH];
     int ceilingMap[MAP_HEIGHT][MAP_WIDTH];

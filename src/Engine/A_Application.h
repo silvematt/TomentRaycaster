@@ -15,7 +15,7 @@
 #define MAX_STRLEN 255      // Max lenght of a filepath
 
 #define MAX_FILEPATH_L 255  // Max lenght of a filepath
-#define MAX_STRL_R 255      // Max lenght of a fgets while reading
+#define MAX_STRL_R 8192      // Max lenght of a fgets while reading
 
 
 // Holds the current game state

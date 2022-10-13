@@ -124,7 +124,7 @@ void R_DrawMinimap(void)
             curRect.y = y * TILE_SIZE / MINIMAP_DIVIDER;
 
             // If it is an empty space
-            if(R_GetValueFromLevel(player.level, y, x) == 0)
+            if(R_GetWallObjectFromMap(player.level, y, x)->assetID == 0)
             {
                 R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 128, 128, 128), &curRect);
             }
@@ -325,9 +325,9 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
     int vcurGridX;
     int vcurGridY;
 
-    int hobjectIDHit = -1;    // The ID of the object hit
-    int vobjectIDHit = -1;    // The ID of the object hit
-    int objectIDHit;
+    wallObject_t* hobjectIDHit = NULL;    // The ID of the object hit
+    wallObject_t* vobjectIDHit = NULL;    // The ID of the object hit
+    wallObject_t* correctObjectHit = NULL;    // The ID of the object hit
 
     // Final grid point
     int fcurGridX;
@@ -416,15 +416,15 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                         R_AddDeadDynamicToVisibleSprite(level, hcurGridX, hcurGridY);
                 }
                 
-                int idHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
+                wallObject_t* objectHit = R_GetWallObjectFromMap(level, hcurGridY, hcurGridX);
                 // If it hit a wall, register it, save the distance and get out of the while
-                if(idHit >= 1)
+                if(objectHit->assetID >= 1)
                 {
                     // Check if this is a thin wall
-                    if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 0) == 1)
+                    if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 0) == 1)
                     {
                         // Check if this is an Horzintal thin wall (if it is a vertical, just ignore it)
-                        if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 0)
+                        if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 1) == 0)
                         {
                             // Add half a tile to the current point
                             hcurx += (Xa/2);
@@ -459,7 +459,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                     else // This is a normal wall
                     {
                         hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
-                        hobjectIDHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
+                        hobjectIDHit = objectHit;
                         break;
                     }
                 }
@@ -541,16 +541,15 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                         R_AddDeadDynamicToVisibleSprite(level, vcurGridX, vcurGridY);
                 }
 
-                int idHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
-
+                wallObject_t* objectHit = R_GetWallObjectFromMap(level, vcurGridY, vcurGridX);
                 // If it hit a wall, register it, save the distance and get out of the while
-                if(idHit >= 1)
+                if(objectHit->assetID >= 1)
                 {
                     // Check if this is a thin wall
-                    if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 0) == 1)
+                    if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 0) == 1)
                     {
                             // Check if this is an Vertical thin wall (if it is an horizontal, just ignore it)
-                        if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 1)
+                        if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 1) == 1)
                         {
                             // This is a thin wall, check if we hit it or if it was occluded by the wall
 
@@ -587,7 +586,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                     else
                     {
                         vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
-                        vobjectIDHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
+                        vobjectIDHit = objectHit;
                         break;
                     }
                 }
@@ -621,7 +620,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
         {
             horizontal = true;
             correctDistance = hDistance;
-            objectIDHit = hobjectIDHit;
+            correctObjectHit = hobjectIDHit;
 
             wallPoint.x = hcurx;
             wallPoint.y = hcury;
@@ -636,7 +635,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
         {
             horizontal = false;
             correctDistance = vDistance;
-            objectIDHit = vobjectIDHit;
+            correctObjectHit = vobjectIDHit;
 
             wallPoint.x = vcurx;
             wallPoint.y = vcury;
@@ -676,7 +675,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
         float wallLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.wallLight)  / finalDistance;
         wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
 
-        object_t* curObject = tomentdatapack.walls[objectIDHit];
+        wallObject_t* curObject = correctObjectHit;
 
         // Draw the walls as column of pixels
         if(horizontal && !isOffScreenBottom) 
@@ -688,11 +687,18 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             // but this calculation lets us slide the texture offset too for the doors
             int offset = (int)(hcurx - (G_GetDoorPosition(level, fcurGridY, fcurGridX))) % TILE_SIZE;
 
+            int textureType = 0;
             // If looking down, flip the texture offset
             if(rayAngle < M_PI)
+            {
                 offset = (TILE_SIZE-1) - offset;
+                textureType = TEXTURE_ARRAY_DOWN;
+            }
+            else
+                textureType = TEXTURE_ARRAY_UP;
             
-            R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            if(curObject->texturesArray[textureType] > 0)
+                R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -710,11 +716,20 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             int offset = (int)(vcury - (G_GetDoorPosition(level, fcurGridY, fcurGridX))) % TILE_SIZE;
             offset = SDL_clamp(offset, 0, TILE_SIZE);
 
+            int textureType = 0;
+
             // If looking left, flip the texture offset
             if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
+            {
                 offset = (TILE_SIZE-1) - offset;
 
-            R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+                textureType = TEXTURE_ARRAY_RIGHT;
+            }
+            else
+                textureType = TEXTURE_ARRAY_LEFT;
+
+            if(curObject->texturesArray[textureType] > 0)
+                R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -776,9 +791,10 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
     int vcurGridX;
     int vcurGridY;
 
-    int hobjectIDHit = -1;    // The ID of the object hit
-    int vobjectIDHit = -1;    // The ID of the object hit
-    int objectIDHit;
+    wallObject_t* hobjectIDHit = NULL;    // The ID of the object hit
+    wallObject_t* vobjectIDHit = NULL;    // The ID of the object hit
+
+    wallObject_t* correctObjectHit = NULL;    // The ID of the object hit
 
     // Final grid point
     int fcurGridX;
@@ -896,17 +912,18 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                     R_AddDeadDynamicToVisibleSprite(level, hcurGridX, hcurGridY);
             }
             
-            int idHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
+            
+            wallObject_t* objectHit = R_GetWallObjectFromMap(level, hcurGridY, hcurGridX);
             // If it hit a wall, register it, save the distance and get out of the while
-            if(idHit >= 1)
+            if(objectHit->assetID >= 1)
             {
                 // Check if this is a thin wall
-                if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 0) == 1)
+                if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 0) == 1)
                 {
                         thinWallHit = true;
 
                     // Check if this is an Horzintal thin wall (if it is a vertical, just ignore it)
-                    if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 0)
+                    if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 1) == 0)
                     {
                         // Add half a tile to the current point
                         hcurx += (horXa/2);
@@ -946,7 +963,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                 else // This is a normal wall
                 {
                     hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
-                    hobjectIDHit = R_GetValueFromLevel(level, hcurGridY, hcurGridX);
+                    hobjectIDHit = objectHit;
                     horHitted = true;
                 }
             }
@@ -1008,18 +1025,18 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                     R_AddDeadDynamicToVisibleSprite(level, vcurGridX, vcurGridY);
             }
 
-            int idHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
-
+            
+            wallObject_t* objectHit = R_GetWallObjectFromMap(level, vcurGridY, vcurGridX);
             // If it hit a wall, register it, save the distance and get out of the while
-            if(idHit >= 1)
+            if(objectHit->assetID >= 1)
             {
                 // Check if this is a thin wall
-                if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 0) == 1)
+                if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 0) == 1)
                 {
                     thinWallHit = true;
 
                         // Check if this is an Vertical thin wall (if it is an horizontal, just ignore it)
-                    if(U_GetBit(&tomentdatapack.walls[idHit]->flags, 1) == 1)
+                    if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 1) == 1)
                     {
                         // This is a thin wall, check if we hit it or if it was occluded by the wall
 
@@ -1062,7 +1079,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                 else
                 {
                     vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
-                    vobjectIDHit = R_GetValueFromLevel(level, vcurGridY, vcurGridX);
+                    vobjectIDHit = objectHit;
                     verHitted = true;
                 }
             }
@@ -1101,7 +1118,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             {
                 horizontal = true;
                 correctDistance = hDistance;
-                objectIDHit = hobjectIDHit;
+                correctObjectHit= hobjectIDHit;
 
                 wallPoint.x = hcurx;
                 wallPoint.y = hcury;
@@ -1116,7 +1133,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             {
                 horizontal = false;
                 correctDistance = vDistance;
-                objectIDHit = vobjectIDHit;
+                correctObjectHit = vobjectIDHit;
 
                 wallPoint.x = vcurx;
                 wallPoint.y = vcury;
@@ -1138,7 +1155,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             data->distance = correctDistance;
             data->gridPos.x = fcurGridX;
             data->gridPos.y = fcurGridY;
-            data->idHit = objectIDHit;
+            data->objectHit = correctObjectHit;
             data->isVertical = !horizontal;
 
             // Increment the hor/ver distance in base of what we found, increment what we found so we don't check it two times
@@ -1220,7 +1237,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
             float wallLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.wallLight)  / finalDistance;
             wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
 
-            object_t* curObject = tomentdatapack.walls[toDraw[tD].idHit];
+            wallObject_t* curObject = toDraw[tD].objectHit;
             
             // Draw the walls as column of pixels
             if(!toDraw[tD].isVertical && !isOffScreenBottom) 
@@ -1234,11 +1251,19 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                 int offset = (int)(toDraw[tD].curX) % TILE_SIZE; 
                 offset = SDL_clamp(offset, 0, TILE_SIZE);
 
+                int textureType = 0;
+
                 // If looking down, flip the texture offset
                 if(rayAngle < M_PI)
+                {
                     offset = (TILE_SIZE-1) - offset;
+                    textureType = TEXTURE_ARRAY_DOWN;
+                }
+                else
+                    textureType = TEXTURE_ARRAY_UP;
                 
-                R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+                if(curObject->texturesArray[textureType] > 0)
+                    R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
                 if(debugRendering)
                 {
@@ -1257,11 +1282,19 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
 
                 offset = SDL_clamp(offset, 0, TILE_SIZE);
 
+                int textureType = 0;
                 // If looking left, flip the texture offset
                 if(rayAngle > M_PI / 2 && rayAngle < (3*M_PI) / 2)
+                {
                     offset = (TILE_SIZE-1) - offset;
 
-                R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+                    textureType = TEXTURE_ARRAY_RIGHT;
+                }
+                else
+                    textureType = TEXTURE_ARRAY_LEFT;
+
+                if(curObject->texturesArray[textureType] > 0)
+                    R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
                 if(debugRendering)
                 {
@@ -1280,7 +1313,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         int idBelow = -1;
 
         if(level > 0)
-            idBelow = R_GetValueFromLevel(level-1, toDraw[tD].gridPos.y, toDraw[tD].gridPos.x);
+            idBelow = R_GetWallObjectFromMap(level-1, toDraw[tD].gridPos.y, toDraw[tD].gridPos.x)->assetID;
 
         bool isEmptyBelow = (idBelow == 0);
 
@@ -1301,7 +1334,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         int idAbove = -1;
 
         if(level+1 < MAX_N_LEVELS)
-            idAbove = R_GetValueFromLevel(level+1, toDraw[tD].gridPos.y, toDraw[tD].gridPos.x);
+            idAbove = R_GetWallObjectFromMap(level+1, toDraw[tD].gridPos.y, toDraw[tD].gridPos.x)->assetID;
 
         bool isEmptyAbove = (idAbove == 0);
 
@@ -1352,10 +1385,8 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
 
         bool isInWall = curGridX==wall->gridPos.x && curGridY==wall->gridPos.y;
         
-        int wallID = R_GetValueFromLevel(wall->level, curGridY, curGridX); 
-        
         // If wall ended
-        if(wallID == 0 || !isInWall)
+        if(wall->objectHit == 0 || !isInWall)
         {
             if(startedDrawing)
                 return;
@@ -1374,11 +1405,14 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
         // If the ray is in a grid that is inside the map
         if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
         {
-            // Check the floor texture at that point
-            if(wallID >= 1)
+            // Check the Bottom texture at that point
+            if(wall->objectHit->assetID >= 1)
             {
-                // Draw floor
-                R_DrawColumnOfPixelShaded(wall->x, y-1, y+1, R_GetPixelFromSurface(*tomentdatapack.walls[wallID]->bottomTexture, textureX, textureY), lightingMult, straightlinedist-1.0f);
+                // Draw Bottom
+                int textureID = wall->objectHit->texturesArray[TEXTURE_ARRAY_BOTTOM];
+
+                if(textureID > 0)
+                    R_DrawColumnOfPixelShaded(wall->x, y-1, y+1, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), lightingMult, straightlinedist-1.0f);
 
                 startedDrawing = true;
             }
@@ -1418,9 +1452,8 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
 
         bool isInWall = curGridX==wall->gridPos.x && curGridY==wall->gridPos.y;
 
-        int wallID = R_GetValueFromLevel(wall->level, curGridY, curGridX);
         // If wall ended
-        if(wallID == 0 || !isInWall)
+        if(wall->objectHit->assetID == 0 || !isInWall)
         {
             if(startedDrawing)
                 return;
@@ -1440,10 +1473,13 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
         if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
         {
             // Check the floor texture at that point
-            if(wallID >= 1)
+            if(wall->objectHit->assetID >= 1)
             {                
                 // Draw floor
-                R_DrawColumnOfPixelShaded(wall->x, y-1, y+1, R_GetPixelFromSurface(*tomentdatapack.walls[wallID]->topTexture, textureX, textureY), floorLighting, straightlinedist-1.0f);
+                int textureID = wall->objectHit->texturesArray[TEXTURE_ARRAY_TOP];
+                
+                if(textureID > 0)
+                    R_DrawColumnOfPixelShaded(wall->x, y-1, y+1, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), floorLighting, straightlinedist-1.0f);
 
                 startedDrawing = true;
             }
@@ -1501,7 +1537,7 @@ void R_FloorCasting(float end, float rayAngle, int x, float wallHeight)
                 floorObjectID = currentMap.floorMap[curGridY][curGridX];
                 
                 // Draw floor
-                R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.floors[floorObjectID]->texture, textureX, textureY), floorLighting, d);
+                R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.textures[floorObjectID]->texture, textureX, textureY), floorLighting, d);
             }
         }
     }
@@ -1558,7 +1594,7 @@ void R_CeilingCasting(int level, float start, float rayAngle, int x, float wallH
                 ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
 
                 // Draw ceiling
-                R_DrawPixelShaded(x, (y), R_GetPixelFromSurface(tomentdatapack.ceilings[ceilingObjectID]->texture, textureX, textureY), floorLighting, d);
+                R_DrawPixelShaded(x, (y), R_GetPixelFromSurface(tomentdatapack.textures[ceilingObjectID]->texture, textureX, textureY), floorLighting, d);
             }
         }
     }
@@ -1597,7 +1633,7 @@ void R_DrawThinWall(walldata_t* cur)
     float wallLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.wallLight)  / finalDistance;
     wallLighting = SDL_clamp(wallLighting, 0, 1.0f);
 
-    object_t* curObject = tomentdatapack.walls[cur->idHit];
+    wallObject_t* curObject = cur->objectHit;
 
     // Draw the walls as column of pixels
     if(!cur->isVertical && !isOffScreenBottom) 
@@ -1614,7 +1650,7 @@ void R_DrawThinWall(walldata_t* cur)
             offset = (TILE_SIZE-1) - offset;
         
         if(cur->extraData == 1) // If it is visible
-            R_DrawStripeTexturedShaded((cur->x), leveledStart, leveledEnd, curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((cur->x), leveledStart, leveledEnd, tomentdatapack.textures[curObject->texturesArray[0]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
     }
     else if(!isOffScreenBottom)
     {
@@ -1630,7 +1666,7 @@ void R_DrawThinWall(walldata_t* cur)
             offset = (TILE_SIZE-1) - offset;
 
         if(cur->extraData == 1) // If it is visible
-            R_DrawStripeTexturedShaded((cur->x), leveledStart, leveledEnd, (curObject->alt != NULL) ? curObject->alt->texture : curObject->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+            R_DrawStripeTexturedShaded((cur->x), leveledStart, leveledEnd, tomentdatapack.textures[curObject->texturesArray[0]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
     }
 }
 
@@ -1889,20 +1925,20 @@ void R_DrawDrawables(void)
 }
 
 
-int R_GetValueFromLevel(int level, int y, int x)
+wallObject_t* R_GetWallObjectFromMap(int level, int y, int x)
 {
     if(x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT)
     {
         switch(level)
         {
             case 0:
-                return currentMap.level0[y][x];
+                return &currentMap.level0[y][x];
 
             case 1:
-                return currentMap.level1[y][x];
+                return &currentMap.level1[y][x];
 
             case 2:
-                return currentMap.level2[y][x];
+                return &currentMap.level2[y][x];
 
             default:
                 //printf("WARNING! Level get was out of max/min level size\n");
@@ -2379,6 +2415,7 @@ void I_AddThinWall(int level, bool horizontal, float rayAngle, int x, float curX
         printf("problem");
         return;
     }
+
     walldata_t* data = &currentThinWalls[visibleThinWallsLength];
     data->level = level;
     data->rayAngle = rayAngle;
@@ -2388,7 +2425,7 @@ void I_AddThinWall(int level, bool horizontal, float rayAngle, int x, float curX
     data->distance = distance;
     data->gridPos.x = gridX;
     data->gridPos.y = gridY;
-    data->idHit = R_GetValueFromLevel(level, gridY, gridX);
+    data->objectHit = R_GetWallObjectFromMap(level, gridY, gridX);
     data->isVertical = !horizontal;
 
     if(horizontal)
@@ -2423,7 +2460,7 @@ static void I_DebugPathfinding(void)
             curRect.y = y * TILE_SIZE / MINIMAP_DIVIDER;
 
             // If it is an empty space
-            if(R_GetValueFromLevel(level, y, x) == 0)
+            if(R_GetWallObjectFromMap(level, y, x) == 0)
             {
                 R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 0, 0, 0), &curRect);
             }

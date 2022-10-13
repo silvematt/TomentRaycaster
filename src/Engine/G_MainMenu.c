@@ -30,8 +30,8 @@ void G_RenderCurrentMenuBackground(void)
     {
         case MENU_START:
         {
-            SDL_Rect titleRect = {110, 10, tomentdatapack.uiAssets[M_ASSET_TITLE].texture->w, tomentdatapack.uiAssets[M_ASSET_TITLE].texture->h};
-            R_BlitIntoScreenScaled(NULL, tomentdatapack.uiAssets[M_ASSET_TITLE].texture, &titleRect);
+            SDL_Rect titleRect = {110, 10, tomentdatapack.uiAssets[M_ASSET_TITLE]->texture->w, tomentdatapack.uiAssets[M_ASSET_TITLE]->texture->h};
+            R_BlitIntoScreenScaled(NULL, tomentdatapack.uiAssets[M_ASSET_TITLE]->texture, &titleRect);
             break;
         }
     }
@@ -49,8 +49,8 @@ void G_RenderCurrentMenu(void)
     }
 
     // Display cursor
-    SDL_Rect cursorRect = {currentMenu->selectedElement->box.x - CURSOR_X_OFFSET, currentMenu->selectedElement->box.y, tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR].texture->w, tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR].texture->h};
-    R_BlitIntoScreen(NULL, tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR].texture, &cursorRect);
+    SDL_Rect cursorRect = {currentMenu->selectedElement->box.x - CURSOR_X_OFFSET, currentMenu->selectedElement->box.y, tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR]->texture->w, tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR]->texture->h};
+    R_BlitIntoScreen(NULL, tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR]->texture, &cursorRect);
 }
 
 void G_InMenuInputHandling(SDL_Event* e)

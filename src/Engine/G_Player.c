@@ -399,7 +399,7 @@ void G_PlayerUIRender(void)
     SDL_Rect healthbarEmptyScreenPos = {105, 5, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect healthbarEmptySize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
 
-    R_BlitIntoScreenScaled(&healthbarEmptySize, tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY].texture, &healthbarEmptyScreenPos);
+    R_BlitIntoScreenScaled(&healthbarEmptySize, tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY]->texture, &healthbarEmptyScreenPos);
 
     SDL_Rect healthbarFillScreenPos = {105, 5, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect healthbarFillSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
@@ -418,13 +418,13 @@ void G_PlayerUIRender(void)
     if(healthbarFillSize.x >=3)
         healthbarFillScreenPos.x+=3;
 
-    R_BlitIntoScreenScaled(&healthbarFillSize, tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL].texture, &healthbarFillScreenPos);
+    R_BlitIntoScreenScaled(&healthbarFillSize, tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL]->texture, &healthbarFillScreenPos);
 
     // MANA BAR
     SDL_Rect manabarEmptyScreenPos = {105, 34, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect manabarEmptySize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
 
-    R_BlitIntoScreenScaled(&manabarEmptySize, tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY].texture, &manabarEmptyScreenPos);
+    R_BlitIntoScreenScaled(&manabarEmptySize, tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY]->texture, &manabarEmptyScreenPos);
 
     SDL_Rect manabarFillScreenPos = {105, 34, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect manabarFillSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
@@ -438,7 +438,7 @@ void G_PlayerUIRender(void)
     if(manabarFillSize.x >= 3)
         manabarFillScreenPos.x+=3;
 
-    R_BlitIntoScreenScaled(&manabarFillSize, tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL].texture, &manabarFillScreenPos);
+    R_BlitIntoScreenScaled(&manabarFillSize, tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL]->texture, &manabarFillScreenPos);
 
     // Render the selected weapon
     SDL_Surface* curWeapon;
@@ -448,15 +448,15 @@ void G_PlayerUIRender(void)
     switch(player.curWeapon)
     {
         case PLAYER_FP_HANDS:
-            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_FISTS].texture;
+            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_FISTS]->texture;
             break;
 
         case PLAYER_FP_AXE:
-            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_AXE].texture;
+            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_AXE]->texture;
             break;
 
         default:
-            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_FISTS].texture;
+            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_FISTS]->texture;
             break;
     }
 
@@ -468,11 +468,11 @@ void G_PlayerUIRender(void)
             break;
 
         case SPELL_FIREBALL1:
-            curSpell = tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1].texture;
+            curSpell = tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1]->texture;
             break;
 
         case SPELL_ICEDART1:
-            curSpell = tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1].texture;
+            curSpell = tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1]->texture;
             break;
 
         default:
@@ -500,7 +500,7 @@ void G_PlayerUIRender(void)
     SDL_Rect crosshairScreenPos = {(PROJECTION_PLANE_WIDTH / 2) - 6, (PROJECTION_PLANE_HEIGHT / 2) - 6, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     SDL_Rect crosshairSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
     
-    R_BlitIntoScreenScaled(&crosshairSize, player.crosshairHit ? tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT].texture : tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR].texture, &crosshairScreenPos);
+    R_BlitIntoScreenScaled(&crosshairSize, player.crosshairHit ? tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT]->texture : tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR]->texture, &crosshairScreenPos);
 }
 //-------------------------------------
 // Handles Input from the player while doing the Event Input Handling
@@ -573,9 +573,9 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 {
                     printf("Tapped a trigger\n");
 
-                    int wallID = R_GetValueFromLevel(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
-                    if(tomentdatapack.walls[wallID]->Callback != NULL)
-                        tomentdatapack.walls[wallID]->Callback(tomentdatapack.walls[wallID]->data);
+                    wallObject_t* object = R_GetWallObjectFromMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
+                    if(tomentdatapack.walls[object->assetID]->Callback != NULL)
+                        tomentdatapack.walls[object->assetID]->Callback(object->data);
                 }
             }
 

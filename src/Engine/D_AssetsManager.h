@@ -27,14 +27,26 @@ typedef enum enginesDefaultsID_e
 typedef enum wallObjectID_e
 {
     // 0 = Empty
-    W_1 = 1,
-    W_1Alt = 2, // Alt is vertical
-    W_2 = 3,
-    WD_Gate1 = 4,
-    WD_Gate1Alt = 5,
-    WT_CastleDoorsLvl2,
-
+    W_Wall = 1,
+    W_ThinWallHor,
+    W_ThinWallVer,
+    W_DoorHor,
+    W_DoorVer,
+    W_WallTriggerChangeMap,
 } wallObjectID_t;
+
+typedef enum textureID_e
+{
+    // 0 = Empty
+    TEXTURE_WallBrick1 = 1,
+    TEXTURE_WallBrick1Dark,
+    TEXTURE_FloorBrick1,
+    TEXTURE_CeilingWood1,
+    TEXTURE_Wall2,
+    TEXTURE_Gate1,
+    TEXTURE_Gate1Alt,
+    TEXTURE_CastleDoor,
+} textureID_e;
 
 // All Floors
 typedef enum floorObjectID_e
@@ -103,6 +115,40 @@ typedef struct objectAnimations_s
     unsigned animCastSpellActionFrame;
 } objectanimations_t;
 
+
+// Types of walls
+typedef struct wallAsset_s
+{
+    int ID;
+
+    byte flags; // Flags to diversify types of objects
+    
+    // Callbacks
+    void (*Callback)(char* data);
+} wallAsset_t;
+
+
+#define TEXTURE_ARRAY_TOP 0
+#define TEXTURE_ARRAY_BOTTOM 1
+#define TEXTURE_ARRAY_LEFT 2
+#define TEXTURE_ARRAY_RIGHT 3
+#define TEXTURE_ARRAY_UP 4
+#define TEXTURE_ARRAY_DOWN 5
+// Wall Objects are dynamic wall data loaded from the map file
+typedef struct wallObject_s
+{
+    int assetID;
+
+    // Texture IDs for each face, used for cube walls, after being init they point to texture
+    // TOP  BOTTOM  LEFT RIGHT UP   DOWN
+    // (0,  1,      2,   3,    4,   5   )
+    // Top texture (index 0) is the default texture, used for non cubed wall (like doors and thin walls)
+    int texturesArray[6];
+
+    // Data of the callback (i.e. the level to load for the wallTrigger asset)
+    char data[256];
+} wallObject_t;
+
 typedef struct object_s
 {
     int ID;
@@ -112,14 +158,18 @@ typedef struct object_s
 
     objectanimations_t* animations;
 
-    // Extra textures, after being init they point to texture
-    SDL_Surface** topTexture;
-    SDL_Surface** bottomTexture;
-
-    // Extra
+    // Callbacks
     char* data;
     void (*Callback)(char* data);
 } object_t;
+
+typedef struct textureObject_s
+{
+    int ID;
+    SDL_Surface* texture;
+    byte flags;
+} textureObject_t;
+
 
 
 // The Text rendering is not hardcoded to use 16x6 elements font sheets, but the translation map is, 
@@ -291,14 +341,19 @@ typedef struct tomentdatapack_s
     // img.archt
     archt_t IMGArch;
 
+    // Texture database
+    textureObject_t* textures[OBJECTARRAY_DEFAULT_SIZE];
+    unsigned texturesLength;
+
     // Font databse
-    fontsheet_t fontsheets[OBJECTARRAY_DEFAULT_SIZE];   // All fonts
-    unsigned fontsheetsLenghth;
+    fontsheet_t* fontsheets[OBJECTARRAY_DEFAULT_SIZE];   // All fonts
+    unsigned fontsheetsLength;
 
     // -------------------------------
     // UI
     // -------------------------------
-    uiAssets_t uiAssets[OBJECTARRAY_DEFAULT_SIZE];
+    uiAssets_t* uiAssets[OBJECTARRAY_DEFAULT_SIZE];
+    unsigned uiAssetsLenght;
 
     // -------------------------------
     // In Game Assets
@@ -312,14 +367,8 @@ typedef struct tomentdatapack_s
     object_t* skies[OBJECTARRAY_DEFAULT_SIZE];
     unsigned skiesLength;
 
-    object_t* walls[OBJECTARRAY_DEFAULT_SIZE];
+    wallAsset_t* walls[OBJECTARRAY_DEFAULT_SIZE];
     unsigned wallsLength;
-
-    object_t* floors[OBJECTARRAY_DEFAULT_SIZE];
-    unsigned floorsLength;
-
-    object_t* ceilings[OBJECTARRAY_DEFAULT_SIZE];
-    unsigned ceilingsLength;
 
     object_t* sprites[OBJECTARRAY_DEFAULT_SIZE];
     unsigned spritesLength;
@@ -343,6 +392,8 @@ bool D_CheckTextureLoaded(SDL_Surface* ptr, int ID);
 // Initializes defauls for an object
 //-------------------------------------
 void D_InitObject(object_t* obj);
+void D_InitWallAsset(wallAsset_t* obj);
+void D_InitTextureAsset(textureObject_t* obj);
 
 void D_InitAssetManager(void);
 
@@ -357,11 +408,10 @@ void D_OpenArchs(void);
 void D_CloseArchs(void);
 
 void D_InitEnginesDefaults(void);
+void D_InitLoadTextures(void);
 void D_InitFontSheets(void);
 void D_InitUIAssets(void);
 void D_InitLoadWalls(void);
-void D_InitLoadFloors(void);
-void D_InitLoadCeilings(void);
 void D_InitLoadSprites(void);
 void D_InitLoadSkies(void);
 void D_InitLoadPlayersFP(void);
