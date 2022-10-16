@@ -60,4 +60,115 @@ void D_CallbackPickup(char* data)
 void D_CallbackLadder(char* data)
 {
     printf("Climbing Ladder\n");
+    wallObject_t* wallObj = R_GetWallObjectFromMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
+
+    // Check if he player is facing a ladder
+
+    // If player is looking at the up face
+    if(player.angle < (5*M_PI)/6 && player.angle > M_PI/6)
+    {
+        // Check if the texture at that point is the ladder
+        if(U_GetBit(&tomentdatapack.textures[wallObj->texturesArray[TEXTURE_ARRAY_UP]]->flags, 0))
+        {
+            // Climb!!
+            player.climbingPosX = player.position.x;
+            player.climbingPosY = player.position.y + TILE_SIZE;
+            player.climbingPosZ = player.z + TILE_SIZE;
+            player.climbingUp = true;
+            player.hasToClimb = true;
+        }
+    }
+    // If player is looking at the bottom face 
+    else if(player.angle > (7*M_PI)/6 && player.angle < (11*M_PI)/6)
+    {
+        // Check if the texture at that point is the ladder
+        if(U_GetBit(&tomentdatapack.textures[wallObj->texturesArray[TEXTURE_ARRAY_DOWN]]->flags, 0))
+        {
+            // Climb!!
+            player.climbingPosX = player.position.x;
+            player.climbingPosY = player.position.y - TILE_SIZE;
+            player.climbingPosZ = player.z + TILE_SIZE;
+            player.climbingUp = true;
+            player.hasToClimb = true;
+        }
+    }
+    // If the player is looking at the left face
+    else if(player.angle < M_PI/3 || player.angle > (5*M_PI) / 3)
+    {
+        // Check if the texture at that point is the ladder
+        if(U_GetBit(&tomentdatapack.textures[wallObj->texturesArray[TEXTURE_ARRAY_LEFT]]->flags, 0))
+        {
+            // Climb!!
+            player.climbingPosX = player.position.x + TILE_SIZE;
+            player.climbingPosY = player.position.y;
+            player.climbingPosZ = player.z + TILE_SIZE;
+            player.climbingUp = true;
+            player.hasToClimb = true;
+        }
+    }
+    // If the player is looking at the right face
+    else if(player.angle > (2*M_PI)/3 && player.angle < (4*M_PI)/3)
+    {
+        // Check if the texture at that point is the ladder
+        if(U_GetBit(&tomentdatapack.textures[wallObj->texturesArray[TEXTURE_ARRAY_LEFT]]->flags, 0))
+        {
+            // Climb!!
+            player.climbingPosX = player.position.x - TILE_SIZE;
+            player.climbingPosY = player.position.y;
+            player.climbingPosZ = player.z + TILE_SIZE;
+            player.climbingUp = true;
+            player.hasToClimb = true;
+        }
+    }
+}
+
+void D_CallbackLadderDown(char* data)
+{
+    printf("Climbing Ladde Downr\n");
+    wallObject_t* wallObj = R_GetWallObjectFromMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
+
+    // Check if he player is facing a ladder
+
+    // If player is looking at the up face
+    if(player.angle < (5*M_PI)/6 && player.angle > M_PI/6)
+    {
+        // Check if the texture at that point is the ladder
+        // Climb!!
+        player.climbingPosX = player.position.x;
+        player.climbingPosY = player.position.y + TILE_SIZE;
+        player.climbingPosZ = player.z - TILE_SIZE;
+        player.climbingUp = false;
+        player.hasToClimb = true;
+    }
+    // If player is looking at the bottom face 
+    else if(player.angle > (7*M_PI)/6 && player.angle < (11*M_PI)/6)
+    {
+        // Climb!!
+        player.climbingPosX = player.position.x;
+        player.climbingPosY = player.position.y - TILE_SIZE;
+        player.climbingPosZ = player.z - TILE_SIZE;
+        player.climbingUp = false;
+        player.hasToClimb = true;
+    }
+    // If the player is looking at the left face
+    else if(player.angle < M_PI/3 || player.angle > (5*M_PI) / 3)
+    {
+        // Check if the texture at that point is the ladder
+        // Climb!!
+        player.climbingPosX = player.position.x + TILE_SIZE;
+        player.climbingPosY = player.position.y;
+        player.climbingPosZ = player.z - TILE_SIZE;
+        player.climbingUp = false;
+        player.hasToClimb = true;
+    }
+    // If the player is looking at the right face
+    else if(player.angle > (2*M_PI)/3 && player.angle < (4*M_PI)/3)
+    {
+        // Climb!!
+        player.climbingPosX = player.position.x - TILE_SIZE;
+        player.climbingPosY = player.position.y;
+        player.climbingPosZ = player.z - TILE_SIZE;
+        player.climbingUp = false;
+        player.hasToClimb = true;
+    }
 }

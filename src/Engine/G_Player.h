@@ -34,11 +34,15 @@
 #define MAX_VERTICAL_HEAD_MOV 200
 #define MIN_VERTICAL_HEAD_MOV -200
 
+#define PLAYER_CLIMBING_LADDER_UP_SPEED 24
+#define PLAYER_CLIMBING_LADDER_DOWN_SPEED 48
+
 typedef enum playerState_e
 {
     PSTATE_IDLE = 0,
     PSTATE_ATTACKING1,
-    PSTATE_CASTSPELL
+    PSTATE_CASTSPELL,
+    PSTATE_CLIMBING_LADDER
 } playerState_e;
 
 typedef enum playerAttacks_e
@@ -117,6 +121,13 @@ typedef struct player_s
     bool hasFireball;
     bool hasIceDart;
 
+    // Ladder
+    bool hasToClimb;
+    bool climbingUp;
+
+    float climbingPosX;
+    float climbingPosY;
+    float climbingPosZ;
 } player_t;
 
 
@@ -188,5 +199,6 @@ void G_PlayerGainMana(float amount);
 
 void G_PlayerSetWeapon(playerFPID_e weaponID);
 void G_PlayerSetSpell(playerSpells_e spellID);
+
 
 #endif

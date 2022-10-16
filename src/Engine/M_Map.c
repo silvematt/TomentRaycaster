@@ -282,6 +282,9 @@ void M_LoadObjectTMap(void)
 
 // -------------------------------
 // Loads the collision map
+//
+// Collision:     1 = For everything
+//                2 = For player but not projectiles
 // -------------------------------
 void M_LoadCollisionMaps(void)
 {
@@ -296,7 +299,15 @@ void M_LoadCollisionMaps(void)
                         // Check if it's a wall
                         int wallID = currentMap.level0[y][x].assetID;
                         if(wallID > 0)
-                              currentMap.collisionMapLevel0[y][x] = 1;
+                        {
+                              // If this is an invisible wall, projectile should be able to go throught it
+                              if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 4))
+                              {
+                                    currentMap.collisionMapLevel0[y][x] = 2;
+                              }
+                              else
+                                    currentMap.collisionMapLevel0[y][x] = 1;
+                        }
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
                         int spriteID = currentMap.spritesMapLevel0[y][x];
@@ -312,7 +323,15 @@ void M_LoadCollisionMaps(void)
                         // Check if it's a wall
                         wallID = currentMap.level1[y][x].assetID;
                         if(wallID > 0)
+                        {
+                              // If this is an invisible wall, projectile should be able to go throught it
+                              if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 4))
+                              {
+                                    currentMap.collisionMapLevel1[y][x] = 2;
+                              }
+                              else
                               currentMap.collisionMapLevel1[y][x] = 1;
+                        }
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
                         spriteID = currentMap.spritesMapLevel1[y][x];
@@ -327,7 +346,15 @@ void M_LoadCollisionMaps(void)
                         // Check if it's a wall
                         wallID = currentMap.level2[y][x].assetID;
                         if(wallID > 0)
-                              currentMap.collisionMapLevel2[y][x] = 1;
+                        {
+                              // If this is an invisible wall, projectile should be able to go throught it
+                              if(U_GetBit(&tomentdatapack.walls[wallID]->flags, 4))
+                              {
+                                    currentMap.collisionMapLevel2[y][x] = 2;
+                              }
+                              else
+                                    currentMap.collisionMapLevel2[y][x] = 1;
+                        }
 
                         // Check if it's a sprite (overrides doors, but spirtes should never be placed on top of walls)
                         spriteID = currentMap.spritesMapLevel2[y][x];

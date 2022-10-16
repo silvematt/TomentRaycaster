@@ -18,6 +18,8 @@ static void I_SetAttackCone(int id, int x, int y);
 static bool I_PlayerAttack(int attackType);
 static bool I_PlayerCastSpell(playerSpells_e attackType);
 
+static void I_PlayerLadderMovements();
+
 // ----------------------------------------------------
 // Sets an SDL_Rect
 // ----------------------------------------------------
@@ -48,6 +50,7 @@ void G_InitPlayer(void)
     player.gridPosition.x = currentMap.playerStartingGridX;
     player.gridPosition.y = currentMap.playerStartingGridY;
     player.collisionCircle.r = TILE_SIZE / 2;
+    player.hasToClimb = false;
 
     // Init anim
     player.state = PSTATE_IDLE;
@@ -89,95 +92,105 @@ void G_InitPlayer(void)
 //-------------------------------------
 void G_PlayerTick(void)
 {
-    // Get player grid pos
-    player.gridPosition.x = ((player.position.x+PLAYER_CENTER_FIX) / TILE_SIZE);
-    player.gridPosition.y = ((player.position.y+PLAYER_CENTER_FIX) / TILE_SIZE);
-    
-    //player.angle = M_PI / 4;
-    player.angle += (playerinput.mouseInput.x * PLAYER_ROT_SPEED) * deltaTime;
-    player.verticalHeadMovement += (playerinput.mouseInput.y * PLAYER_VERTICAL_HEAD_MOVEMENT_SPEED) * deltaTime;
-    player.verticalHeadMovement = SDL_clamp(player.verticalHeadMovement, MIN_VERTICAL_HEAD_MOV, MAX_VERTICAL_HEAD_MOV);
-    playerinput.mouseInput.x = 0; // kill the mouse movement after applying rot
-    playerinput.mouseInput.y = 0; // kill the mouse movement after applying rot
-
-
-    FIX_ANGLES(player.angle);
-
-    playerinput.dir.x = cos(player.angle);
-    playerinput.dir.y = sin(player.angle);
-
-    //printf(" ANGLE: %f DIR: %f | %f\n", player.angle, playerinput.dir.x, playerinput.dir.y);
-
-    // Calculate dx dy
-    player.deltaPos.x = (playerinput.dir.x * playerinput.input.y) * PLAYER_SPEED * deltaTime;
-    player.deltaPos.y = (playerinput.dir.y * playerinput.input.y) * PLAYER_SPEED * deltaTime;
-
-    // Strafe
-    if(playerinput.strafe.x != 0.0f)
+    if(!player.hasToClimb)
     {
-        float adjustedAngle = player.angle;
-        vector2_t strafedDir;
+        // Get player grid pos
+        player.gridPosition.x = ((player.position.x+PLAYER_CENTER_FIX) / TILE_SIZE);
+        player.gridPosition.y = ((player.position.y+PLAYER_CENTER_FIX) / TILE_SIZE);
+        
+        //player.angle = M_PI / 4;
+        player.angle += (playerinput.mouseInput.x * PLAYER_ROT_SPEED) * deltaTime;
+        player.verticalHeadMovement += (playerinput.mouseInput.y * PLAYER_VERTICAL_HEAD_MOVEMENT_SPEED) * deltaTime;
+        player.verticalHeadMovement = SDL_clamp(player.verticalHeadMovement, MIN_VERTICAL_HEAD_MOV, MAX_VERTICAL_HEAD_MOV);
+        playerinput.mouseInput.x = 0; // kill the mouse movement after applying rot
+        playerinput.mouseInput.y = 0; // kill the mouse movement after applying rot
 
-        // Player wants to strafe
-        if(playerinput.strafe.x >= 1.0f)
-            adjustedAngle = player.angle + (M_PI / 2);
-        else
-            adjustedAngle = player.angle - (M_PI / 2);
 
-        strafedDir.x = cos(adjustedAngle);
-        strafedDir.y = sin(adjustedAngle);
+        FIX_ANGLES(player.angle);
 
-        player.deltaPos.x += (strafedDir.x) * PLAYER_SPEED * deltaTime;
-        player.deltaPos.y += (strafedDir.y) * PLAYER_SPEED * deltaTime;
-    }
+        playerinput.dir.x = cos(player.angle);
+        playerinput.dir.y = sin(player.angle);
 
-    // After calculating the movement, check for collision and in case, cancel the delta
-    G_PlayerCollisionCheck();
-    
-    // Move Player normally
-    player.position.x += player.deltaPos.x;
-    player.position.y += player.deltaPos.y;
+        //printf(" ANGLE: %f DIR: %f | %f\n", player.angle, playerinput.dir.x, playerinput.dir.y);
 
-    // Clamp player in map boundaries
-    player.position.x = SDL_clamp(player.position.x, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
-    player.position.y = SDL_clamp(player.position.y, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
+        // Calculate dx dy
+        player.deltaPos.x = (playerinput.dir.x * playerinput.input.y) * PLAYER_SPEED * deltaTime;
+        player.deltaPos.y = (playerinput.dir.y * playerinput.input.y) * PLAYER_SPEED * deltaTime;
 
-    // Compute centered pos for calculations
-    player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
-    player.centeredPos.y = player.position.y + PLAYER_CENTER_FIX;
-
-    // Update collision circle
-    player.collisionCircle.pos.x = player.centeredPos.x;
-    player.collisionCircle.pos.y = player.centeredPos.y;
-
-    I_DetermineInFrontGrid();
-
-    // Check for auto-callbacks upon collision
-    int spriteID = R_GetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x);
-    
-    if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 3) && tomentdatapack.sprites[spriteID]->Callback != NULL)
-    {
-        // Call callback
-        tomentdatapack.sprites[spriteID]->Callback(tomentdatapack.sprites[spriteID]->data);
-                        
-        // If the tapped sprite was a pickup, destroy it from the map after the player took it
-        if(tomentdatapack.sprites[spriteID]->Callback == D_CallbackPickup)
+        // Strafe
+        if(playerinput.strafe.x != 0.0f)
         {
-            R_SetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
-            R_SetValueFromCollisionMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
-            G_SetObjectTMap(player.level, player.gridPosition.y, player.gridPosition.x, ObjT_Empty);
+            float adjustedAngle = player.angle;
+            vector2_t strafedDir;
+
+            // Player wants to strafe
+            if(playerinput.strafe.x >= 1.0f)
+                adjustedAngle = player.angle + (M_PI / 2);
+            else
+                adjustedAngle = player.angle - (M_PI / 2);
+
+            strafedDir.x = cos(adjustedAngle);
+            strafedDir.y = sin(adjustedAngle);
+
+            player.deltaPos.x += (strafedDir.x) * PLAYER_SPEED * deltaTime;
+            player.deltaPos.y += (strafedDir.y) * PLAYER_SPEED * deltaTime;
+        }
+
+        // After calculating the movement, check for collision and in case, cancel the delta
+        G_PlayerCollisionCheck();
+        
+        // Move Player normally
+        player.position.x += player.deltaPos.x;
+        player.position.y += player.deltaPos.y;
+
+        // Clamp player in map boundaries
+        player.position.x = SDL_clamp(player.position.x, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
+        player.position.y = SDL_clamp(player.position.y, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
+
+        // Compute centered pos for calculations
+        player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
+        player.centeredPos.y = player.position.y + PLAYER_CENTER_FIX;
+
+        // Update collision circle
+        player.collisionCircle.pos.x = player.centeredPos.x;
+        player.collisionCircle.pos.y = player.centeredPos.y;
+
+        I_DetermineInFrontGrid();
+
+        // Check for auto-callbacks upon collision
+        int spriteID = R_GetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x);
+        
+        if(spriteID > 0 && U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 3) && tomentdatapack.sprites[spriteID]->Callback != NULL)
+        {
+            // Call callback
+            tomentdatapack.sprites[spriteID]->Callback(tomentdatapack.sprites[spriteID]->data);
+                            
+            // If the tapped sprite was a pickup, destroy it from the map after the player took it
+            if(tomentdatapack.sprites[spriteID]->Callback == D_CallbackPickup)
+            {
+                R_SetValueFromSpritesMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
+                R_SetValueFromCollisionMap(player.level, player.gridPosition.y, player.gridPosition.x, 0);
+                G_SetObjectTMap(player.level, player.gridPosition.y, player.gridPosition.x, ObjT_Empty);
+            }
+        }
+
+        // Check to restore the crosshair
+        if(player.crosshairHit)
+        {
+            if(player.crosshairTimer->GetTicks(player.crosshairTimer) > CROSSHAIR_HIT_TIME_SECONDS*1000)
+            {
+                player.crosshairTimer->Stop(player.crosshairTimer);
+                player.crosshairHit = false;
+            }
         }
     }
-
-    // Check to restore the crosshair
-    if(player.crosshairHit)
+    else
     {
-        if(player.crosshairTimer->GetTicks(player.crosshairTimer) > CROSSHAIR_HIT_TIME_SECONDS*1000)
-        {
-            player.crosshairTimer->Stop(player.crosshairTimer);
-            player.crosshairHit = false;
-        }
+        player.state = PSTATE_CLIMBING_LADDER;
+        
+        I_PlayerLadderMovements();
     }
+    
 }
 
 
@@ -1206,5 +1219,99 @@ void G_PlayerSetSpell(playerSpells_e spellID)
         default:
             player.curSpell = SPELL_NULL;
             break;
+    }
+}
+
+static void I_PlayerLadderMovements()
+{
+    bool doingSomething = false;
+
+    if(player.climbingUp)
+    {
+        // Go UP first
+        if(abs(player.z - player.climbingPosZ) > 1.0f)
+        {
+            if(player.climbingPosZ > player.z)
+                player.z += PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+            else
+                player.z -= PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+
+            doingSomething = true;
+        }   
+        else
+        {
+            // Check the difference between the desired and actual pos
+            if(abs(player.position.x - player.climbingPosX) > 1.0f)
+            {
+                // Get pos closer to climbing pos
+                if(player.climbingPosX > player.position.x)
+                    player.position.x += PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+                else
+                    player.position.x -= PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+
+                doingSomething = true;
+            }
+
+            if(abs(player.position.y - player.climbingPosY) > 1.0f)
+            {
+                if(player.climbingPosY > player.position.y)
+                    player.position.y += PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+                else
+                    player.position.y -= PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+                doingSomething = true;
+            }
+        }
+    }
+    else
+    {
+        // Go X-Y first
+        // Check the difference between the desired and actual pos
+        if(abs(player.position.x - player.climbingPosX) > 1.0f)
+        {
+            // Get pos closer to climbing pos
+            if(player.climbingPosX > player.position.x)
+                player.position.x += PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
+            else
+                player.position.x -= PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
+
+            doingSomething = true;
+        }
+        else if(abs(player.position.y - player.climbingPosY) > 1.0f)
+        {
+            if(player.climbingPosY > player.position.y)
+                player.position.y += PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
+            else
+                player.position.y -= PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
+            doingSomething = true;
+        }
+        else if(abs(player.z - player.climbingPosZ) > 1.0f)
+        {
+            if(player.climbingPosZ > player.z)
+                player.z += PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
+            else
+                player.z -= PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
+
+            doingSomething = true;
+        }   
+    }
+    
+    // Compute centered pos for calculations
+    player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
+    player.centeredPos.y = player.position.y + PLAYER_CENTER_FIX;
+
+    // Exit condition
+    if(!doingSomething)
+    {
+        player.position.x = player.climbingPosX;
+        player.position.y = player.climbingPosY;
+
+        // Compute centered pos for calculations
+        player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
+        player.centeredPos.y = player.position.y + PLAYER_CENTER_FIX;
+
+        player.z = player.climbingPosZ;
+
+        player.hasToClimb = false;
+        player.state = PSTATE_IDLE;
     }
 }

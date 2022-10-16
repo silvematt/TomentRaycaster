@@ -456,7 +456,8 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                                 }
                         }
                     }
-                    else // This is a normal wall
+                    // Check if its not an invisible wall (used for down ladders or colliders)
+                    else if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 4) == 0)// This is a normal wall
                     {
                         hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
                         hobjectIDHit = objectHit;
@@ -583,7 +584,8 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                                 }
                         }
                     }
-                    else
+                    // Check if its not an invisible wall (used for down ladders or colliders)
+                    else if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 4) == 0)
                     {
                         vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
                         vobjectIDHit = objectHit;

@@ -30,7 +30,9 @@ typedef enum wallObjectID_e
     W_DoorHor,
     W_DoorVer,
     W_WallTriggerChangeMap,
-    W_WallLadder
+    W_WallLadder,
+    W_WallLadderDown,
+    W_WallInvisible
 } wallObjectID_t;
 
 typedef enum textureID_e
@@ -252,6 +254,10 @@ typedef enum playerFPID_e
     // 0000   0   000
     //         \
     //          1 = Is Trigger
+
+    // 000    0 0000
+    //         \
+    //          1 = Is Invisible (Skipped by non-occlusive raycast)
 
     // ============
     // For sprites

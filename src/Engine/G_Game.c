@@ -305,7 +305,7 @@ void G_UpdateProjectiles(void)
             bool insideMap = cur->this.base.gridPos.x >= 0 && cur->this.base.gridPos.y >= 0 && cur->this.base.gridPos.x < MAP_WIDTH && cur->this.base.gridPos.y < MAP_HEIGHT;
 
             // Destroy condition
-            if(G_CheckCollisionMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x) || !insideMap)
+            if(G_CheckCollisionMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x) == 1 || !insideMap)
             {
                 cur->this.isBeingDestroyed = true;
                 G_AIPlayAnimationOnce(&cur->this, ANIM_DIE);

@@ -500,8 +500,10 @@ void D_InitLoadWalls(void)
     wallAsset_t* doorVer = (wallAsset_t*)malloc(sizeof(wallAsset_t));
     wallAsset_t* wallTriggerChangeMap = (wallAsset_t*)malloc(sizeof(wallAsset_t));
     wallAsset_t* wallLadder = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+    wallAsset_t* wallLadderDown = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+    wallAsset_t* wallInvisible = (wallAsset_t*)malloc(sizeof(wallAsset_t));
 
-    tomentdatapack.wallsLength = 7; // Set length
+    tomentdatapack.wallsLength = 9; // Set length
 
     D_InitWallAsset(wall);
     D_InitWallAsset(thinWallHor);
@@ -510,6 +512,8 @@ void D_InitLoadWalls(void)
     D_InitWallAsset(doorVer);
     D_InitWallAsset(wallTriggerChangeMap);
     D_InitWallAsset(wallLadder);
+    D_InitWallAsset(wallLadderDown);
+    D_InitWallAsset(wallInvisible);
 
     // Put objects in the datapack
     tomentdatapack.walls[W_Wall] = wall;
@@ -519,6 +523,8 @@ void D_InitLoadWalls(void)
     tomentdatapack.walls[W_DoorVer] = doorVer;
     tomentdatapack.walls[W_WallTriggerChangeMap] = wallTriggerChangeMap;
     tomentdatapack.walls[W_WallLadder] = wallLadder;
+    tomentdatapack.walls[W_WallLadderDown] = wallLadderDown;
+    tomentdatapack.walls[W_WallInvisible] = wallInvisible;
 
     // Set Wall
     tomentdatapack.walls[W_Wall]->ID = W_Wall;
@@ -562,6 +568,19 @@ void D_InitLoadWalls(void)
     U_SetBit(&tomentdatapack.walls[W_WallLadder]->flags, 3); // Set Trigger bit flag to 1
     // Set callback and data because this is a trigger
     tomentdatapack.walls[W_WallLadder]->Callback = D_CallbackLadder;
+
+    // Wall Ladder Down
+    tomentdatapack.walls[W_WallLadderDown]->ID = W_WallLadderDown;
+    U_SetBit(&tomentdatapack.walls[W_WallLadderDown]->flags, 3); // Set Trigger bit flag to 1
+    U_SetBit(&tomentdatapack.walls[W_WallLadderDown]->flags, 4); // Set Invisible bit flag to 1
+
+    // Set callback and data because this is a trigger
+    tomentdatapack.walls[W_WallLadderDown]->Callback = D_CallbackLadderDown;
+
+    // Wall Invisible
+    tomentdatapack.walls[W_WallInvisible]->ID = W_WallInvisible;
+    U_SetBit(&tomentdatapack.walls[W_WallInvisible]->flags, 4); // Set Invisible bit flag to 1
+    tomentdatapack.walls[W_WallInvisible]->Callback = NULL;
 }
 
 

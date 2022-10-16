@@ -7,4 +7,6 @@ void D_CallbackPickup(char* data);
 
 void D_CallbackLadder(char* data);
 
+void D_CallbackLadderDown(char* data);
+
 #endif
