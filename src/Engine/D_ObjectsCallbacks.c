@@ -56,3 +56,8 @@ void D_CallbackPickup(char* data)
         G_PlayerSetSpell(SPELL_ICEDART1);
     }
 }
+
+void D_CallbackLadder(char* data)
+{
+    printf("Climbing Ladder\n");
+}

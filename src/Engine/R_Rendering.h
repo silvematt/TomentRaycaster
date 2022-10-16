@@ -15,6 +15,7 @@
 #define PROJECTION_PLANE_WIDTH 640     // Projection Plane
 #define PROJECTION_PLANE_HEIGHT 480
 #define PROJECTION_PLANE_CENTER 240
+
 //#define DISTANCE_TO_PROJECTION ((PROJECTION_PLANE_WIDTH / 2) / tan(PLAYER_FOV /2))
 #define DISTANCE_TO_PROJECTION 554      // Distance to projection
 //#define GAME_VIEW_OFFSETX 350           // Offset of the GameView
@@ -200,7 +201,7 @@ void R_DrawThinWall(walldata_t* wall);
 // - rayAngle = the current rayangle
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
-void R_FloorCasting(float end, float rayAngle, int x, float wallHeight);
+void R_FloorCasting(int end, float rayAngle, int x, float wallHeight);
 
 //-------------------------------------
 // Floorcast and ceilingcast

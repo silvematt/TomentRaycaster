@@ -42,6 +42,7 @@ void G_InitPlayer(void)
     player.collisionCircle.pos.y = player.position.y;
 
     player.angle = currentMap.playerStartingRot;
+    player.verticalHeadMovement = 0.0f;
     player.z = (TILE_SIZE/2) + ((TILE_SIZE) * currentMap.playerStartingLevel);
     player.level = currentMap.playerStartingLevel;
     player.gridPosition.x = currentMap.playerStartingGridX;
@@ -93,9 +94,13 @@ void G_PlayerTick(void)
     player.gridPosition.y = ((player.position.y+PLAYER_CENTER_FIX) / TILE_SIZE);
     
     //player.angle = M_PI / 4;
-    player.angle += (playerinput.input.x * PLAYER_ROT_SPEED) * deltaTime;
-    playerinput.input.x = 0; // kill the mouse movement after applying rot
-    
+    player.angle += (playerinput.mouseInput.x * PLAYER_ROT_SPEED) * deltaTime;
+    player.verticalHeadMovement += (playerinput.mouseInput.y * PLAYER_VERTICAL_HEAD_MOVEMENT_SPEED) * deltaTime;
+    player.verticalHeadMovement = SDL_clamp(player.verticalHeadMovement, MIN_VERTICAL_HEAD_MOV, MAX_VERTICAL_HEAD_MOV);
+    playerinput.mouseInput.x = 0; // kill the mouse movement after applying rot
+    playerinput.mouseInput.y = 0; // kill the mouse movement after applying rot
+
+
     FIX_ANGLES(player.angle);
 
     playerinput.dir.x = cos(player.angle);
@@ -510,7 +515,8 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
     switch(e->type)
     {
         case SDL_MOUSEMOTION:
-            playerinput.input.x = e->motion.xrel;
+            playerinput.mouseInput.x = e->motion.xrel;
+            playerinput.mouseInput.y = -e->motion.yrel;
             break;
 
         case SDL_MOUSEBUTTONUP:

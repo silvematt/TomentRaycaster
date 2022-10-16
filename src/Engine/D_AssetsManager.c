@@ -356,8 +356,9 @@ void D_InitLoadTextures(void)
     textureObject_t* gate1 = (textureObject_t*)malloc(sizeof(textureObject_t));
     textureObject_t* gate1Alt = (textureObject_t*)malloc(sizeof(textureObject_t));
     textureObject_t* castleDoor = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* wall1Ladder = (textureObject_t*)malloc(sizeof(textureObject_t));
 
-    tomentdatapack.texturesLength = 8; // Set length
+    tomentdatapack.texturesLength = 9; // Set length
 
     D_InitTextureAsset(wallBrick1);
     D_InitTextureAsset(wallBrick1Dark);
@@ -367,6 +368,7 @@ void D_InitLoadTextures(void)
     D_InitTextureAsset(gate1);
     D_InitTextureAsset(gate1Alt);
     D_InitTextureAsset(castleDoor);
+    D_InitTextureAsset(wall1Ladder);
 
     // Put objects in the datapack
     tomentdatapack.textures[TEXTURE_WallBrick1] = wallBrick1;
@@ -377,6 +379,7 @@ void D_InitLoadTextures(void)
     tomentdatapack.textures[TEXTURE_Gate1] = gate1;
     tomentdatapack.textures[TEXTURE_Gate1Alt] = gate1Alt;
     tomentdatapack.textures[TEXTURE_CastleDoor] = castleDoor;
+    tomentdatapack.textures[TEXTURE_Wall1Ladder] = wall1Ladder;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -464,6 +467,17 @@ void D_InitLoadTextures(void)
         tomentdatapack.textures[TEXTURE_CastleDoor]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
+    // Wall 1 ladder
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_WALL1_LADDER].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_WALL1_LADDER].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_WALL1_LADDER))
+        tomentdatapack.textures[TEXTURE_Wall1Ladder]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.textures[TEXTURE_Wall1Ladder]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.textures[TEXTURE_Wall1Ladder]->flags, 0); // Set IsLadder = 1
+    SDL_FreeSurface(temp1);
+
     // Final sets
     wallBrick1->ID = TEXTURE_WallBrick1;
     wallBrick1Dark->ID = TEXTURE_WallBrick1Dark;
@@ -473,6 +487,7 @@ void D_InitLoadTextures(void)
     gate1->ID = TEXTURE_Gate1;
     gate1Alt->ID = TEXTURE_Gate1Alt;
     castleDoor->ID = TEXTURE_CastleDoor;
+    wall1Ladder->ID = TEXTURE_Wall1Ladder;
 }
 
 void D_InitLoadWalls(void)
@@ -484,8 +499,9 @@ void D_InitLoadWalls(void)
     wallAsset_t* doorHor = (wallAsset_t*)malloc(sizeof(wallAsset_t));
     wallAsset_t* doorVer = (wallAsset_t*)malloc(sizeof(wallAsset_t));
     wallAsset_t* wallTriggerChangeMap = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+    wallAsset_t* wallLadder = (wallAsset_t*)malloc(sizeof(wallAsset_t));
 
-    tomentdatapack.wallsLength = 6; // Set length
+    tomentdatapack.wallsLength = 7; // Set length
 
     D_InitWallAsset(wall);
     D_InitWallAsset(thinWallHor);
@@ -493,6 +509,7 @@ void D_InitLoadWalls(void)
     D_InitWallAsset(doorHor);
     D_InitWallAsset(doorVer);
     D_InitWallAsset(wallTriggerChangeMap);
+    D_InitWallAsset(wallLadder);
 
     // Put objects in the datapack
     tomentdatapack.walls[W_Wall] = wall;
@@ -501,6 +518,7 @@ void D_InitLoadWalls(void)
     tomentdatapack.walls[W_DoorHor] = doorHor;
     tomentdatapack.walls[W_DoorVer] = doorVer;
     tomentdatapack.walls[W_WallTriggerChangeMap] = wallTriggerChangeMap;
+    tomentdatapack.walls[W_WallLadder] = wallLadder;
 
     // Set Wall
     tomentdatapack.walls[W_Wall]->ID = W_Wall;
@@ -538,6 +556,12 @@ void D_InitLoadWalls(void)
     U_SetBit(&tomentdatapack.walls[W_WallTriggerChangeMap]->flags, 3); // Set Trigger bit flag to 1
     // Set callback and data because this is a trigger
     tomentdatapack.walls[W_WallTriggerChangeMap]->Callback = D_CallbackChangeMap;
+
+    // Wall Ladder
+    tomentdatapack.walls[W_WallLadder]->ID = W_WallLadder;
+    U_SetBit(&tomentdatapack.walls[W_WallLadder]->flags, 3); // Set Trigger bit flag to 1
+    // Set callback and data because this is a trigger
+    tomentdatapack.walls[W_WallLadder]->Callback = D_CallbackLadder;
 }
 
 

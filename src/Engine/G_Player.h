@@ -14,6 +14,7 @@
 
 #define PLAYER_SPEED 250.0f
 #define PLAYER_ROT_SPEED 0.5f
+#define PLAYER_VERTICAL_HEAD_MOVEMENT_SPEED 60.0f
 
 #define PLAYER_STARTING_ROT M_PI
 
@@ -29,6 +30,9 @@
 #define ATTACK_CONE_MAX_DIFF 25
 
 #define CROSSHAIR_HIT_TIME_SECONDS 0.35f
+
+#define MAX_VERTICAL_HEAD_MOV 200
+#define MIN_VERTICAL_HEAD_MOV -200
 
 typedef enum playerState_e
 {
@@ -74,6 +78,7 @@ typedef struct player_s
 
     // Rot of the player in radians
     float angle;
+    float verticalHeadMovement;
 
     // Loaded at runtime
     bool hasBeenInitialized;
