@@ -16,6 +16,7 @@ Features:
 - Transparent (see through) doors and thin walls
 - Multi Floor support (for player, doors, walls, sprites etc.)
 - Vertical Motion
+- Usable ladders to go up/down levels.
 - Sprites Rendering & Collisions
 - AI and basic BFS Pathfinding
 - Player and AI combat
