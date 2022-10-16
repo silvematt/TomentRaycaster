@@ -20,9 +20,6 @@ typedef enum enginesDefaultsID_e
 
 // --------------------------------------------
 // All Walls and doors
-// 
-// W_   walls
-// WD_  doors
 // --------------------------------------------
 typedef enum wallObjectID_e
 {
@@ -33,6 +30,7 @@ typedef enum wallObjectID_e
     W_DoorHor,
     W_DoorVer,
     W_WallTriggerChangeMap,
+    W_WallLadder
 } wallObjectID_t;
 
 typedef enum textureID_e
@@ -46,6 +44,7 @@ typedef enum textureID_e
     TEXTURE_Gate1,
     TEXTURE_Gate1Alt,
     TEXTURE_CastleDoor,
+    TEXTURE_Wall1Ladder
 } textureID_e;
 
 // All Floors
@@ -163,6 +162,16 @@ typedef struct object_s
     void (*Callback)(char* data);
 } object_t;
 
+
+/* object_t Flags
+
+    // ============
+    // For walls
+    // ============
+    // 0000000 0
+    //          \
+    //           1 = Is Ladder
+*/
 typedef struct textureObject_s
 {
     int ID;
@@ -242,7 +251,7 @@ typedef enum playerFPID_e
 
     // 0000   0   000
     //         \
-    //          1 = Is Teleporter
+    //          1 = Is Trigger
 
     // ============
     // For sprites
@@ -317,7 +326,8 @@ typedef enum imgIDs_e
     IMG_ID_ICON_SPELL_ICEDART1,
     IMG_ID_UI_CROSSHAIR_HIT,
     IMG_ID_TOME_FIREBALL01,
-    IMG_ID_TOME_ICEDART01
+    IMG_ID_TOME_ICEDART01,
+    IMG_ID_WALL1_LADDER
 } imgIDs_e;
 
 typedef struct archt_s

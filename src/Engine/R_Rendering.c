@@ -612,7 +612,10 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
     bool horizontal = false;    // Has this ray hit an horizontal?
     float correctDistance;      // Corrected distance for fixing fisheye
 
-    // If the distances are the same we should skip, this happens very rarerly
+    // If the distances are the same we should still render something, this happens very rarerly
+    if(hDistance == vDistance)
+        hDistance -= 0.1f;
+        
     if(hDistance != vDistance)
     {
         // If the horizontal hit was closer
@@ -655,16 +658,13 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
         float wallHeight = (TILE_SIZE  / finalDistance) * DISTANCE_TO_PROJECTION;
         float wallHeightUncapped = wallHeight;
 
-        float screenZ = floor(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(TILE_SIZE/2)));
-        int wallOffset = (PROJECTION_PLANE_CENTER) - floor(wallHeight / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
-        
-        //int wallOffset =  (PROJECTION_PLANE_HEIGHT-wallHeight)/2 + screenZ;
-        
-        int end = floor(wallOffset+wallHeight);
-        int start = floor(wallOffset);
+        float ratio = DISTANCE_TO_PROJECTION/finalDistance;
+        float bottomOfWall = (ratio * player.z + PROJECTION_PLANE_CENTER) + player.verticalHeadMovement;
+        float scale = (DISTANCE_TO_PROJECTION*TILE_SIZE/finalDistance);	
+        float topOfWall = bottomOfWall - scale;
 
-        float leveledStart = start - floor(wallHeight)*level;
-        float leveledEnd = end - floor(wallHeight)*level+1;
+        float leveledStart = topOfWall - floor(wallHeight)*level;
+        float leveledEnd = bottomOfWall - floor(wallHeight)*level;
 
         // Check if start and end are offscreen, if so, don't draw the walls, but draw the bottom/top regardless
         bool isOffScreenBottom = (leveledStart > PROJECTION_PLANE_HEIGHT);
@@ -698,7 +698,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                 textureType = TEXTURE_ARRAY_UP;
             
             if(curObject->texturesArray[textureType] > 0)
-                R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+                R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd+1, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -729,7 +729,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
                 textureType = TEXTURE_ARRAY_LEFT;
 
             if(curObject->texturesArray[textureType] > 0)
-                R_DrawStripeTexturedShaded((x), leveledStart, leveledEnd, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+                R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd+1, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
             if(debugRendering)
             {
@@ -739,10 +739,10 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
         }
 
         if(level == 0)
-            R_FloorCasting(end, rayAngle, x, wallHeight);
+            R_FloorCasting(bottomOfWall, rayAngle, x, wallHeight);
         
         if(currentMap.hasAbsCeiling)
-            R_CeilingCasting(currentMap.absCeilingLevel, start, rayAngle, x, wallHeight);
+            R_CeilingCasting(currentMap.absCeilingLevel, topOfWall, rayAngle, x, wallHeight);
 
         //R_DrawPixel(x, start, r_debugColor);
     }
@@ -1110,7 +1110,10 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         bool horizontal = false;    // Has this ray hit an horizontal?
         float correctDistance;      // Corrected distance for fixing fisheye
         
-        // If the distances are the same we should skip, this happens very rarerly
+        // If the distances are the same we should still render something, this happens very rarerly
+        if(hDistance == vDistance)
+            hDistance -= 0.1f;
+            
         if(hDistance != vDistance && (verHitted || horHitted) && thinWallHit == false)
         {
             // If the horizontal hit was closer
@@ -1215,13 +1218,14 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         float wallHeightUncapped = wallHeight;
 
         float screenZ = floor(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(TILE_SIZE/2)));
-        int wallOffset = (PROJECTION_PLANE_CENTER) - floor(wallHeight / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
 
-        int end = floor(wallOffset+wallHeight);
-        int start = floor(wallOffset);
+        float ratio = DISTANCE_TO_PROJECTION/finalDistance;
+        float bottomOfWall = (ratio * player.z + PROJECTION_PLANE_CENTER) + player.verticalHeadMovement;
+        float scale = (DISTANCE_TO_PROJECTION*TILE_SIZE/finalDistance);	
+        float topOfWall = bottomOfWall - scale;
 
-        float leveledStart = start-1 - floor(wallHeight)*level;
-        float leveledEnd = end - floor(wallHeight)*level;
+        float leveledStart = topOfWall - floor(wallHeight)*level;
+        float leveledEnd = bottomOfWall - floor(wallHeight)*level;
 
         // If stuff is not offscreen
         if(!(leveledStart < 0 && leveledEnd < 0))
@@ -1263,7 +1267,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                     textureType = TEXTURE_ARRAY_UP;
                 
                 if(curObject->texturesArray[textureType] > 0)
-                    R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+                    R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd+1, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
                 if(debugRendering)
                 {
@@ -1294,7 +1298,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                     textureType = TEXTURE_ARRAY_LEFT;
 
                 if(curObject->texturesArray[textureType] > 0)
-                    R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
+                    R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd+1, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
 
                 if(debugRendering)
                 {
@@ -1306,7 +1310,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
 
         // Abs Floor casting
         if(level == 0)
-            R_FloorCasting(end - floor(wallHeight)*level, rayAngle, x, wallHeight);
+            R_FloorCasting(leveledEnd, rayAngle, x, wallHeight);
 
         // Draw bottom of walls
         float wallBottom = TILE_SIZE * level;
@@ -1356,10 +1360,21 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
 {
     //R_FloorCasting(bottom, wall->rayAngle, wall->x, height);
     int y = (PROJECTION_PLANE_HEIGHT - height) / 2 + height;
-    y = y - height*wall->level + screenZ;
 
-    if(y < 0)
-        y = 0;
+    if(player.verticalHeadMovement > 0)
+    {
+        y = y - height*wall->level + screenZ - player.verticalHeadMovement;
+
+        if(y < 0 - player.verticalHeadMovement)
+            y = 0 - player.verticalHeadMovement;
+    }
+    else
+    {
+        y = y - height*wall->level + screenZ + player.verticalHeadMovement;
+
+        if(y < 0 + player.verticalHeadMovement)
+            y = 0 + player.verticalHeadMovement;
+    }
 
     //R_DrawPixel(wall->x ,y, r_debugColor); 
 
@@ -1372,7 +1387,7 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
         float ceilingHeight = TILE_SIZE * wall->level;
 
         // Get distance
-        float straightlinedist = (((ceilingHeight - player.z) * DISTANCE_TO_PROJECTION) / (PROJECTION_PLANE_CENTER-y));
+        float straightlinedist = (((ceilingHeight - player.z) * DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER)-y));
         float d = straightlinedist / cos(beta);
 
         // Get coordinates
@@ -1412,7 +1427,7 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
                 int textureID = wall->objectHit->texturesArray[TEXTURE_ARRAY_BOTTOM];
 
                 if(textureID > 0)
-                    R_DrawColumnOfPixelShaded(wall->x, y-1, y+1, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), lightingMult, straightlinedist-1.0f);
+                    R_DrawColumnOfPixelShaded(wall->x, y+player.verticalHeadMovement-1, y+player.verticalHeadMovement+1, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), lightingMult, straightlinedist-1.0f);
 
                 startedDrawing = true;
             }
@@ -1426,10 +1441,22 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
     FIX_ANGLES(beta);
 
     int y = (PROJECTION_PLANE_HEIGHT - height) / 2;
-    y = y - height*wall->level + screenZ;
+
+    if(player.verticalHeadMovement > 0)
+    {
+        y = y - height*wall->level + screenZ + player.verticalHeadMovement;
     
-    if(y > PROJECTION_PLANE_HEIGHT)
-        y = PROJECTION_PLANE_HEIGHT;
+        if(y > PROJECTION_PLANE_HEIGHT + player.verticalHeadMovement)
+            y = PROJECTION_PLANE_HEIGHT + player.verticalHeadMovement;
+    }
+    else
+    {
+        y = y - height*wall->level + screenZ - player.verticalHeadMovement;
+    
+        if(y > PROJECTION_PLANE_HEIGHT - player.verticalHeadMovement)
+            y = PROJECTION_PLANE_HEIGHT - player.verticalHeadMovement;
+    }
+    
 
     //R_DrawPixel(wall->x ,y, r_debugColor); 
 
@@ -1439,7 +1466,7 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
     for(; y >= PROJECTION_PLANE_CENTER; y--)
     {
         // Get distance
-        float straightlinedist = ((player.z - wallTop) * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
+        float straightlinedist = ((player.z - wallTop) * DISTANCE_TO_PROJECTION) / (y - (PROJECTION_PLANE_CENTER));
         float d = straightlinedist / cos(beta);
 
         // Get coordinates
@@ -1479,7 +1506,7 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
                 int textureID = wall->objectHit->texturesArray[TEXTURE_ARRAY_TOP];
                 
                 if(textureID > 0)
-                    R_DrawColumnOfPixelShaded(wall->x, y-1, y+1, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), floorLighting, straightlinedist-1.0f);
+                    R_DrawColumnOfPixelShaded(wall->x, y+player.verticalHeadMovement-1, y+player.verticalHeadMovement+1, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), floorLighting, straightlinedist-1.0f);
 
                 startedDrawing = true;
             }
@@ -1494,7 +1521,7 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
 // - rayAngle = the current rayangle
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
-void R_FloorCasting(float end, float rayAngle, int x, float wallHeight)
+void R_FloorCasting(int end, float rayAngle, int x, float wallHeight)
 {
     if(end > PROJECTION_PLANE_HEIGHT)
         end = PROJECTION_PLANE_HEIGHT;
@@ -1503,10 +1530,10 @@ void R_FloorCasting(float end, float rayAngle, int x, float wallHeight)
     float beta = (player.angle - rayAngle);
     FIX_ANGLES(beta);
 
-    for(int y = floor(end); y < PROJECTION_PLANE_HEIGHT; y++)
+    for(int y = end; y < PROJECTION_PLANE_HEIGHT; y++)
     {
         // Get distance
-        float straightlinedist = (player.z * DISTANCE_TO_PROJECTION) / (y - PROJECTION_PLANE_CENTER);
+        float straightlinedist = (player.z * DISTANCE_TO_PROJECTION) / (y - (PROJECTION_PLANE_CENTER+ player.verticalHeadMovement));
         float d = straightlinedist / cos(beta);
 
         // Calculate lighting intensity
@@ -1553,7 +1580,7 @@ void R_CeilingCasting(int level, float start, float rayAngle, int x, float wallH
     for(int y = floor(start); y >= 0; y--)
     {
         // Get distance
-        float straightlinedist = (((ceilingHeight - player.z)* DISTANCE_TO_PROJECTION) / (PROJECTION_PLANE_CENTER-y));
+        float straightlinedist = (((ceilingHeight - player.z)* DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER+ player.verticalHeadMovement)-y));
         float d = straightlinedist / cos(beta);
 
         // Get coordinates
@@ -1564,7 +1591,7 @@ void R_CeilingCasting(int level, float start, float rayAngle, int x, float wallH
         int curGridX = floor(floorx / TILE_SIZE);
         int curGridY = floor(floory / TILE_SIZE);
 
-        straightlinedist = (((ceilingHeight - player.z)* DISTANCE_TO_PROJECTION) / (PROJECTION_PLANE_CENTER-y));
+        straightlinedist = (((ceilingHeight - player.z)* DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER+ player.verticalHeadMovement)-y));
         d = straightlinedist / cos(beta);
 
         // Calculate lighting intensity
@@ -1616,7 +1643,7 @@ void R_DrawThinWall(walldata_t* cur)
 
     float screenZ = round(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(TILE_SIZE/2)));
     
-    int wallOffset = (PROJECTION_PLANE_CENTER) - floor(wallHeight / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
+    int wallOffset = (PROJECTION_PLANE_CENTER+ player.verticalHeadMovement) - floor(wallHeight / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
 
     float start = floor(wallOffset);
     float end = floor(wallOffset+wallHeight);
@@ -1807,15 +1834,15 @@ void R_DrawSprite(sprite_t* sprite)
     if(sprite->sheetLength > 0 && U_GetBit(&tomentdatapack.sprites[sprite->spriteID]->flags, 1) == 1)
         currentFrame = ((int)floor(curTime / ANIMATION_SPEED_DIVIDER) % sprite->sheetLength);
 
+    drawYStart  = (PROJECTION_PLANE_CENTER + player.verticalHeadMovement) - (sprite->height / 2) + screenZ;
+    drawYEnd    = (PROJECTION_PLANE_CENTER + player.verticalHeadMovement) + (sprite->height / 2) + screenZ;
+
     for(int j = 0; j < sprite->height; j++)
     {
         offset = j*TILE_SIZE/sprite->height + (UNIT_SIZE*currentFrame);
         drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(sprite->height/2);
 
-        drawYStart = (PROJECTION_PLANE_CENTER) - (sprite->height / 2) + screenZ;
-        drawYEnd = (PROJECTION_PLANE_CENTER) + (sprite->height / 2) + screenZ;
-
-        R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->height*sprite->level), drawYEnd-(sprite->height*sprite->level), tomentdatapack.sprites[sprite->spriteID]->texture,offset, sprite->height, lighting, dist);
+        R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->height*sprite->level)+1, drawYEnd-(sprite->height*sprite->level)+1, tomentdatapack.sprites[sprite->spriteID]->texture,offset, sprite->height, lighting, dist);
     }
 
     // Draws the center of the sprite
@@ -1872,14 +1899,14 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
     // Draw
     int offset, drawX, drawYStart, drawYEnd;
 
+    drawYStart  = (PROJECTION_PLANE_CENTER + player.verticalHeadMovement) - (sprite->base.height / 2) + screenZ;
+    drawYEnd    = (PROJECTION_PLANE_CENTER + player.verticalHeadMovement) + (sprite->base.height / 2) + screenZ;
+
     // Select Animation
     for(int j = 0; j < sprite->base.height; j++)
     {
         offset = j*TILE_SIZE/sprite->base.height + (UNIT_SIZE*sprite->animFrame);
         drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(sprite->base.height/2);
-
-        drawYStart = (PROJECTION_PLANE_CENTER) - (sprite->base.height / 2) + screenZ;
-        drawYEnd = (PROJECTION_PLANE_CENTER) + (sprite->base.height / 2) + screenZ;
 
         if(sprite->curAnim != NULL)
             R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->base.height*sprite->base.level), drawYEnd-(sprite->base.height*sprite->base.level), sprite->curAnim, offset, sprite->base.height, lighting, dist);
