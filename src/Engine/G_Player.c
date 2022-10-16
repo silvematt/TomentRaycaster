@@ -546,7 +546,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
 
         case SDL_KEYUP:
             // Space player's interacions
-            if(e->key.keysym.sym == SDLK_SPACE)
+            if(e->key.keysym.sym == SDLK_SPACE && player.state != PSTATE_CLIMBING_LADDER)
             {
                 // Interactions
                 objectType_e objType = G_GetFromObjectTMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
@@ -1176,7 +1176,7 @@ static void I_SetAttackCone(int id, int x, int y)
 
 bool G_PlayerCanAttack(void)
 {
-    return (player.state != PSTATE_ATTACKING1 && player.state != PSTATE_CASTSPELL);
+    return (player.state != PSTATE_ATTACKING1 && player.state != PSTATE_CASTSPELL && player.state != PSTATE_CLIMBING_LADDER);
 }
 
 void G_PlayerSetWeapon(playerFPID_e weaponID)
@@ -1245,9 +1245,9 @@ static void I_PlayerLadderMovements()
             {
                 // Get pos closer to climbing pos
                 if(player.climbingPosX > player.position.x)
-                    player.position.x += PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+                    player.position.x += PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
                 else
-                    player.position.x -= PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+                    player.position.x -= PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
 
                 doingSomething = true;
             }
@@ -1255,9 +1255,9 @@ static void I_PlayerLadderMovements()
             if(abs(player.position.y - player.climbingPosY) > 1.0f)
             {
                 if(player.climbingPosY > player.position.y)
-                    player.position.y += PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+                    player.position.y += PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
                 else
-                    player.position.y -= PLAYER_CLIMBING_LADDER_UP_SPEED * deltaTime;
+                    player.position.y -= PLAYER_CLIMBING_LADDER_DOWN_SPEED * deltaTime;
                 doingSomething = true;
             }
         }
