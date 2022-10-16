@@ -59,5 +59,5 @@ void D_CallbackPickup(char* data)
 
 void D_CallbackLadder(char* data)
 {
-    printf("aight gotta figure sht out now XD\n");
+    printf("Climbing Ladder\n");
 }

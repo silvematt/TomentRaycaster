@@ -8,6 +8,7 @@
         "p_physics.h": "c",
         "g_ai.h": "c",
         "u_utilities.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "stdio.h": "c"
     }
 }
