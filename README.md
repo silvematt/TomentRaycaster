@@ -9,7 +9,7 @@ I've loved the time I've spent on it, it's a work in progress with other feature
 
 Features:
 - Rendering 640x480
-- Player Input (Walk forward/backwards, fly up/down, rotate, strafe, interact)
+- Player Input (Walk forward/backwards, fly up/down, rotate, look up/down, strafe, interact)
 - Textured Walls, Floors, Ceilings
 - Thin (offsetted) Walls
 - Sliding Doors
