@@ -57,10 +57,10 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
     switch(cur->base.spriteID)
     {
         case DS_Skeleton:
-            cur->attributes.maxHealth = 1000.0f;
+            cur->attributes.maxHealth = 100.0f;
             cur->attributes.curHealth = cur->attributes.maxHealth;
 
-            cur->attributes.maxMana = 1000.0f;
+            cur->attributes.maxMana = 100.0f;
             cur->attributes.curMana = cur->attributes.maxMana;
 
             cur->attributes.baseDamage = 5.0f;
