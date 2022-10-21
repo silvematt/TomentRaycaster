@@ -301,8 +301,9 @@ void G_UpdateProjectiles(void)
             cur->this.base.pos.x += cos(cur->this.base.angle) * cur->this.speed * deltaTime;
             cur->this.base.pos.y += sin(cur->this.base.angle) * cur->this.speed * deltaTime;
 
-             // Determine AI's level
-            cur->this.base.level = (int)floor(cur->this.base.z / TILE_SIZE);
+             // Determine Projectile's level
+             // half a tile is added to the base.z because the collision with the bottom part should always be a bit higer than normal (otherwise the projectile hits a wall with the transparent part of the sprite)
+            cur->this.base.level = (int)floor((cur->this.base.z+(TILE_SIZE/2)) / TILE_SIZE);
             cur->this.base.level = SDL_clamp(cur->this.base.level, 0, MAX_N_LEVELS-1);
 
             if(cur->this.verticalMovementDelta > 0 || cur->this.verticalMovementDelta < 0)
@@ -332,7 +333,7 @@ void G_UpdateProjectiles(void)
                         break;
 
                     case S_IceDart1:
-                        damage = 10.0f;
+                        damage = 15.0f;
                         break;
 
                     default:

@@ -200,5 +200,6 @@ void G_PlayerGainMana(float amount);
 void G_PlayerSetWeapon(playerFPID_e weaponID);
 void G_PlayerSetSpell(playerSpells_e spellID);
 
+void G_PlayerDeath();
 
 #endif

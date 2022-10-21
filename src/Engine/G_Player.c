@@ -74,7 +74,7 @@ void G_InitPlayer(void)
         player.hasBeenInitialized = true;
 
         player.hasAxe = false;
-        player.hasFireball = true;
+        player.hasFireball = false;
         player.hasIceDart = false;
     }
     // Rect for minimap
@@ -651,6 +651,12 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
 void G_PlayerTakeDamage(float dmg)
 {
     player.attributes.curHealth -= dmg;
+
+    if(player.attributes.curHealth <= 0.0f)
+    {
+        G_PlayerDeath();
+    }
+    
     player.attributes.curHealth = SDL_clamp(player.attributes.curHealth, 0, player.attributes.maxHealth);
 }
 
@@ -664,6 +670,12 @@ void G_PlayerGainMana(float amount)
 {
     player.attributes.curMana += amount;
     player.attributes.curMana = SDL_clamp(player.attributes.curMana, 0, player.attributes.maxMana);
+}
+
+void G_PlayerDeath()
+{
+    G_SetMenu(&DeathMenu);
+    A_ChangeState(GSTATE_MENU);
 }
 
 //-------------------------------------

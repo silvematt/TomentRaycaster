@@ -10,7 +10,8 @@
 
 typedef enum
 {
-    MENU_START = 0
+    MENU_START = 0,
+    MENU_DEATH
 } menusIDs_e;
 
 
@@ -36,6 +37,14 @@ extern menu_t* currentMenu;
 extern menuelement_t MainMenuElements[];
 extern menu_t MainMenu;
 
+// Menus are initialized at compile-time
+extern menuelement_t DeathMenuElements[];
+extern menu_t DeathMenu;
+
+
+void G_InitMainMenu();
+
+void G_SetMenu(menu_t* menu);
 
 //-------------------------------------
 // Renders what's gonna be behind the current menu
@@ -67,5 +76,7 @@ static void CALLBACK_MAINMENU_NewGame(void);
 // MENU_QUIT
 //-------------------------------------
 static void CALLBACK_MAINMENU_Quit(void);
+
+static void CALLBACK_DEATHMENU_Return(void);
 
 #endif

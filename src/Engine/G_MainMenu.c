@@ -18,8 +18,22 @@ menuelement_t MainMenuElements[] =
 
 menu_t MainMenu = {MENU_START, MainMenuElements, 5, &MainMenuElements[0]};
 
+menuelement_t DeathMenuElements[] =
+{
+    {"Restart  Game",    {220, 200, 400, 40}, CALLBACK_MAINMENU_NewGame},
+    {"Return",           {220, 250, 200, 40}, CALLBACK_DEATHMENU_Return},
+};
 
-menu_t* currentMenu = &MainMenu;
+menu_t DeathMenu = {MENU_DEATH, DeathMenuElements, 2, &DeathMenuElements[0]};
+
+
+menu_t* currentMenu;
+
+
+void G_InitMainMenu()
+{
+    G_SetMenu(&MainMenu);
+}
 
 //-------------------------------------
 // Renders what's gonna be behind the current menu
@@ -34,6 +48,13 @@ void G_RenderCurrentMenuBackground(void)
             R_BlitIntoScreenScaled(NULL, tomentdatapack.uiAssets[M_ASSET_TITLE]->texture, &titleRect);
             break;
         }
+
+        case MENU_DEATH:
+        {
+            SDL_Rect titleRect = {110, 10, tomentdatapack.uiAssets[M_ASSET_TITLE]->texture->w, tomentdatapack.uiAssets[M_ASSET_TITLE]->texture->h};
+            T_DisplayTextScaled(FONT_BLKCRY, "You  died!", 180, 80, 2.0f);
+            break;
+        }
     }
 }
 
@@ -43,9 +64,9 @@ void G_RenderCurrentMenuBackground(void)
 void G_RenderCurrentMenu(void)
 {
     // Display text
-    for(int i = 0; i < 5; i++)
+    for(int i = 0; i < currentMenu->elementsLength; i++)
     {
-        T_DisplayTextScaled(FONT_BLKCRY, MainMenu.elements[i].text, MainMenu.elements[i].box.x, MainMenu.elements[i].box.y, 1.25f);
+        T_DisplayTextScaled(FONT_BLKCRY, currentMenu->elements[i].text, currentMenu->elements[i].box.x, currentMenu->elements[i].box.y, 1.25f);
     }
 
     // Display cursor
@@ -79,9 +100,16 @@ void G_InMenuInputHandling(SDL_Event* e)
             if (isOn && currentMenu->selectedElement->OnClick != NULL)
             {
                 currentMenu->selectedElement->OnClick();
+                return;
             }
         }
     }
+}
+
+void G_SetMenu(menu_t* newMenu)
+{
+    currentMenu = newMenu;
+    currentMenu->elementsLength = newMenu->elementsLength;
 }
 
 //-------------------------------------
@@ -106,4 +134,12 @@ static void CALLBACK_MAINMENU_NewGame(void)
 static void CALLBACK_MAINMENU_Quit(void)
 {
     application.quit = true;
+}
+
+
+// DEATH MENU
+static void CALLBACK_DEATHMENU_Return(void)
+{
+    G_SetMenu(&MainMenu);
+    A_ChangeState(GSTATE_MENU);
 }
