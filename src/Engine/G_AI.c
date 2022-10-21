@@ -20,7 +20,10 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
     
     cur->base.active = true;
     cur->base.level = level;
+    cur->base.level = SDL_clamp(cur->base.level, 0, MAX_N_LEVELS-1);
 
+    cur->base.z = TILE_SIZE * (level);
+    cur->verticalMovementDelta = 0.0f;
     cur->base.gridPos.x = x;
     cur->base.gridPos.y = y;
 
@@ -54,10 +57,10 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
     switch(cur->base.spriteID)
     {
         case DS_Skeleton:
-            cur->attributes.maxHealth = 100.0f;
+            cur->attributes.maxHealth = 1000.0f;
             cur->attributes.curHealth = cur->attributes.maxHealth;
 
-            cur->attributes.maxMana = 100.0f;
+            cur->attributes.maxMana = 1000.0f;
             cur->attributes.curMana = cur->attributes.maxMana;
 
             cur->attributes.baseDamage = 5.0f;
@@ -109,6 +112,13 @@ void G_AIUpdate(void)
 
         cur->base.gridPos.x = cur->base.centeredPos.x / TILE_SIZE;
         cur->base.gridPos.y = cur->base.centeredPos.y / TILE_SIZE;
+
+        // Determine AI's level
+        cur->base.level = (int)floor(cur->base.z / TILE_SIZE);
+        cur->base.level = SDL_clamp(cur->base.level, 0, MAX_N_LEVELS-1);
+
+        if(cur->verticalMovementDelta > 0 || cur->verticalMovementDelta < 0)
+            cur->base.z += cur->verticalMovementDelta * deltaTime;
 
         cur->base.angle = ((atan2(-cur->base.pSpacePos.y, cur->base.pSpacePos.x))* RADIAN_TO_DEGREE)*-1;
         FIX_ANGLES_DEGREES(cur->base.angle);

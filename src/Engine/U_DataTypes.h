@@ -73,6 +73,8 @@ typedef struct sprite_s
 
     float dist;     // distance from player
     float height;   // how big the sprite will be drawn
+
+    float z;
 } sprite_t;
 
 
@@ -138,6 +140,9 @@ typedef struct dynamicSprite_s
     // Used for projectiles to distinguish between player's projectiles and AI's projectiles
     bool isOfPlayer;
     bool isBeingDestroyed; // called when a projectile hits and awaits the explosion animation to be removed from the list
+
+    // How muc this dynamic needs to move each tick on the z axis
+    float verticalMovementDelta;
 } dynamicSprite_t;
 
 // -------------------------------

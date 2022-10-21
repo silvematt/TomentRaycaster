@@ -367,7 +367,7 @@ void G_PlayerRender(void)
             if(player.state == PSTATE_CASTSPELL && player.animFrame == curAnimActionFrame && player.hasToCast && !player.hasCasted)
             {
                 // Spawn a projectile
-                G_SpawnProjectile(player.curSpell, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, true);
+                G_SpawnProjectile(player.curSpell, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, player.z-(TILE_SIZE/2), player.verticalHeadMovement, true);
                 player.hasCasted = true;
                 player.hasToCast = false;
             }

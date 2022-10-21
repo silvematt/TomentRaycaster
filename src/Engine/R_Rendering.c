@@ -1886,7 +1886,7 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
 
     sprite->base.height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
 
-    float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-(TILE_SIZE/2)));
+    float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-sprite->base.z-(TILE_SIZE/2)));
 
     if(sprite->base.height <= 0)
         return;
@@ -1911,7 +1911,7 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
         drawX = PROJECTION_PLANE_WIDTH-(spriteX)+j-(sprite->base.height/2);
 
         if(sprite->curAnim != NULL)
-            R_DrawStripeTexturedShaded(drawX, drawYStart-(sprite->base.height*sprite->base.level), drawYEnd-(sprite->base.height*sprite->base.level), sprite->curAnim, offset, sprite->base.height, lighting, dist);
+            R_DrawStripeTexturedShaded(drawX, drawYStart, drawYEnd, sprite->curAnim, offset, sprite->base.height, lighting, dist);
     }
 
     // Draws the center of the sprite

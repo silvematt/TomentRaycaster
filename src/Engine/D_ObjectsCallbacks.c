@@ -124,7 +124,7 @@ void D_CallbackLadder(char* data)
 
 void D_CallbackLadderDown(char* data)
 {
-    printf("Climbing Ladde Downr\n");
+    printf("Climbing Ladder Down\n");
     wallObject_t* wallObj = R_GetWallObjectFromMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
 
     // Check if he player is facing a ladder

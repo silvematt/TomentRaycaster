@@ -301,8 +301,15 @@ void G_UpdateProjectiles(void)
             cur->this.base.pos.x += cos(cur->this.base.angle) * cur->this.speed * deltaTime;
             cur->this.base.pos.y += sin(cur->this.base.angle) * cur->this.speed * deltaTime;
 
+             // Determine AI's level
+            cur->this.base.level = (int)floor(cur->this.base.z / TILE_SIZE);
+            cur->this.base.level = SDL_clamp(cur->this.base.level, 0, MAX_N_LEVELS-1);
+
+            if(cur->this.verticalMovementDelta > 0 || cur->this.verticalMovementDelta < 0)
+                cur->this.base.z += cur->this.verticalMovementDelta * deltaTime;
+
             // Check if projectile is not out of map
-            bool insideMap = cur->this.base.gridPos.x >= 0 && cur->this.base.gridPos.y >= 0 && cur->this.base.gridPos.x < MAP_WIDTH && cur->this.base.gridPos.y < MAP_HEIGHT;
+            bool insideMap = cur->this.base.gridPos.x >= 0 && cur->this.base.gridPos.y >= 0 && cur->this.base.gridPos.x < MAP_WIDTH && cur->this.base.gridPos.y < MAP_HEIGHT && cur->this.base.z > -TILE_SIZE && cur->this.base.z < TILE_SIZE*(MAX_N_LEVELS);
 
             // Destroy condition
             if(G_CheckCollisionMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x) == 1 || !insideMap)
@@ -423,7 +430,7 @@ void G_UpdateProjectiles(void)
 }
 
 
-void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, bool isOfPlayer)
+void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, float posz, float verticalAngle, bool isOfPlayer)
 {
     // Allocate a node
     projectileNode_t* newNode = (projectileNode_t*)malloc(sizeof(projectileNode_t));
@@ -447,6 +454,10 @@ void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, b
 
     newNode->this.base.pos.x = posx;
     newNode->this.base.pos.y = posy;
+    newNode->this.base.z = posz;
+
+    // Vertical angle is how much the entity that launches the projectile is looking up/down
+    newNode->this.verticalMovementDelta = verticalAngle;
 
     newNode->this.base.gridPos.x = posx / TILE_SIZE;
     newNode->this.base.gridPos.y = posy / TILE_SIZE;
