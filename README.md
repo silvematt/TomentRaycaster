@@ -8,7 +8,7 @@ I've written this raycaster following Permadi's paper and Wolfenstein 3D code (a
 I've loved the time I've spent on it, it's a work in progress with other features on schedule :)
 
 Features:
-- Rendering 640x480
+- Rendering 640x480 (with scalable raycasting resolution) 
 - Player Input (Walk forward/backwards, fly up/down, rotate, look up/down, strafe, interact)
 - Textured Walls, Floors, Ceilings
 - Thin (offsetted) Walls
