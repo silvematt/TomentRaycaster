@@ -290,11 +290,11 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
 
     if(keyboardState[SDL_SCANCODE_LCTRL])
         if(player.z > 1)
-            player.z -= 1.0f * deltaTime; 
+            player.z -= 100 * deltaTime; 
 
     if(keyboardState[SDL_SCANCODE_LSHIFT])
         if(player.z < 191)
-            player.z += 1.0f * deltaTime; 
+            player.z += 100 * deltaTime; 
 
     if(keyboardState[SDL_SCANCODE_KP_MINUS])
     {

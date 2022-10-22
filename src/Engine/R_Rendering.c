@@ -2173,7 +2173,7 @@ void R_BlitColorIntoScreen(int color, SDL_Rect* pos)
         for(int x = 0; x < pos->w; x++) 
         {
             // Put it into buffer
-            pixels[(pos->x + x) + ((pos->y + y) * SCREEN_WIDTH)] = color;
+            pixels[(pos->x + x) + ((pos->y + y) * win_surface->w)] = color;
         }
 }
 
@@ -2387,7 +2387,7 @@ void R_DrawColumnOfPixelShaded(int x, int y, int endY, int color, float intensit
 
     for(int i = y; i <= endY; i++)
     {
-        if( x >= 0 && x < SCREEN_WIDTH && i >= 0 && i < SCREEN_HEIGHT)    // To not go outside of boundaries
+        if( x >= 0 && x < PROJECTION_PLANE_WIDTH && i >= 0 && i < PROJECTION_PLANE_HEIGHT)    // To not go outside of boundaries
         {
             // Put it in the framebuffer
             // Put in Z buffer
