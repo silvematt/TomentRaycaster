@@ -2,8 +2,8 @@
 
 #include "P_Physics.h"
 
-// Timer needed to calculate delta time
-Timer* stepTimer;
+Uint32 current;
+Uint32 lastUpdate;
 
 // Delta time
 float deltaTime;
@@ -13,17 +13,19 @@ float deltaTime;
 //-------------------------------------
 void P_PhysicsInit(void)
 {
-    stepTimer = U_TimerCreateNew();
-    stepTimer->Start(stepTimer);
-    deltaTime = stepTimer->GetTicks(stepTimer) / 1000.0f;
+    current = 0;
+    lastUpdate = 0;
 }
+
 
 //-------------------------------------
 // Physics tick
 //-------------------------------------
 void P_PhysicsTick(void)
 {
-    deltaTime = stepTimer->GetTicks(stepTimer) / 1000.0f;
+	current = SDL_GetTicks();
+
+	deltaTime = (current - lastUpdate) / 1000.0f;
 }
 
 //-------------------------------------
@@ -31,7 +33,7 @@ void P_PhysicsTick(void)
 //-------------------------------------
 void P_PhysicsEndTick(void)
 {
-    stepTimer->Start(stepTimer);
+    lastUpdate = current;
 }
 
 float P_GetDistance(float x1, float y1, float x2, float y2)

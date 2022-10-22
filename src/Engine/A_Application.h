@@ -41,6 +41,9 @@ extern SDL_Surface* win_surface;    // the surface of the window
 extern int win_width;               // win_surface->w
 extern unsigned int* pixels;        // pixels of the surface
 
+extern SDL_Surface* raycast_surface;    // the surface the raycasting is written to      
+extern unsigned int* raycast_pixels;    // pixels of the surface
+
 //-------------------------------------
 // Initializes the application 
 //-------------------------------------

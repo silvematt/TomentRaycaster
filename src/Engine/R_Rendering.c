@@ -20,7 +20,7 @@ uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of
 uint32_t r_debugColor;
 
 // zBuffer
-float zBuffer[PROJECTION_PLANE_HEIGHT][PROJECTION_PLANE_WIDTH];
+float zBuffer[MAX_PROJECTION_PLANE_HEIGHT][MAX_PROJECTION_PLANE_WIDTH];
 
 // Visible Sprite Determination
 bool visibleTiles[MAP_HEIGHT][MAP_WIDTH];
@@ -30,7 +30,7 @@ int visibleSpritesLength;
 // =========================================
 // Thin wall Transparency
 // =========================================
-walldata_t currentThinWalls[PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
+walldata_t currentThinWalls[MAX_PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
 unsigned visibleThinWallsLength;
 
 // Drawables
@@ -42,6 +42,16 @@ bool r_debugPathfinding = false;
 
 alertMessage_t* alertMessagesHead;
 
+
+GraphicsOptions_e r_CurrentGraphicsSetting = GRAPHICS_MEDIUM;
+
+// Projection Plane
+int PROJECTION_PLANE_WIDTH;     
+int PROJECTION_PLANE_HEIGHT;
+int PROJECTION_PLANE_CENTER;
+
+//#define DISTANCE_TO_PROJECTION ((PROJECTION_PLANE_WIDTH / 2) / tan(PLAYER_FOV /2))
+int DISTANCE_TO_PROJECTION;
 
 // =========================================
 // Static functions
@@ -59,8 +69,63 @@ void R_InitRendering(void)
     r_transparencyColor = SDL_MapRGB(win_surface->format, 155, 0, 155);
     r_debugColor = SDL_MapRGB(win_surface->format, 0, 255, 0);
 
+    R_SetRenderingGraphics(r_CurrentGraphicsSetting);
+
     // Clear initial render
     R_ClearRendering();
+}
+
+void R_SetRenderingGraphics(GraphicsOptions_e setting)
+{
+    switch(setting)
+    {
+        case GRAPHICS_LOW:
+            PROJECTION_PLANE_WIDTH = 260;
+            PROJECTION_PLANE_HEIGHT = 180;
+            PROJECTION_PLANE_CENTER = 90;
+            DISTANCE_TO_PROJECTION = 225;
+
+            MAX_VERTICAL_HEAD_MOV = 65;
+            MIN_VERTICAL_HEAD_MOV = -65;
+            break;
+
+        case GRAPHICS_MEDIUM:
+            PROJECTION_PLANE_WIDTH = 320;
+            PROJECTION_PLANE_HEIGHT = 240;
+            PROJECTION_PLANE_CENTER = 120;
+            DISTANCE_TO_PROJECTION = 277;
+
+            MAX_VERTICAL_HEAD_MOV = 80;
+            MIN_VERTICAL_HEAD_MOV = -80;
+            break;
+
+        case GRAPHICS_HIGH:
+            PROJECTION_PLANE_WIDTH = 640;
+            PROJECTION_PLANE_HEIGHT = 480;
+            PROJECTION_PLANE_CENTER = 240;
+            DISTANCE_TO_PROJECTION = 554;
+
+            MAX_VERTICAL_HEAD_MOV = 170;
+            MIN_VERTICAL_HEAD_MOV = -170;
+            break;
+
+        default:
+            PROJECTION_PLANE_WIDTH = 320;
+            PROJECTION_PLANE_HEIGHT = 240;
+            PROJECTION_PLANE_CENTER = 120;
+            DISTANCE_TO_PROJECTION = 277;
+
+            MAX_VERTICAL_HEAD_MOV = 80;
+            MIN_VERTICAL_HEAD_MOV = -80;
+            break;
+    }
+
+    // Create surface for raycasting
+    if(raycast_surface != NULL)
+        SDL_FreeSurface(raycast_surface);
+
+    raycast_surface = SDL_CreateRGBSurfaceWithFormat(0, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT, 32, win_surface->format->format);
+    raycast_pixels = raycast_surface->pixels;
 }
 
 
@@ -192,13 +257,13 @@ void R_DrawBackground(void)
         // DRAW CEILING
         for(int x = 0; x < PROJECTION_PLANE_WIDTH; x++)
         {
-            R_DrawColumn(x, 0, (PROJECTION_PLANE_HEIGHT-1) / 2, SDL_MapRGB(win_surface->format, 64, 64, 64));
+            R_DrawColumn(x, 0, (SCREEN_HEIGHT-1) / 2, SDL_MapRGB(raycast_surface->format, 64, 64, 64));
         }
 
         // DRAW FLOOR
         for(int i = 0; i < PROJECTION_PLANE_WIDTH; i++)
         {
-            R_DrawColumn(i, (PROJECTION_PLANE_HEIGHT-1) / 2, PROJECTION_PLANE_HEIGHT, SDL_MapRGB(win_surface->format, 128, 128, 128));
+            R_DrawColumn(i, (PROJECTION_PLANE_HEIGHT-1) / 2, PROJECTION_PLANE_HEIGHT, SDL_MapRGB(raycast_surface->format, 128, 128, 128));
         }
     }
     else
@@ -206,20 +271,20 @@ void R_DrawBackground(void)
         // Blit the sky texture
         object_t* curSky = tomentdatapack.skies[currentMap.skyID];
 
-        static SDL_Rect size = {PROJECTION_PLANE_WIDTH, 0, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-        static SDL_Rect pos =  {0, 0, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+        SDL_Rect size = {SCREEN_WIDTH, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+        SDL_Rect pos =  {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
         // Correct the offset (player.Angle * 611 is the sweet spot to make the shift back seamless when the angles are fixed (round(6.28318.. * 611) % 640 = 0) )
-        scrollOffset = (int)round(player.angle*611) % PROJECTION_PLANE_WIDTH;
+        scrollOffset = (int)round(player.angle*611) % SCREEN_WIDTH;
         
         // Limit the offset to max 640
-        if(scrollOffset < -PROJECTION_PLANE_WIDTH || scrollOffset > PROJECTION_PLANE_WIDTH)
+        if(scrollOffset < -SCREEN_WIDTH || scrollOffset > SCREEN_WIDTH)
             scrollOffset = 0;
 
         // Shift the sky with the rotation
         size.x = scrollOffset;
 
-        SDL_BlitScaled(curSky->texture, &size, win_surface, &pos);
+        SDL_BlitScaled(curSky->texture, &size, raycast_surface, &pos);
     }
 }
 
@@ -284,6 +349,12 @@ void R_Raycast(void)
 
     // Raycast player's level
     I_Ray(player.level, player.level);
+
+    SDL_Rect size = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+    
+    // Copy raycast surface to the screen surface
+    if(application.gamestate == GSTATE_GAME)
+        SDL_BlitScaled(raycast_surface, NULL, win_surface, &size);
 }
 
 void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
@@ -807,7 +878,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
     // For NonOccluded raycast we should keep raycasting until the end or the map or the defined 
     int maxDrawDistance = 24;
     bool mapEndedOrMaxDistanceReached = false;
-    walldata_t toDraw[PROJECTION_PLANE_WIDTH * MAX_N_LEVELS];
+    walldata_t toDraw[MAX_PROJECTION_PLANE_WIDTH * MAX_N_LEVELS];
     unsigned int toDrawLength = 0;
     
     // HORIZONTAL CHECK
@@ -1219,7 +1290,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         float wallHeight = (TILE_SIZE  / finalDistance) * DISTANCE_TO_PROJECTION;
         float wallHeightUncapped = wallHeight;
 
-        float screenZ = floor(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(TILE_SIZE/2)));
+        float screenZ = floor(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(HALF_TILE_SIZE)));
 
         float ratio = DISTANCE_TO_PROJECTION/finalDistance;
         float bottomOfWall = (ratio * player.z + PROJECTION_PLANE_CENTER) + player.verticalHeadMovement;
@@ -1643,7 +1714,7 @@ void R_DrawThinWall(walldata_t* cur)
     float wallHeight = (TILE_SIZE  / finalDistance) * DISTANCE_TO_PROJECTION;
     float wallHeightUncapped = wallHeight;
 
-    float screenZ = round(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(TILE_SIZE/2)));
+    float screenZ = round(DISTANCE_TO_PROJECTION / finalDistance*(player.z-(HALF_TILE_SIZE)));
     
     int wallOffset = (PROJECTION_PLANE_CENTER+ player.verticalHeadMovement) - floor(wallHeight / 2.0f) + screenZ;    // Wall Y offset to draw them in the middle of the screen + z
 
@@ -1719,8 +1790,8 @@ void R_AddToVisibleSprite(int gridX, int gridY, int level, int spriteID)
     visibleSprites[visibleSpritesLength].pos.x = gridX * TILE_SIZE;
     visibleSprites[visibleSpritesLength].pos.y = gridY * TILE_SIZE;
 
-    visibleSprites[visibleSpritesLength].centeredPos.x = visibleSprites[visibleSpritesLength].pos.x + (TILE_SIZE / 2);
-    visibleSprites[visibleSpritesLength].centeredPos.y = visibleSprites[visibleSpritesLength].pos.y + (TILE_SIZE / 2);
+    visibleSprites[visibleSpritesLength].centeredPos.x = visibleSprites[visibleSpritesLength].pos.x + (HALF_TILE_SIZE);
+    visibleSprites[visibleSpritesLength].centeredPos.y = visibleSprites[visibleSpritesLength].pos.y + (HALF_TILE_SIZE);
 
     // Get Player Space pos
     visibleSprites[visibleSpritesLength].pSpacePos.x = visibleSprites[visibleSpritesLength].centeredPos.x - player.centeredPos.x;
@@ -1818,7 +1889,7 @@ void R_DrawSprite(sprite_t* sprite)
 
     sprite->height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
 
-    float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-(TILE_SIZE/2)));
+    float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-(HALF_TILE_SIZE)));
 
     if(sprite->height <= 0)
         return;
@@ -1886,7 +1957,7 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
 
     sprite->base.height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
 
-    float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-sprite->base.z-(TILE_SIZE/2)));
+    float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-sprite->base.z-(HALF_TILE_SIZE)));
 
     if(sprite->base.height <= 0)
         return;
@@ -2073,7 +2144,7 @@ Uint32 R_GetPixelFromSurface(SDL_Surface *surface, int x, int y)
 // Updates the screen to the win_surface
 //-------------------------------------
 void R_FinishUpdate(void)
-{
+{    
     SDL_UpdateWindowSurface(application.win);
 }
 
@@ -2178,9 +2249,9 @@ void R_UpdateAlertMessages(void)
 //-------------------------------------
 void R_ClearRendering(void)
 {
-    for(int y = 0; y < SCREEN_HEIGHT; y++)
-        for(int x = 0; x < SCREEN_WIDTH; x++)
-            pixels[x + (y * win_surface->w)] = r_blankColor;
+    for(int y = 0; y < PROJECTION_PLANE_HEIGHT; y++)
+        for(int x = 0; x < PROJECTION_PLANE_WIDTH; x++)
+            raycast_pixels[x + (y * raycast_surface->w)] = r_blankColor;
 }
 
 //-------------------------------------
@@ -2270,8 +2341,8 @@ void R_DrawLine(int x0, int y0, int x1, int y1, int color)
 //-------------------------------------------------
 void R_DrawPixel(int x, int y, int color)
 {
-    if( x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)    // To not go outside of boundaries
-            pixels[x + y * win_width] = color;
+    if( x >= 0 && x < PROJECTION_PLANE_WIDTH && y >= 0 && y < PROJECTION_PLANE_HEIGHT)    // To not go outside of boundaries
+            raycast_pixels[x + y * raycast_surface->w] = color;
 }
 
 //------------------------------------------------
@@ -2279,7 +2350,7 @@ void R_DrawPixel(int x, int y, int color)
 //-------------------------------------------------
 void R_DrawPixelShaded(int x, int y, int color, float intensity, float dist)
 {
-    if( x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)    // To not go outside of boundaries
+    if( x >= 0 && x < PROJECTION_PLANE_WIDTH && y >= 0 && y < PROJECTION_PLANE_HEIGHT)    // To not go outside of boundaries
     {
         // Put it in the framebuffer
         // Put in Z buffer
@@ -2287,13 +2358,13 @@ void R_DrawPixelShaded(int x, int y, int color, float intensity, float dist)
         {
             // Do shading
             Uint8 r,g,b;
-            SDL_GetRGB(color, win_surface->format, &r, &g, &b);
+            SDL_GetRGB(color, raycast_surface->format, &r, &g, &b);
             r*=intensity;
             g*=intensity;
             b*=intensity;
         
             zBuffer[y][x] = dist;
-            pixels[x + y * win_width] = SDL_MapRGB(win_surface->format, r,g,b);
+            raycast_pixels[x + y * raycast_surface->w] = SDL_MapRGB(raycast_surface->format, r,g,b);
         }
     }
 }
@@ -2307,12 +2378,12 @@ void R_DrawColumnOfPixelShaded(int x, int y, int endY, int color, float intensit
 
     // Do shading
     Uint8 r,g,b;
-    SDL_GetRGB(color, win_surface->format, &r, &g, &b);
+    SDL_GetRGB(color, raycast_surface->format, &r, &g, &b);
     r*=intensity;
     g*=intensity;
     b*=intensity;
 
-    pixel = SDL_MapRGB(win_surface->format, r,g,b);
+    pixel = SDL_MapRGB(raycast_surface->format, r,g,b);
 
     for(int i = y; i <= endY; i++)
     {
@@ -2323,7 +2394,7 @@ void R_DrawColumnOfPixelShaded(int x, int y, int endY, int color, float intensit
             if(distance < zBuffer[i][x])
             {
                 zBuffer[i][x] = distance;
-                pixels[x + i * win_width] = pixel;
+                raycast_pixels[x + i * raycast_surface->w] = pixel;
             }
         }
     }
@@ -2338,7 +2409,7 @@ void R_DrawColumn(int x, int y, int endY, int color)
     for(int i = y; i < endY; i++)
     {
         if(x < PROJECTION_PLANE_WIDTH && x >= 0) // Don't overflow
-            pixels[x + i * win_width] = color;
+            raycast_pixels[x + i * raycast_surface->w] = color;
     }
 }
 
@@ -2378,7 +2449,7 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
                 if(wallheight < zBuffer[i][x])
                 {
                     zBuffer[i][x] = wallheight; 
-                    pixels[x + i * win_width] = pixel;
+                    raycast_pixels[x + i * raycast_surface->w] = pixel;
                 }
         }
 
@@ -2425,7 +2496,7 @@ void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, in
                 // Put it in the framebuffer
 
                 // Update the Z buffer;
-                pixels[x + i * win_width] = SDL_MapRGB(texture->format, r,g,b);
+                raycast_pixels[x + i * raycast_surface->w] = SDL_MapRGB(texture->format, r,g,b);
                 zBuffer[i][x] = dist; 
             }
         }

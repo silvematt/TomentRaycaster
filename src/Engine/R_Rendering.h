@@ -12,14 +12,33 @@
 // =========================================
 #define PLAYER_FOV 60                   // FOV of the player for raycasting
 #define PLAYER_FOV_F 60.0f              // FOV of the player for raycasting (as float)
-#define PROJECTION_PLANE_WIDTH 640     // Projection Plane
-#define PROJECTION_PLANE_HEIGHT 480
-#define PROJECTION_PLANE_CENTER 240
+
+
+// Max values the projection plane can be
+#define MAX_PROJECTION_PLANE_WIDTH 640
+#define MAX_PROJECTION_PLANE_HEIGHT 480
+
+// Runtime Graphichs
+typedef enum GraphicsOptions_e
+{
+    GRAPHICS_LOW = 0,
+    GRAPHICS_MEDIUM,
+    GRAPHICS_HIGH
+} GraphicsOptions_e;
+
+extern GraphicsOptions_e r_CurrentGraphicsSetting;
+
+// Projection Plane
+extern int PROJECTION_PLANE_WIDTH;     
+extern int PROJECTION_PLANE_HEIGHT;
+extern int PROJECTION_PLANE_CENTER;
 
 //#define DISTANCE_TO_PROJECTION ((PROJECTION_PLANE_WIDTH / 2) / tan(PLAYER_FOV /2))
-#define DISTANCE_TO_PROJECTION 554      // Distance to projection
-//#define GAME_VIEW_OFFSETX 350           // Offset of the GameView
-//#define GAME_VIEW_OFFSETY 125           // Offset of the GameView
+extern int DISTANCE_TO_PROJECTION;
+
+// Player's look up/down
+extern int MAX_VERTICAL_HEAD_MOV;
+extern int MIN_VERTICAL_HEAD_MOV;
 
 // =========================================
 // Minimap
@@ -49,7 +68,7 @@ extern int visibleSpritesLength;
 #define MAX_THIN_WALL_TRANSPARENCY_RECURSION 4
 
 // Found thin walls to draw
-extern walldata_t currentThinWalls[PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
+extern walldata_t currentThinWalls[MAX_PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION];
 extern unsigned visibleThinWallsLength;
 
 // Alert message
@@ -71,10 +90,10 @@ extern uint32_t r_blankColor;           // Color shown when nothing else is in t
 extern uint32_t r_transparencyColor;    // Color marked as "transparency", rendering of this color will be skipped for surfaces
 
 // Wall heights, saved for each x for each level
-extern float zBuffer[PROJECTION_PLANE_HEIGHT][PROJECTION_PLANE_WIDTH];
+extern float zBuffer[MAX_PROJECTION_PLANE_HEIGHT][MAX_PROJECTION_PLANE_WIDTH];
 
 // Drawables
-#define MAX_DRAWABLES PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION + MAXVISABLE
+#define MAX_DRAWABLES MAX_PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION + MAXVISABLE
 extern drawabledata_t allDrawables[MAX_DRAWABLES];
 extern int allDrawablesLength;
 
@@ -82,10 +101,13 @@ extern bool debugRendering;
 extern bool r_debugPathfinding;
 
 
+
 //-------------------------------------
 // Initializes the rendering 
 //-------------------------------------
 void R_InitRendering(void);
+
+void R_SetRenderingGraphics(GraphicsOptions_e setting);
 
 //-------------------------------------
 // Fill buffers and put framebuffers on top of each other

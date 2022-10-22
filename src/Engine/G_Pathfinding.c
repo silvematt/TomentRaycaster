@@ -162,8 +162,8 @@ path_t G_PerformPathfindingDebug(int level, vector2Int_t gridPos, vector2Int_t g
         for(int i = 0; i < pathLength; i++)
         {
             // Set X and Y
-            curRect.w = (TILE_SIZE/2) / MINIMAP_DIVIDER;
-            curRect.h = (TILE_SIZE/2) / MINIMAP_DIVIDER;
+            curRect.w = (HALF_TILE_SIZE) / MINIMAP_DIVIDER;
+            curRect.h = (HALF_TILE_SIZE) / MINIMAP_DIVIDER;
             curRect.x = (path.nodes[i]->gridPos.x) * TILE_SIZE / MINIMAP_DIVIDER +1;
             curRect.y = (path.nodes[i]->gridPos.y) * TILE_SIZE / MINIMAP_DIVIDER +1;
 

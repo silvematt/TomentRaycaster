@@ -102,8 +102,8 @@ void G_AIUpdate(void)
         int oldGridPosY = cur->base.gridPos.y;
 
         // Calculate centered pos
-        cur->base.centeredPos.x = cur->base.pos.x + (TILE_SIZE / 2);
-        cur->base.centeredPos.y = cur->base.pos.y + (TILE_SIZE / 2);
+        cur->base.centeredPos.x = cur->base.pos.x + (HALF_TILE_SIZE);
+        cur->base.centeredPos.y = cur->base.pos.y + (HALF_TILE_SIZE);
 
         // Calculate runtime stuff
         // Get Player Space pos
@@ -144,8 +144,8 @@ void G_AIUpdate(void)
             if(path.isValid && path.nodesLength-1 >= 0 && path.nodes[path.nodesLength-1] != NULL &&
                 G_CheckDynamicSpriteMap(cur->base.level, path.nodes[path.nodesLength-1]->gridPos.y, path.nodes[path.nodesLength-1]->gridPos.x) == false)
             {
-                deltaX = (path.nodes[path.nodesLength-1]->gridPos.x * TILE_SIZE + (TILE_SIZE/2)) - cur->base.centeredPos.x;
-                deltaY = (path.nodes[path.nodesLength-1]->gridPos.y * TILE_SIZE + (TILE_SIZE/2)) - cur->base.centeredPos.y;
+                deltaX = (path.nodes[path.nodesLength-1]->gridPos.x * TILE_SIZE + (HALF_TILE_SIZE)) - cur->base.centeredPos.x;
+                deltaY = (path.nodes[path.nodesLength-1]->gridPos.y * TILE_SIZE + (HALF_TILE_SIZE)) - cur->base.centeredPos.y;
 
                 // Check if we're far away from the target
                 if(P_CheckCircleCollision(&cur->base.collisionCircle, cur->targetColl) < 0 && 
@@ -155,8 +155,8 @@ void G_AIUpdate(void)
                         cur->base.pos.y += (deltaY * cur->speed) * deltaTime; 
 
                         // Recalculate centered pos after delta move
-                        cur->base.centeredPos.x = cur->base.pos.x + (TILE_SIZE / 2);
-                        cur->base.centeredPos.y = cur->base.pos.y + (TILE_SIZE / 2);
+                        cur->base.centeredPos.x = cur->base.pos.x + (HALF_TILE_SIZE);
+                        cur->base.centeredPos.y = cur->base.pos.y + (HALF_TILE_SIZE);
 
                         cur->base.gridPos.x = cur->base.centeredPos.x / TILE_SIZE;
                         cur->base.gridPos.y = cur->base.centeredPos.y / TILE_SIZE;

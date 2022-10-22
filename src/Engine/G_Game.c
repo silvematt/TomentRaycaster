@@ -71,8 +71,6 @@ void G_InitGame(void)
         projectilesHead = NULL;
     }
 
-    P_PhysicsInit();
-
     G_ChangeMap("devmap");
     
     gameTimer->Start(gameTimer);
@@ -124,9 +122,14 @@ void G_StateGameLoop(void)
 
 void G_StateMenuLoop(void)
 {
+    // Keep physic ticking even in menus, because game can be paused
+    P_PhysicsTick();
+
     // Handles input
     I_HandleInput();
 
+    P_PhysicsEndTick();
+    
     // Clears current render
     SDL_FillRect(win_surface, NULL, r_blankColor);
 
@@ -303,7 +306,7 @@ void G_UpdateProjectiles(void)
 
              // Determine Projectile's level
              // half a tile is added to the base.z because the collision with the bottom part should always be a bit higer than normal (otherwise the projectile hits a wall with the transparent part of the sprite)
-            cur->this.base.level = (int)floor((cur->this.base.z+(TILE_SIZE/2)) / TILE_SIZE);
+            cur->this.base.level = (int)floor((cur->this.base.z+(HALF_TILE_SIZE)) / TILE_SIZE);
             cur->this.base.level = SDL_clamp(cur->this.base.level, 0, MAX_N_LEVELS-1);
 
             if(cur->this.verticalMovementDelta > 0 || cur->this.verticalMovementDelta < 0)
@@ -463,8 +466,8 @@ void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, f
     newNode->this.base.gridPos.x = posx / TILE_SIZE;
     newNode->this.base.gridPos.y = posy / TILE_SIZE;
 
-    newNode->this.base.centeredPos.x = newNode->this.base.pos.x + (TILE_SIZE / 2);
-    newNode->this.base.centeredPos.y = newNode->this.base.pos.y + (TILE_SIZE / 2);
+    newNode->this.base.centeredPos.x = newNode->this.base.pos.x + (HALF_TILE_SIZE);
+    newNode->this.base.centeredPos.y = newNode->this.base.pos.y + (HALF_TILE_SIZE);
     
     newNode->this.base.pSpacePos.x = newNode->this.base.centeredPos.x - player.centeredPos.x;
     newNode->this.base.pSpacePos.y = newNode->this.base.centeredPos.y - player.centeredPos.y;

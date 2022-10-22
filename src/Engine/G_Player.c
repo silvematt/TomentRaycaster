@@ -12,6 +12,10 @@
 
 player_t player;    // Player
 
+// Init by init player, they change with resolution
+int MAX_VERTICAL_HEAD_MOV = 100;
+int MIN_VERTICAL_HEAD_MOV = -100;
+
 static void I_DetermineInFrontGrid(void);
 static void I_SetAttackCone(int id, int x, int y);
 
@@ -45,7 +49,7 @@ void G_InitPlayer(void)
 
     player.angle = currentMap.playerStartingRot;
     player.verticalHeadMovement = 0.0f;
-    player.z = (TILE_SIZE/2) + ((TILE_SIZE) * currentMap.playerStartingLevel);
+    player.z = (HALF_TILE_SIZE) + ((TILE_SIZE) * currentMap.playerStartingLevel);
     player.level = currentMap.playerStartingLevel;
     player.gridPosition.x = currentMap.playerStartingGridX;
     player.gridPosition.y = currentMap.playerStartingGridY;
@@ -144,8 +148,8 @@ void G_PlayerTick(void)
         player.position.y += player.deltaPos.y;
 
         // Clamp player in map boundaries
-        player.position.x = SDL_clamp(player.position.x, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
-        player.position.y = SDL_clamp(player.position.y, 0.0f, (MAP_WIDTH * TILE_SIZE)-(TILE_SIZE/2));
+        player.position.x = SDL_clamp(player.position.x, 0.0f, (MAP_WIDTH * TILE_SIZE)-(HALF_TILE_SIZE));
+        player.position.y = SDL_clamp(player.position.y, 0.0f, (MAP_WIDTH * TILE_SIZE)-(HALF_TILE_SIZE));
 
         // Compute centered pos for calculations
         player.centeredPos.x = player.position.x + PLAYER_CENTER_FIX;
@@ -286,11 +290,11 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
 
     if(keyboardState[SDL_SCANCODE_LCTRL])
         if(player.z > 1)
-            player.z -= 1.0f; 
+            player.z -= 1.0f * deltaTime; 
 
     if(keyboardState[SDL_SCANCODE_LSHIFT])
         if(player.z < 191)
-            player.z += 1.0f; 
+            player.z += 1.0f * deltaTime; 
 
     if(keyboardState[SDL_SCANCODE_KP_MINUS])
     {
@@ -321,8 +325,8 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
 // FPS Images size are: PROJECTION_PLANE_WIDTH/2 by PROJECTION_PLANE_HEIGHT/2
 void G_PlayerRender(void)
 {
-    SDL_Rect screenPos = {0, 0, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-    SDL_Rect size = {(0), (0), PROJECTION_PLANE_WIDTH/2, PROJECTION_PLANE_HEIGHT/2};
+    SDL_Rect screenPos = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Rect size = {(0), (0), SCREEN_WIDTH/2, SCREEN_HEIGHT/2};
 
     // Select Animation
     SDL_Surface* curAnim;
@@ -366,8 +370,10 @@ void G_PlayerRender(void)
             // Spawn projectile at the right frame
             if(player.state == PSTATE_CASTSPELL && player.animFrame == curAnimActionFrame && player.hasToCast && !player.hasCasted)
             {
-                // Spawn a projectile
-                G_SpawnProjectile(player.curSpell, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, player.z-(TILE_SIZE/2), player.verticalHeadMovement, true);
+                // Spawn a projectile   
+                // Angle must be the same for each resolution
+                float angle = (player.verticalHeadMovement / MAX_VERTICAL_HEAD_MOV) * 200.0f;
+                G_SpawnProjectile(player.curSpell, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, player.z-(HALF_TILE_SIZE), angle, true);
                 player.hasCasted = true;
                 player.hasToCast = false;
             }
@@ -401,7 +407,7 @@ void G_PlayerRender(void)
                 player.animFrame = ((int)floor(player.animTimer->GetTicks(player.animTimer) / ANIMATION_SPEED_DIVIDER) % curAnimLength);
         }
 
-        size.x = (PROJECTION_PLANE_WIDTH/2) * player.animFrame; 
+        size.x = (SCREEN_WIDTH/2) * player.animFrame; 
     }
 
     // Blit FP
@@ -414,13 +420,13 @@ void G_PlayerRender(void)
 void G_PlayerUIRender(void)
 {
     // HEALTH BAR
-    SDL_Rect healthbarEmptyScreenPos = {105, 5, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-    SDL_Rect healthbarEmptySize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect healthbarEmptyScreenPos = {105, 5, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Rect healthbarEmptySize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
 
     R_BlitIntoScreenScaled(&healthbarEmptySize, tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY]->texture, &healthbarEmptyScreenPos);
 
-    SDL_Rect healthbarFillScreenPos = {105, 5, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-    SDL_Rect healthbarFillSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect healthbarFillScreenPos = {105, 5, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Rect healthbarFillSize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
 
     // Fill size.x of 0 means full health
     // Fill size.x of 160 means 0 health
@@ -439,13 +445,13 @@ void G_PlayerUIRender(void)
     R_BlitIntoScreenScaled(&healthbarFillSize, tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL]->texture, &healthbarFillScreenPos);
 
     // MANA BAR
-    SDL_Rect manabarEmptyScreenPos = {105, 34, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-    SDL_Rect manabarEmptySize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect manabarEmptyScreenPos = {105, 34, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Rect manabarEmptySize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
 
     R_BlitIntoScreenScaled(&manabarEmptySize, tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY]->texture, &manabarEmptyScreenPos);
 
-    SDL_Rect manabarFillScreenPos = {105, 34, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-    SDL_Rect manabarFillSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect manabarFillScreenPos = {105, 34, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Rect manabarFillSize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
 
     manabarFillSize.x = (-8*player.attributes.curMana)/5.0f + 160;
 
@@ -501,22 +507,22 @@ void G_PlayerUIRender(void)
     // Render icons
 
     // Render weapon
-    SDL_Rect weaponIconScreenPos = {105, 63, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-    SDL_Rect weaponIconSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect weaponIconScreenPos = {105, 63, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Rect weaponIconSize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
 
     if(curWeapon != NULL)
         R_BlitIntoScreenScaled(&weaponIconSize, curWeapon, &weaponIconScreenPos);
 
     // Render spell icon
-    SDL_Rect spellIconScreenPos = {143, 63, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-    SDL_Rect spellIconSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect spellIconScreenPos = {143, 63, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Rect spellIconSize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
 
     if(curSpell != NULL)
         R_BlitIntoScreenScaled(&spellIconSize, curSpell, &spellIconScreenPos);
 
     // Render crosshair
-    SDL_Rect crosshairScreenPos = {(PROJECTION_PLANE_WIDTH / 2) - 6, (PROJECTION_PLANE_HEIGHT / 2) - 6, PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
-    SDL_Rect crosshairSize = {(0), (0), PROJECTION_PLANE_WIDTH, PROJECTION_PLANE_HEIGHT};
+    SDL_Rect crosshairScreenPos = {(SCREEN_WIDTH / 2) - 6, (SCREEN_HEIGHT / 2) - 6, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Rect crosshairSize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
     
     R_BlitIntoScreenScaled(&crosshairSize, player.crosshairHit ? tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT]->texture : tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR]->texture, &crosshairScreenPos);
 }
@@ -674,6 +680,7 @@ void G_PlayerGainMana(float amount)
 
 void G_PlayerDeath()
 {
+    player.hasBeenInitialized = false;
     G_SetMenu(&DeathMenu);
     A_ChangeState(GSTATE_MENU);
 }

@@ -9,6 +9,9 @@ SDL_Surface* win_surface;
 int win_width;
 unsigned int* pixels;
 
+SDL_Surface* raycast_surface;
+unsigned int* raycast_pixels;
+
 // Game State
 bool isInMenu;       // True if the player is in a menu
 bool isInGame;       // True if the player is in game
@@ -24,8 +27,10 @@ void A_InitApplication(void)
 
     SDL_Init(SDL_INIT_EVERYTHING);
 
-    //uint32_t winFlags = SDL_WINDOW_FULLSCREEN; 
     uint32_t winFlags = 0; 
+    //uint32_t winFlags = SDL_WINDOW_FULLSCREEN; 
+
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
     application.win = SDL_CreateWindow("Toment", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, winFlags);
     win_surface = SDL_GetWindowSurface(application.win);
