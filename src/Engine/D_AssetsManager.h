@@ -135,6 +135,7 @@ typedef struct wallAsset_s
 #define TEXTURE_ARRAY_RIGHT 3
 #define TEXTURE_ARRAY_UP 4
 #define TEXTURE_ARRAY_DOWN 5
+
 // Wall Objects are dynamic wall data loaded from the map file
 typedef struct wallObject_s
 {

@@ -14,4 +14,9 @@ byte    U_GetBit(byte* b, byte n);
 // Perform quicksorts before drawing drawables to draw from farther to nearest
 // -------------------------------
 void    U_QuicksortDrawables(drawabledata_t drawables[], int first, int last);
+
+// -------------------------------
+// Perform quicksorts before drawing drawables to draw from farther to nearest
+// -------------------------------
+void    U_QuicksortWallData(walldata_t data[], int first, int last);
 #endif

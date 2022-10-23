@@ -765,10 +765,10 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             if(rayAngle < M_PI)
             {
                 offset = (TILE_SIZE-1) - offset;
-                textureType = TEXTURE_ARRAY_DOWN;
+                textureType = TEXTURE_ARRAY_UP;
             }
             else
-                textureType = TEXTURE_ARRAY_UP;
+                textureType = TEXTURE_ARRAY_DOWN;
             
             if(curObject->texturesArray[textureType] > 0)
                 R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd+1, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
@@ -815,7 +815,7 @@ void R_RaycastPlayersLevel(int level, int x, float _rayAngle)
             R_FloorCasting(bottomOfWall, rayAngle, x, wallHeight);
         
         if(currentMap.hasAbsCeiling)
-            R_CeilingCasting(currentMap.absCeilingLevel, topOfWall, rayAngle, x, wallHeight);
+            R_CeilingCasting(currentMap.absCeilingLevel, leveledStart, rayAngle, x, wallHeight);
 
         //R_DrawPixel(x, start, r_debugColor);
     }
@@ -1250,7 +1250,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
 
 
             //R_FloorCasting(end, rayAngle, x, wallHeight);
-            //R_CeilingCasting(start, rayAngle, x, wallHeight);
+            
 
             //R_DrawPixel(x, start, r_debugColor);
         }
@@ -1264,20 +1264,8 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         mapEndedOrMaxDistanceReached = (horEnded && verEnded && !thinWallHit);
     }
 
-    // Order the todraw list from further to nearest (TODO: more optimized sort)
-    walldata_t a;
-    for (int i = 0; i < toDrawLength; ++i) 
-        {
-            for (int j = i + 1; j < toDrawLength; ++j) 
-            {
-                if (toDraw[i].distance < toDraw[j].distance) 
-                {
-                    a = toDraw[i];
-                    toDraw[i] = toDraw[j];
-                    toDraw[j] = a;
-                }
-            }
-        }
+    // Order the todraw list from further to nearest
+    U_QuicksortWallData(toDraw, 0, toDrawLength-1);
 
     // Draw everything found in reverse order
     for(int tD = 0; tD < toDrawLength; tD++)
@@ -1334,10 +1322,10 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                 if(rayAngle < M_PI)
                 {
                     offset = (TILE_SIZE-1) - offset;
-                    textureType = TEXTURE_ARRAY_DOWN;
+                    textureType = TEXTURE_ARRAY_UP;
                 }
                 else
-                    textureType = TEXTURE_ARRAY_UP;
+                    textureType = TEXTURE_ARRAY_DOWN;
                 
                 if(curObject->texturesArray[textureType] > 0)
                     R_DrawStripeTexturedShaded((x), leveledStart+1, leveledEnd+1, tomentdatapack.textures[curObject->texturesArray[textureType]]->texture, offset, wallHeightUncapped, wallLighting, finalDistance);
@@ -1424,7 +1412,8 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         if(player.z > wallTop && isEmptyAbove)
         {
             // Draw the bottom
-            R_DrawWallTop(&toDraw[tD], wallHeight, screenZ);
+            bool isInFront = (player.inFrontGridPosition.x == toDraw[tD].gridPos.x && player.inFrontGridPosition.y == toDraw[tD].gridPos.y);
+            R_DrawWallTop(&toDraw[tD], wallHeight, screenZ, isInFront);
         }
     }
 }
@@ -1508,7 +1497,7 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
     }
 }
 
-void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
+void R_DrawWallTop(walldata_t* wall, float height, float screenZ, bool isInFront)
 {
     float beta = (player.angle - wall->rayAngle);
     FIX_ANGLES(beta);
@@ -1552,8 +1541,12 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
 
         bool isInWall = curGridX==wall->gridPos.x && curGridY==wall->gridPos.y;
 
+        // This attempts to fix a fundamental issue with this raycaster: it does not raycast the cell below the player, so it doesn't draw its floor. This means if the player is far enough from the cell in front of him, but not enough to be in the cell behind him, there will be a gap emptyness.
+        // This fixes the issue only if the player looks directly at the floor, if he looks at an angle the corners will appear and disappar as he walks
+        bool gap = (!isInWall && isInFront && player.state != PSTATE_CLIMBING_LADDER && curGridX==player.gridPosition.x && curGridY==player.gridPosition.y);
+        
         // If wall ended
-        if(wall->objectHit->assetID == 0 || !isInWall)
+        if(wall->objectHit->assetID == 0 || (!isInWall && !gap))
         {
             if(startedDrawing)
                 return;
@@ -1579,7 +1572,9 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ)
                 int textureID = wall->objectHit->texturesArray[TEXTURE_ARRAY_TOP];
                 
                 if(textureID > 0)
+                {
                     R_DrawColumnOfPixelShaded(wall->x, y+player.verticalHeadMovement-1, y+player.verticalHeadMovement+1, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), floorLighting, straightlinedist-1.0f);
+                }
 
                 startedDrawing = true;
             }
@@ -1694,7 +1689,7 @@ void R_CeilingCasting(int level, float start, float rayAngle, int x, float wallH
                 ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
 
                 // Draw ceiling
-                R_DrawPixelShaded(x, (y), R_GetPixelFromSurface(tomentdatapack.textures[ceilingObjectID]->texture, textureX, textureY), floorLighting, d);
+                R_DrawColumnOfPixelShaded(x, y, y+1, R_GetPixelFromSurface(tomentdatapack.textures[ceilingObjectID]->texture, textureX, textureY), floorLighting, d-1.0f);
             }
         }
     }

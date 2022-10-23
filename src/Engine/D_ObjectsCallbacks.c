@@ -110,7 +110,7 @@ void D_CallbackLadder(char* data)
     else if(player.angle > (2*M_PI)/3 && player.angle < (4*M_PI)/3)
     {
         // Check if the texture at that point is the ladder
-        if(U_GetBit(&tomentdatapack.textures[wallObj->texturesArray[TEXTURE_ARRAY_LEFT]]->flags, 0))
+        if(U_GetBit(&tomentdatapack.textures[wallObj->texturesArray[TEXTURE_ARRAY_RIGHT]]->flags, 0))
         {
             // Climb!!
             player.climbingPosX = player.position.x - TILE_SIZE;

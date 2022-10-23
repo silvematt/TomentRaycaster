@@ -204,7 +204,7 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ);
 //-------------------------------------
 // Draws the bottom top of a cube that's located below camera's head
 //-------------------------------------
-void R_DrawWallTop(walldata_t* wall, float height, float screenZ);
+void R_DrawWallTop(walldata_t* wall, float height, float screenZ, bool isInFront);
 
 //-------------------------------------
 // Drawables routine, sort and render drawables

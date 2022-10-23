@@ -159,6 +159,10 @@ void G_PlayerTick(void)
         player.collisionCircle.pos.x = player.centeredPos.x;
         player.collisionCircle.pos.y = player.centeredPos.y;
 
+        // Get player grid pos
+        player.gridPosition.x = ((player.position.x+PLAYER_CENTER_FIX) / TILE_SIZE);
+        player.gridPosition.y = ((player.position.y+PLAYER_CENTER_FIX) / TILE_SIZE);
+
         I_DetermineInFrontGrid();
 
         // Check for auto-callbacks upon collision
@@ -191,10 +195,8 @@ void G_PlayerTick(void)
     else
     {
         player.state = PSTATE_CLIMBING_LADDER;
-        
         I_PlayerLadderMovements();
     }
-    
 }
 
 
@@ -616,10 +618,12 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 A_ChangeState(GSTATE_MENU);
             }
 
+            /*
             if(e->key.keysym.sym == SDLK_F1)
             {
                 debugRendering = !debugRendering;
             }
+            */
 
             if(e->key.keysym.sym == SDLK_F2)
             {

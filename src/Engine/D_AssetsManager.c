@@ -557,8 +557,6 @@ void D_InitLoadWalls(void)
 
     // WD_CastleDoorsLvl2
     tomentdatapack.walls[W_WallTriggerChangeMap]->ID = W_WallTriggerChangeMap;
-    U_SetBit(&tomentdatapack.walls[W_WallTriggerChangeMap]->flags, 0); // Set Thin Wall bit flag to 1, by not setting the next bit this is horizontal
-    U_SetBit(&tomentdatapack.walls[W_WallTriggerChangeMap]->flags, 2); // Set Door bit flag to 1
     U_SetBit(&tomentdatapack.walls[W_WallTriggerChangeMap]->flags, 3); // Set Trigger bit flag to 1
     // Set callback and data because this is a trigger
     tomentdatapack.walls[W_WallTriggerChangeMap]->Callback = D_CallbackChangeMap;
