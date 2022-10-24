@@ -13,8 +13,8 @@
 player_t player;    // Player
 
 // Init by init player, they change with resolution
-int MAX_VERTICAL_HEAD_MOV = 100;
-int MIN_VERTICAL_HEAD_MOV = -100;
+int MAX_VERTICAL_HEAD_MOV = 25;
+int MIN_VERTICAL_HEAD_MOV = -25;
 
 static void I_DetermineInFrontGrid(void);
 static void I_SetAttackCone(int id, int x, int y);
@@ -374,7 +374,7 @@ void G_PlayerRender(void)
             {
                 // Spawn a projectile   
                 // Angle must be the same for each resolution
-                float angle = (player.verticalHeadMovement / MAX_VERTICAL_HEAD_MOV) * 200.0f;
+                float angle = (player.verticalHeadMovement / MAX_VERTICAL_HEAD_MOV) * 75.0f;
                 G_SpawnProjectile(player.curSpell, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, player.z-(HALF_TILE_SIZE), angle, true);
                 player.hasCasted = true;
                 player.hasToCast = false;

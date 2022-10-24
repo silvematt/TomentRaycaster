@@ -85,8 +85,8 @@ void R_SetRenderingGraphics(GraphicsOptions_e setting)
             PROJECTION_PLANE_CENTER = 90;
             DISTANCE_TO_PROJECTION = 225;
 
-            MAX_VERTICAL_HEAD_MOV = 65;
-            MIN_VERTICAL_HEAD_MOV = -65;
+            MAX_VERTICAL_HEAD_MOV = 20;
+            MIN_VERTICAL_HEAD_MOV = -20;
             break;
 
         case GRAPHICS_MEDIUM:
@@ -95,8 +95,8 @@ void R_SetRenderingGraphics(GraphicsOptions_e setting)
             PROJECTION_PLANE_CENTER = 120;
             DISTANCE_TO_PROJECTION = 277;
 
-            MAX_VERTICAL_HEAD_MOV = 80;
-            MIN_VERTICAL_HEAD_MOV = -80;
+            MAX_VERTICAL_HEAD_MOV = 25;
+            MIN_VERTICAL_HEAD_MOV = -25;
             break;
 
         case GRAPHICS_HIGH:
@@ -105,8 +105,8 @@ void R_SetRenderingGraphics(GraphicsOptions_e setting)
             PROJECTION_PLANE_CENTER = 240;
             DISTANCE_TO_PROJECTION = 554;
 
-            MAX_VERTICAL_HEAD_MOV = 170;
-            MIN_VERTICAL_HEAD_MOV = -170;
+            MAX_VERTICAL_HEAD_MOV = 50;
+            MIN_VERTICAL_HEAD_MOV = -50;
             break;
 
         default:
@@ -115,8 +115,8 @@ void R_SetRenderingGraphics(GraphicsOptions_e setting)
             PROJECTION_PLANE_CENTER = 120;
             DISTANCE_TO_PROJECTION = 277;
 
-            MAX_VERTICAL_HEAD_MOV = 80;
-            MIN_VERTICAL_HEAD_MOV = -80;
+            MAX_VERTICAL_HEAD_MOV = 25;
+            MIN_VERTICAL_HEAD_MOV = -25;
             break;
     }
 
@@ -1390,8 +1390,9 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
         // Detect if we should draw the bottom/top face of this cube
         if(player.z < wallBottom && isEmptyBelow)
         {
+            bool isInFront = (player.inFrontGridPosition.x == toDraw[tD].gridPos.x && player.inFrontGridPosition.y == toDraw[tD].gridPos.y);
             // Draw the bottom
-            R_DrawWallBottom(&toDraw[tD], wallHeight, screenZ);
+            R_DrawWallBottom(&toDraw[tD], wallHeight, screenZ, isInFront);
         }
 
         // Draw top of walls
@@ -1418,7 +1419,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
     }
 }
 
-void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
+void R_DrawWallBottom(walldata_t* wall, float height, float screenZ, bool isInFront)
 {
     //R_FloorCasting(bottom, wall->rayAngle, wall->x, height);
     int y = (PROJECTION_PLANE_HEIGHT - height) / 2 + height;
@@ -1444,12 +1445,12 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
     FIX_ANGLES(beta);
 
     bool startedDrawing = false;
-    for(; y < PROJECTION_PLANE_CENTER; y++)
+    for(; y <= PROJECTION_PLANE_CENTER; y++)
     {
         float ceilingHeight = TILE_SIZE * wall->level;
 
         // Get distance
-        float straightlinedist = (((ceilingHeight - player.z) * DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER)-y));
+        float straightlinedist = floor((((ceilingHeight - player.z) * DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER)-y)));
         float d = straightlinedist / cos(beta);
 
         // Get coordinates
@@ -1461,9 +1462,9 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
         int curGridY = floor(floory / TILE_SIZE);
 
         bool isInWall = curGridX==wall->gridPos.x && curGridY==wall->gridPos.y;
-        
+
         // If wall ended
-        if(wall->objectHit == 0 || !isInWall)
+        if(wall->objectHit == 0 || (!isInWall))
         {
             if(startedDrawing)
                 return;
@@ -1489,7 +1490,7 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ)
                 int textureID = wall->objectHit->texturesArray[TEXTURE_ARRAY_BOTTOM];
 
                 if(textureID > 0)
-                    R_DrawColumnOfPixelShaded(wall->x, y+player.verticalHeadMovement-1, y+player.verticalHeadMovement+1, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), lightingMult, straightlinedist-1.0f);
+                    R_DrawColumnOfPixelShaded(wall->x, y+player.verticalHeadMovement-2, y+player.verticalHeadMovement+2, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), lightingMult, straightlinedist-1.0f);
 
                 startedDrawing = true;
             }
@@ -1541,12 +1542,8 @@ void R_DrawWallTop(walldata_t* wall, float height, float screenZ, bool isInFront
 
         bool isInWall = curGridX==wall->gridPos.x && curGridY==wall->gridPos.y;
 
-        // This attempts to fix a fundamental issue with this raycaster: it does not raycast the cell below the player, so it doesn't draw its floor. This means if the player is far enough from the cell in front of him, but not enough to be in the cell behind him, there will be a gap emptyness.
-        // This fixes the issue only if the player looks directly at the floor, if he looks at an angle the corners will appear and disappar as he walks
-        bool gap = (!isInWall && isInFront && player.state != PSTATE_CLIMBING_LADDER && curGridX==player.gridPosition.x && curGridY==player.gridPosition.y);
-        
         // If wall ended
-        if(wall->objectHit->assetID == 0 || (!isInWall && !gap))
+        if(wall->objectHit->assetID == 0 || (!isInWall))
         {
             if(startedDrawing)
                 return;

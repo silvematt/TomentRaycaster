@@ -199,7 +199,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle);
 //-------------------------------------
 // Draws the bottom face of a cube that's located above camera's head
 //-------------------------------------
-void R_DrawWallBottom(walldata_t* wall, float height, float screenZ);
+void R_DrawWallBottom(walldata_t* wall, float height, float screenZ, bool isInFront);
 
 //-------------------------------------
 // Draws the bottom top of a cube that's located below camera's head
