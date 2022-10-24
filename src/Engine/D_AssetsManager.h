@@ -76,7 +76,8 @@ typedef enum spritesObjectID_e
     S_PickupManaPotion,
     S_IceDart1,
     S_TomeFireball1,
-    S_TomeIceDart1
+    S_TomeIceDart1,
+    S_Table1
 } spritesObjectID_t;
 
 // All sprites
@@ -334,7 +335,8 @@ typedef enum imgIDs_e
     IMG_ID_UI_CROSSHAIR_HIT,
     IMG_ID_TOME_FIREBALL01,
     IMG_ID_TOME_ICEDART01,
-    IMG_ID_WALL1_LADDER
+    IMG_ID_WALL1_LADDER,
+    IMG_ID_S_Table1
 } imgIDs_e;
 
 typedef struct archt_s

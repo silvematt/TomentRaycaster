@@ -1450,7 +1450,7 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ, bool isInFr
         float ceilingHeight = TILE_SIZE * wall->level;
 
         // Get distance
-        float straightlinedist = floor((((ceilingHeight - player.z) * DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER)-y)));
+        float straightlinedist = (((ceilingHeight - player.z) * DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER)-y));
         float d = straightlinedist / cos(beta);
 
         // Get coordinates
@@ -1490,7 +1490,7 @@ void R_DrawWallBottom(walldata_t* wall, float height, float screenZ, bool isInFr
                 int textureID = wall->objectHit->texturesArray[TEXTURE_ARRAY_BOTTOM];
 
                 if(textureID > 0)
-                    R_DrawColumnOfPixelShaded(wall->x, y+player.verticalHeadMovement-2, y+player.verticalHeadMovement+2, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), lightingMult, straightlinedist-1.0f);
+                    R_DrawColumnOfPixelShaded(wall->x, y+player.verticalHeadMovement-2, y+player.verticalHeadMovement+2, R_GetPixelFromSurface(tomentdatapack.textures[textureID]->texture, textureX, textureY), lightingMult, straightlinedist);
 
                 startedDrawing = true;
             }
