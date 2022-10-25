@@ -1384,7 +1384,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
 
         // If there's a door below this wall, we should draw the ceiling regardless
         if(!isEmptyBelow)
-            if(idBelow != -1 && U_GetBit(&tomentdatapack.walls[idBelow]->flags, 2) == 1)
+            if(idBelow != -1 && (U_GetBit(&tomentdatapack.walls[idBelow]->flags, 2) == 1 || U_GetBit(&tomentdatapack.walls[idBelow]->flags, 4) == 1))
                 isEmptyBelow = true;
         
         // Detect if we should draw the bottom/top face of this cube
@@ -1406,7 +1406,7 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
 
         // If there's a door below this wall, we should draw the ceiling regardless
         if(!isEmptyAbove)
-            if(idAbove != -1 && U_GetBit(&tomentdatapack.walls[idAbove]->flags, 2) == 1)
+            if(idAbove != -1 && (U_GetBit(&tomentdatapack.walls[idAbove]->flags, 2) == 1 || U_GetBit(&tomentdatapack.walls[idAbove]->flags, 4) == 1))
                 isEmptyAbove = true;
 
         // Detect if we should draw the bottom/top face of this cube
@@ -1645,35 +1645,24 @@ void R_CeilingCasting(int level, float start, float rayAngle, int x, float wallH
     for(int y = floor(start); y >= 0; y--)
     {
         // Get distance
-        float straightlinedist = (((ceilingHeight - player.z)* DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER+ player.verticalHeadMovement)-y));
+        float straightlinedist = (((ceilingHeight - player.z) * DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER+ player.verticalHeadMovement)-y));
         float d = straightlinedist / cos(beta);
 
         // Get coordinates
         float floorx = player.centeredPos.x + (cos(rayAngle) * d);
         float floory = player.centeredPos.y + (sin(rayAngle) * d);
 
-        // Get map coordinates
-        int curGridX = floor(floorx / TILE_SIZE);
-        int curGridY = floor(floory / TILE_SIZE);
-
-        straightlinedist = (((ceilingHeight - player.z)* DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER+ player.verticalHeadMovement)-y));
-        d = straightlinedist / cos(beta);
-
-        // Calculate lighting intensity
-        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
-        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
-
-        // Get coordinates
-        floorx = player.centeredPos.x + (cos(rayAngle) * d);
-        floory = player.centeredPos.y + (sin(rayAngle) * d);
-
         // Get textels
         int textureX = (int)floorx % TILE_SIZE;
         int textureY = (int)floory % TILE_SIZE;
 
         // Get map coordinates
-        curGridX = floor(floorx / TILE_SIZE);
-        curGridY = floor(floory / TILE_SIZE);
+        int curGridX = floor(floorx / TILE_SIZE);
+        int curGridY = floor(floory / TILE_SIZE);
+
+        // Calculate lighting intensity
+        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / d;
+        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
 
         int floorObjectID = -1;
         int ceilingObjectID = -1;
@@ -1686,7 +1675,7 @@ void R_CeilingCasting(int level, float start, float rayAngle, int x, float wallH
                 ceilingObjectID = currentMap.ceilingMap[curGridY][curGridX];
 
                 // Draw ceiling
-                R_DrawColumnOfPixelShaded(x, y, y+1, R_GetPixelFromSurface(tomentdatapack.textures[ceilingObjectID]->texture, textureX, textureY), floorLighting, d-1.0f);
+                R_DrawColumnOfPixelShaded(x, y, y+1, R_GetPixelFromSurface(tomentdatapack.textures[ceilingObjectID]->texture, textureX, textureY), floorLighting, straightlinedist-1.0f);
             }
         }
     }
