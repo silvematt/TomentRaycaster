@@ -55,6 +55,7 @@ typedef enum playerSpells_e
     SPELL_ICEDART1 = 8
 } playerSpells_e;
 
+struct dynamicSprite_t; // forward declaration
 // ----------------------------------------------------
 // Sets an SDL_Rect
 // ----------------------------------------------------
@@ -125,6 +126,9 @@ typedef struct player_s
     float climbingPosX;
     float climbingPosY;
     float climbingPosZ;
+
+    bool isFightingBoss;
+    dynamicSprite_t* bossFighting;
 } player_t;
 
 

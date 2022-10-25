@@ -9,4 +9,6 @@ void D_CallbackLadder(char* data);
 
 void D_CallbackLadderDown(char* data);
 
+void D_CallbackUseAltar(char* data);
+
 #endif

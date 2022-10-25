@@ -27,7 +27,7 @@ void D_CallbackPickup(char* data)
         alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
         R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X-50, ALERT_MESSAGE_DEF_Y, "You drink an Health  Potion", 2.0f, 1.0f);
 
-        G_PlayerGainHealth(20.0f);
+        G_PlayerGainHealth(30.0f);
     }
     else if(strcmp(data, "PICKUP_MANA") == 0)
     {
@@ -35,7 +35,7 @@ void D_CallbackPickup(char* data)
 
         alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
         R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X-50, ALERT_MESSAGE_DEF_Y, "You drink a  Mana  Potion", 2.0f, 1.0f);
-        G_PlayerGainMana(20.0f);
+        G_PlayerGainMana(30.0f);
     }
     else if(strcmp(data, "TOME_FIREBALL") == 0)
     {
@@ -170,5 +170,28 @@ void D_CallbackLadderDown(char* data)
         player.climbingPosZ = player.z - TILE_SIZE;
         player.climbingUp = false;
         player.hasToClimb = true;
+    }
+}
+
+void D_CallbackUseAltar(char* data)
+{
+    printf("Used Altar\n");
+    if(strcmp(data, "HEALTH") == 0)
+    {
+        printf("Praying to an Health Altar...\n");
+        player.attributes.maxHealth += 100;
+        player.attributes.curHealth = player.attributes.maxHealth;
+
+        alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
+        R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X-30, ALERT_MESSAGE_DEF_Y, "You pray to the Altar\nand your health increases.", 3.0f, 1.0f);
+    }
+    else if (strcmp(data, "MANA") == 0)
+    {
+        printf("Praying to a Mana Altar...\n");
+        player.attributes.maxMana += 100;
+        player.attributes.curMana = player.attributes.maxMana;
+
+        alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
+        R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X-30, ALERT_MESSAGE_DEF_Y, "You pray to the Altar\nand your mana increases.", 3.0f, 1.0f);
     }
 }

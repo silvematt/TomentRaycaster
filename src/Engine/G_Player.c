@@ -9,6 +9,7 @@
 #include "G_Pathfinding.h"
 #include "D_ObjectsCallbacks.h"
 #include "G_AI.h"
+#include "T_TextRendering.h"
 
 player_t player;    // Player
 
@@ -86,6 +87,9 @@ void G_InitPlayer(void)
 
     player.crosshairHit = false;
     player.crosshairTimer = U_TimerCreateNew();
+
+    player.isFightingBoss = false;
+    player.bossFighting = NULL;
 
     // Do one tick
     G_PlayerTick();
@@ -435,7 +439,7 @@ void G_PlayerUIRender(void)
     // H = 100 means B = 0
     // H = 0 means B = 160
     // The formula is the equation of the line between these two points
-    healthbarFillSize.x = (-8*player.attributes.curHealth)/5.0f + 160;
+    healthbarFillSize.x = -160/player.attributes.maxHealth* player.attributes.curHealth + 160;
 
     // Fix bar border
     if(healthbarFillSize.x == 2)
@@ -455,7 +459,7 @@ void G_PlayerUIRender(void)
     SDL_Rect manabarFillScreenPos = {105, 34, SCREEN_WIDTH, SCREEN_HEIGHT};
     SDL_Rect manabarFillSize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
 
-    manabarFillSize.x = (-8*player.attributes.curMana)/5.0f + 160;
+    manabarFillSize.x = -160/player.attributes.maxMana* player.attributes.curMana + 160;
 
     // Fix bar border
     if(manabarFillSize.x == 2)
@@ -527,6 +531,38 @@ void G_PlayerUIRender(void)
     SDL_Rect crosshairSize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
     
     R_BlitIntoScreenScaled(&crosshairSize, player.crosshairHit ? tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT]->texture : tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR]->texture, &crosshairScreenPos);
+
+    // Boss UI
+    if(player.isFightingBoss && player.bossFighting != NULL)
+    {
+        // HEALTH BAR
+        SDL_Rect bossHealthbarEmptyScreenPos = {80, 410, SCREEN_WIDTH, SCREEN_HEIGHT};
+        SDL_Rect bossHealthbarEmptySize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
+
+        R_BlitIntoScreenScaled(&bossHealthbarEmptySize, tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY]->texture, &bossHealthbarEmptyScreenPos);
+
+        SDL_Rect bossHealthbarFillScreenPos = {80, 410, SCREEN_WIDTH, SCREEN_HEIGHT};
+        SDL_Rect bossHealthbarFillSize = {(0), (0), SCREEN_WIDTH, SCREEN_HEIGHT};
+
+        // Fill size.x of 0 means full health
+        // Fill size.x of 460 means 0 health (same size of the healthbar image x)
+        // H = 100 means B = 0
+        // H = 0 means B = 160
+        // The formula is the equation of the line between these two points
+        bossHealthbarFillSize.x = -460/player.bossFighting->attributes.maxHealth* player.bossFighting->attributes.curHealth + 460;
+
+        // Fix bar border
+        if(bossHealthbarFillSize.x == 2)
+            bossHealthbarFillScreenPos.x+=2;
+
+        if(bossHealthbarFillSize.x >=3)
+            bossHealthbarFillScreenPos.x+=3;
+
+        R_BlitIntoScreenScaled(&bossHealthbarFillSize, tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL]->texture, &bossHealthbarFillScreenPos);
+
+        // Boss Name
+        T_DisplayText(FONT_BLKCRY, player.bossFighting->base.name, 80, 380);
+    }
 }
 //-------------------------------------
 // Handles Input from the player while doing the Event Input Handling
@@ -562,13 +598,21 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 if(objType == ObjT_Door)
                 {
                     printf("Tapped a door\n");
-
-                    // Open/Close
-                    if(G_GetDoorState(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Closed || G_GetDoorState(player.level,player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Closing)
-                        G_SetDoorState(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, DState_Opening);
                     
-                    else if(G_GetDoorState(player.level,player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Open || G_GetDoorState(player.level,player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Opening)
-                        G_SetDoorState(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, DState_Closing);
+                    if(player.isFightingBoss && player.bossFighting->bossPreventOpeningDoorsWhileFighting)
+                    {
+                        alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
+                        R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X, ALERT_MESSAGE_DEF_Y, "You can't do that now.", 2.0f, 1.0f);
+                    }
+                    else
+                    {
+                        // Open/Close
+                        if(G_GetDoorState(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Closed || G_GetDoorState(player.level,player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Closing)
+                            G_SetDoorState(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, DState_Opening);
+                        
+                        else if(G_GetDoorState(player.level,player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Open || G_GetDoorState(player.level,player.inFrontGridPosition.y, player.inFrontGridPosition.x) == DState_Opening)
+                            G_SetDoorState(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, DState_Closing);
+                    }
                 }
                 else if(objType == ObjT_Empty)
                 {
@@ -590,6 +634,11 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                             R_SetValueFromCollisionMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, 0);
                             G_SetObjectTMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, ObjT_Empty);
                         }
+                        else if(tomentdatapack.sprites[spriteID]->Callback == D_CallbackUseAltar)
+                        {
+                            R_SetValueFromSpritesMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, S_AltarEmpty);
+                            G_SetObjectTMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x, ObjT_Sprite);
+                        }
                     }
                 }
                 else if(objType == ObjT_Wall)
@@ -599,10 +648,20 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 else if(objType == ObjT_Trigger)
                 {
                     printf("Tapped a trigger\n");
-
+                    
                     wallObject_t* object = R_GetWallObjectFromMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
                     if(tomentdatapack.walls[object->assetID]->Callback != NULL)
-                        tomentdatapack.walls[object->assetID]->Callback(object->data);
+                    {
+                        // Prevent the player from climbing ladders if he's in a bossfight that does not allow ladders
+                        if(player.isFightingBoss && player.bossFighting->bossPreventClimbingLaddersWhileFighting &&
+                            (object->assetID == W_WallLadder || object->assetID == W_WallLadderDown))
+                        {
+                            alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
+                            R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X, ALERT_MESSAGE_DEF_Y, "You can't do that now.", 2.0f, 1.0f);
+                        }
+                        else
+                            tomentdatapack.walls[object->assetID]->Callback(object->data);
+                    }
                 }
             }
 
@@ -1158,7 +1217,7 @@ static bool I_PlayerCastSpell(playerSpells_e spell)
             break;
 
         case SPELL_ICEDART1:
-            manaNeeded = 3.0f;
+            manaNeeded = 3.25f;
             checkSpell = true;
             break;
 

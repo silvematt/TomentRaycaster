@@ -57,6 +57,10 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
     switch(cur->base.spriteID)
     {
         case DS_Skeleton:
+            cur->base.name = "Skeleton";
+            cur->isBoss = false;
+
+            cur->speed = 2.0f;
             cur->attributes.maxHealth = 100.0f;
             cur->attributes.curHealth = cur->attributes.maxHealth;
 
@@ -69,7 +73,28 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
             cur->attributes.criticalModifier = 1.5f;
             break;
 
+        case DS_SkeletonElite:
+            cur->base.name = "Royal  Skeleton";
+            cur->isBoss = true;
+            cur->bossPreventClimbingLaddersWhileFighting = true;
+            cur->bossPreventOpeningDoorsWhileFighting = true;
+            
+            cur->speed = 4.0f;
+            cur->attributes.maxHealth = 700.0f;
+            cur->attributes.curHealth = cur->attributes.maxHealth;
+
+            cur->attributes.maxMana = 700.0f;
+            cur->attributes.curMana = cur->attributes.maxMana;
+
+            cur->attributes.baseDamage = 7.0f;
+            cur->attributes.attackChance = 90;
+            cur->attributes.criticalChance = 10;
+            cur->attributes.criticalModifier = 1.5f;
+            break;
+
         default:
+            printf("AI with ID %d was not initalized. Setting it with base stats.\n");
+
             cur->attributes.maxHealth = 100.0f;
             cur->attributes.curHealth = cur->attributes.maxHealth;
 
@@ -144,6 +169,15 @@ void G_AIUpdate(void)
             if(path.isValid && path.nodesLength-1 >= 0 && path.nodes[path.nodesLength-1] != NULL &&
                 G_CheckDynamicSpriteMap(cur->base.level, path.nodes[path.nodesLength-1]->gridPos.y, path.nodes[path.nodesLength-1]->gridPos.x) == false)
             {
+                // From here on, the AI is chasing the player so it is safe to say that they're fighting
+
+                // Check boss fight
+                if(!player.isFightingBoss && cur->isBoss)
+                {
+                    player.isFightingBoss = true;
+                    player.bossFighting = cur;
+                }
+
                 deltaX = (path.nodes[path.nodesLength-1]->gridPos.x * TILE_SIZE + (HALF_TILE_SIZE)) - cur->base.centeredPos.x;
                 deltaY = (path.nodes[path.nodesLength-1]->gridPos.y * TILE_SIZE + (HALF_TILE_SIZE)) - cur->base.centeredPos.y;
 
@@ -297,6 +331,13 @@ void G_AIDie(dynamicSprite_t* cur)
 
     // Clear from dynamic map
     G_ClearFromDynamicSpriteMap(cur->base.level, cur->base.gridPos.y, cur->base.gridPos.x);
+
+    // Check if this was the boss the player was fighting, if he was, release the UI
+    if(player.isFightingBoss && player.bossFighting == cur)
+    {
+        player.isFightingBoss = false;
+        player.bossFighting = NULL;
+    }
 }
 
 

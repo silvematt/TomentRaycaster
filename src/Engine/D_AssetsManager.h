@@ -78,7 +78,11 @@ typedef enum spritesObjectID_e
     S_TomeFireball1,
     S_TomeIceDart1,
     S_Table1,
-    S_SkullStatic
+    S_SkullStatic,
+    DS_SkeletonElite,
+    S_AltarEmpty,
+    S_AltarHealth,
+    S_AltarMana
 } spritesObjectID_t;
 
 // All sprites
@@ -227,6 +231,8 @@ typedef enum uiAssetsID_e
     G_ASSET_UI_CROSSHAIR,
     G_ASSET_ICON_SPELL_ICEDART1,
     G_ASSET_UI_CROSSHAIR_HIT,
+    G_ASSET_BOSS_HEALTHBAR_EMPTY,
+    G_ASSET_BOSS_HEALTHBAR_FILL
 } uiAssetsID_e;
 
 // FP Player IDs
@@ -338,7 +344,15 @@ typedef enum imgIDs_e
     IMG_ID_TOME_ICEDART01,
     IMG_ID_WALL1_LADDER,
     IMG_ID_S_Table1,
-    IMG_ID_S_SKULL_STATIC
+    IMG_ID_S_SKULL_STATIC,
+    IMG_ID_AI_SKELETON_ELITE,
+    IMG_ID_AI_SKELETON_ELITE_ATTACK,
+    IMG_ID_AI_SKELETON_ELITE_DEATH,
+    IMG_ID_BOSS_HEALTHBAR_EMPTY,
+    IMG_ID_BOSS_HEALTHBAR_FILL,
+    IMG_ID_S_ALTAR_EMPTY,
+    IMG_ID_S_ALTAR_HEALTH,
+    IMG_ID_S_ALTAR_MANA
 } imgIDs_e;
 
 typedef struct archt_s

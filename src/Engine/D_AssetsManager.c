@@ -138,6 +138,8 @@ void D_InitUIAssets(void)
     uiAssets_t* crosshair = (uiAssets_t*)malloc(sizeof(uiAssets_t));
     uiAssets_t* iconSpellIceDart = (uiAssets_t*)malloc(sizeof(uiAssets_t));
     uiAssets_t* crosshairHit = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* bossHealthBarEmpty = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* bossHealthBarFill = (uiAssets_t*)malloc(sizeof(uiAssets_t));
 
     tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR] = selectCursor;
     tomentdatapack.uiAssets[M_ASSET_TITLE] = menuTitle;
@@ -151,8 +153,10 @@ void D_InitUIAssets(void)
     tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR] = crosshair;
     tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1] = iconSpellIceDart;
     tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT] = crosshairHit;
+    tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY] = bossHealthBarEmpty;
+    tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL] = bossHealthBarFill;
 
-    tomentdatapack.uiAssetsLenght = 12;
+    tomentdatapack.uiAssetsLenght = 14;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -309,6 +313,28 @@ void D_InitUIAssets(void)
     }
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_FreeSurface(temp1);
+
+    // BOSS_HEALTHBAR_EMPTY
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_BOSS_HEALTHBAR_EMPTY].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_BOSS_HEALTHBAR_EMPTY].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_BOSS_HEALTHBAR_EMPTY))
+        tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_FreeSurface(temp1);
+
+    // BOSS_HEALTHBAR_FILL
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_BOSS_HEALTHBAR_FILL].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_BOSS_HEALTHBAR_FILL].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_BOSS_HEALTHBAR_FILL))
+        tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 }
 
@@ -597,8 +623,12 @@ void D_InitLoadSprites(void)
     object_t* tomeIceDart1 = (object_t*)malloc(sizeof(object_t));
     object_t* table1 = (object_t*)malloc(sizeof(object_t));
     object_t* skullStatic = (object_t*)malloc(sizeof(object_t));
+    object_t* aiSkeletonElite = (object_t*)malloc(sizeof(object_t));
+    object_t* altarEmpty = (object_t*)malloc(sizeof(object_t));
+    object_t* altarHealth = (object_t*)malloc(sizeof(object_t));
+    object_t* altarMana = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.spritesLength = 12; // Set length
+    tomentdatapack.spritesLength = 16; // Set length
 
     D_InitObject(spritesBarrel1);
     D_InitObject(spritesCampfire);
@@ -612,6 +642,10 @@ void D_InitLoadSprites(void)
     D_InitObject(tomeIceDart1);
     D_InitObject(table1);
     D_InitObject(skullStatic);
+    D_InitObject(aiSkeletonElite);
+    D_InitObject(altarEmpty);
+    D_InitObject(altarHealth);
+    D_InitObject(altarMana);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
@@ -626,6 +660,10 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_TomeIceDart1] = tomeIceDart1;
     tomentdatapack.sprites[S_Table1] = table1;
     tomentdatapack.sprites[S_SkullStatic] = skullStatic;
+    tomentdatapack.sprites[DS_SkeletonElite] = aiSkeletonElite;
+    tomentdatapack.sprites[S_AltarEmpty] = altarEmpty;
+    tomentdatapack.sprites[S_AltarHealth] = altarHealth;
+    tomentdatapack.sprites[S_AltarMana] = altarMana;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -898,6 +936,98 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_SkullStatic]->Callback = NULL;
     SDL_FreeSurface(temp1);
 
+    // LOAD DYNAMIC
+    // AI Skeleton
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_ELITE].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_ELITE].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_AI_SKELETON_ELITE))
+    {
+        tomentdatapack.sprites[DS_SkeletonElite]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+
+        // Load animations as well
+        tomentdatapack.sprites[DS_SkeletonElite]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[DS_SkeletonElite]->animations->belongsTo = tomentdatapack.sprites[DS_SkeletonElite];
+
+        // Idle = Normal
+        tomentdatapack.sprites[DS_SkeletonElite]->animations->animIdle = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonElite]->animations->animIdleSheetLength = 0;
+
+        // Skeleton Death
+        int animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_ELITE_DEATH].startingOffset);
+        SDL_RWops* animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_ELITE_DEATH].size);
+        SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_SkeletonElite]->animations->animDie = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonElite]->animations->animDieSheetLength = 4;
+        SDL_FreeSurface(animTemp1);
+
+        // Skeleton Attack
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_ELITE_ATTACK].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_ELITE_ATTACK].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_SkeletonElite]->animations->animAttack = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonElite]->animations->animAttackSheetLength = 4;
+        SDL_FreeSurface(animTemp1);
+
+    }
+    else
+        tomentdatapack.sprites[DS_SkeletonElite]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[DS_SkeletonElite]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[DS_SkeletonElite]->flags, 2); // Set dynamic bit flag to 1
+
+    // Callback
+    tomentdatapack.sprites[DS_SkeletonElite]->Callback = NULL;
+    SDL_FreeSurface(temp1);
+
+    // Altar Empty
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_S_ALTAR_EMPTY].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_S_ALTAR_EMPTY].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_S_ALTAR_EMPTY))
+        tomentdatapack.sprites[S_AltarEmpty]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[S_AltarEmpty]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[S_AltarEmpty]->flags, 0); // Set collision bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_AltarEmpty] = 0;
+    // Callback
+    tomentdatapack.sprites[S_AltarEmpty]->Callback = NULL;
+    SDL_FreeSurface(temp1);
+
+    // Altar Health
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_S_ALTAR_HEALTH].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_S_ALTAR_HEALTH].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_S_ALTAR_HEALTH))
+        tomentdatapack.sprites[S_AltarHealth]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[S_AltarHealth]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[S_AltarHealth]->flags, 0); // Set collision bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_AltarHealth] = 0;
+
+    // Callback
+    tomentdatapack.sprites[S_AltarHealth]->Callback = D_CallbackUseAltar;
+    tomentdatapack.sprites[S_AltarHealth]->data = "HEALTH";
+    SDL_FreeSurface(temp1);
+
+    // Altar Mana
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_S_ALTAR_MANA].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_S_ALTAR_MANA].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_S_ALTAR_MANA))
+        tomentdatapack.sprites[S_AltarMana]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[S_AltarMana]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[S_AltarMana]->flags, 0); // Set collision bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_AltarMana] = 0;
+
+    // Callback
+    tomentdatapack.sprites[S_AltarMana]->Callback = D_CallbackUseAltar;
+    tomentdatapack.sprites[S_AltarMana]->data = "MANA";
+    SDL_FreeSurface(temp1);
+
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
@@ -910,6 +1040,9 @@ void D_InitLoadSprites(void)
     D_SetObject(tomeIceDart1, S_TomeIceDart1, tomentdatapack.sprites[S_TomeIceDart1]->texture, NULL);
     D_SetObject(table1, S_Table1, tomentdatapack.sprites[S_Table1]->texture, NULL);
     D_SetObject(skullStatic, S_SkullStatic, tomentdatapack.sprites[S_SkullStatic]->texture, NULL);
+    D_SetObject(altarEmpty, S_AltarEmpty, tomentdatapack.sprites[S_AltarEmpty]->texture, NULL);
+    D_SetObject(altarHealth, S_AltarHealth, tomentdatapack.sprites[S_AltarHealth]->texture, NULL);
+    D_SetObject(altarMana, S_AltarMana, tomentdatapack.sprites[S_AltarMana]->texture, NULL);
 }
 
 

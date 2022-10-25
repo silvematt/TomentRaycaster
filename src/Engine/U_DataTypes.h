@@ -55,6 +55,7 @@ typedef struct path_s
 // -------------------------------
 typedef struct sprite_s
 {
+    char* name;
     bool active;            // used for dynamics
     
     vector2_t pos;          // position in world
@@ -119,6 +120,11 @@ typedef struct dynamicSprite_s
     dynamicSpriteState_e state;
     bool isAlive;
     float speed;
+    
+    // Boss related stuff
+    bool isBoss; // If true, when the AI will attack the player the boss UI will appear
+    bool bossPreventOpeningDoorsWhileFighting; // If this is true, when this boss will be fought the player will not be able to interact with doors
+    bool bossPreventClimbingLaddersWhileFighting; // If this is true, when this boss will be fought the player will not be able to interact with ladders
 
     SDL_Surface* curAnim;
     int curAnimLength;
