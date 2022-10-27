@@ -1,7 +1,7 @@
 #ifndef INPUT_HANDLING_H_INCLUDED
 #define INPUT_HANDLING_H_INCLUDED
 
-#include "../include/SDL2/SDL.h"
+#include "SDL.h"
 
 #include "A_Application.h"
 #include "G_Player.h"

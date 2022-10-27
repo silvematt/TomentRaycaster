@@ -1,7 +1,7 @@
 #ifndef TEXT_RENDERING_H_INCLUDED
 #define TEXT_RENDERING_H_INCLUDED
 
-#include "../include/SDL2/SDL.h"
+#include "SDL.h"
 
 // ----------------------------------------------------------------------
 // Displays the given text

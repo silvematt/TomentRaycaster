@@ -6,7 +6,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#include "../include/SDL2/SDL.h"
+#include "SDL.h"
 
 // Defines
 #define SCREEN_WIDTH 640

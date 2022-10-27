@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "../include/SDL2/SDL.h"
+#include "SDL.h"
 
 // How off the text the cursor should be
 #define CURSOR_X_OFFSET 35

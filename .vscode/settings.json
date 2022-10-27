@@ -9,6 +9,10 @@
         "g_ai.h": "c",
         "u_utilities.h": "c",
         "stdlib.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "u_datatypes.h": "c",
+        "g_player.h": "c",
+        "a_application.h": "c",
+        "float.h": "c"
     }
 }

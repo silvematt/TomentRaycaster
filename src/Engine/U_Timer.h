@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "../include/SDL2/SDL.h"
+#include "SDL.h"
 
 // -------------------------------
 // Timer

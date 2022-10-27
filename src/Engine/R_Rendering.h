@@ -1,7 +1,7 @@
 #ifndef RENDERING_H_INCLUDED
 #define RENDERING_H_INCLUDED
 
-#include "../include/SDL2/SDL.h"
+#include "SDL.h"
 
 #include "M_Map.h"
 #include "U_DataTypes.h"

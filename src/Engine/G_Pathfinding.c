@@ -1,6 +1,6 @@
 #include "G_Pathfinding.h"
 #include "R_Rendering.h"
-#include "../include/SDL2/SDL.h"
+#include "SDL.h"
 #include "G_Player.h"
 
 pathnode_t frontier[MAP_HEIGHT*MAP_WIDTH+2];

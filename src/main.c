@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 // External Libraries
-#include "include/SDL2/SDL.h"
+#include "SDL.h"
 
 // Engine
 #include "Engine/A_Application.h"

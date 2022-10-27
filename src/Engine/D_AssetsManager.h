@@ -3,7 +3,7 @@
 
 #include "stdio.h"
 
-#include "../include/SDL2/SDL.h"
+#include "SDL.h"
 #include "U_DataTypes.h"
 
 // --------------------------------------------
