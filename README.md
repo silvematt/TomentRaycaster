@@ -19,6 +19,7 @@ Features:
 - Usable ladders to go up/down levels.
 - Sprites Rendering & Collisions
 - AI and basic BFS Pathfinding
+- Boss AI and possibility to add custom behaviours for each AI (melee, casters, bosses)
 - Player and AI combat
 - Projectiles & Player's spells
 - Pickups of weapons and consumables (potions) for the player
