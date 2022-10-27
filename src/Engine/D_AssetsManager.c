@@ -383,8 +383,10 @@ void D_InitLoadTextures(void)
     textureObject_t* gate1Alt = (textureObject_t*)malloc(sizeof(textureObject_t));
     textureObject_t* castleDoor = (textureObject_t*)malloc(sizeof(textureObject_t));
     textureObject_t* wall1Ladder = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* floorBrick2 = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* floorDirt1 = (textureObject_t*)malloc(sizeof(textureObject_t));
 
-    tomentdatapack.texturesLength = 9; // Set length
+    tomentdatapack.texturesLength = 11; // Set length
 
     D_InitTextureAsset(wallBrick1);
     D_InitTextureAsset(wallBrick1Dark);
@@ -395,6 +397,8 @@ void D_InitLoadTextures(void)
     D_InitTextureAsset(gate1Alt);
     D_InitTextureAsset(castleDoor);
     D_InitTextureAsset(wall1Ladder);
+    D_InitTextureAsset(floorBrick2);
+    D_InitTextureAsset(floorDirt1);
 
     // Put objects in the datapack
     tomentdatapack.textures[TEXTURE_WallBrick1] = wallBrick1;
@@ -406,6 +410,8 @@ void D_InitLoadTextures(void)
     tomentdatapack.textures[TEXTURE_Gate1Alt] = gate1Alt;
     tomentdatapack.textures[TEXTURE_CastleDoor] = castleDoor;
     tomentdatapack.textures[TEXTURE_Wall1Ladder] = wall1Ladder;
+    tomentdatapack.textures[TEXTURE_FloorBrick2] = floorBrick2;
+    tomentdatapack.textures[TEXTURE_FloorDirt1] = floorDirt1;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -504,6 +510,28 @@ void D_InitLoadTextures(void)
     U_SetBit(&tomentdatapack.textures[TEXTURE_Wall1Ladder]->flags, 0); // Set IsLadder = 1
     SDL_FreeSurface(temp1);
 
+    // Floor brick 2
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_F_2].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_F_2].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_F_2))
+        tomentdatapack.textures[TEXTURE_FloorBrick2]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.textures[TEXTURE_FloorBrick2]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.textures[TEXTURE_FloorBrick2]->flags, 0); // Set IsLadder = 1
+    SDL_FreeSurface(temp1);
+
+    // Floor Dirt 1
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_F_DIRT].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_F_DIRT].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_F_DIRT))
+        tomentdatapack.textures[TEXTURE_FloorDirt1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.textures[TEXTURE_FloorDirt1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.textures[TEXTURE_FloorDirt1]->flags, 0); // Set IsLadder = 1
+    SDL_FreeSurface(temp1);
+
     // Final sets
     wallBrick1->ID = TEXTURE_WallBrick1;
     wallBrick1Dark->ID = TEXTURE_WallBrick1Dark;
@@ -514,6 +542,8 @@ void D_InitLoadTextures(void)
     gate1Alt->ID = TEXTURE_Gate1Alt;
     castleDoor->ID = TEXTURE_CastleDoor;
     wall1Ladder->ID = TEXTURE_Wall1Ladder;
+    floorBrick2->ID = TEXTURE_FloorBrick2;
+    floorDirt1->ID = TEXTURE_FloorDirt1;
 }
 
 void D_InitLoadWalls(void)
@@ -627,8 +657,9 @@ void D_InitLoadSprites(void)
     object_t* altarEmpty = (object_t*)malloc(sizeof(object_t));
     object_t* altarHealth = (object_t*)malloc(sizeof(object_t));
     object_t* altarMana = (object_t*)malloc(sizeof(object_t));
+    object_t* aiSkeletonBurnt = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.spritesLength = 16; // Set length
+    tomentdatapack.spritesLength = 17; // Set length
 
     D_InitObject(spritesBarrel1);
     D_InitObject(spritesCampfire);
@@ -646,6 +677,7 @@ void D_InitLoadSprites(void)
     D_InitObject(altarEmpty);
     D_InitObject(altarHealth);
     D_InitObject(altarMana);
+    D_InitObject(aiSkeletonBurnt);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
@@ -664,6 +696,7 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_AltarEmpty] = altarEmpty;
     tomentdatapack.sprites[S_AltarHealth] = altarHealth;
     tomentdatapack.sprites[S_AltarMana] = altarMana;
+    tomentdatapack.sprites[DS_SkeletonBurnt] = aiSkeletonBurnt;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -1028,6 +1061,50 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_AltarMana]->data = "MANA";
     SDL_FreeSurface(temp1);
 
+    // LOAD DYNAMIC
+    // AI SkeletonBurnt
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_BURNT].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_BURNT].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_AI_SKELETON_BURNT))
+    {
+        tomentdatapack.sprites[DS_SkeletonBurnt]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+
+        // Load animations as well
+        tomentdatapack.sprites[DS_SkeletonBurnt]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[DS_SkeletonBurnt]->animations->belongsTo = tomentdatapack.sprites[DS_SkeletonBurnt];
+
+        // Idle = Normal
+        tomentdatapack.sprites[DS_SkeletonBurnt]->animations->animIdle = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonBurnt]->animations->animIdleSheetLength = 0;
+
+        // Skeleton Death
+        int animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_BURNT_DEATH].startingOffset);
+        SDL_RWops* animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_BURNT_DEATH].size);
+        SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_SkeletonBurnt]->animations->animDie = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonBurnt]->animations->animDieSheetLength = 4;
+        SDL_FreeSurface(animTemp1);
+
+        // Skeleton Attack
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_BURNT_ATTACK].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_BURNT_ATTACK].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_SkeletonBurnt]->animations->animAttack = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonBurnt]->animations->animAttackSheetLength = 6;
+        SDL_FreeSurface(animTemp1);
+
+    }
+    else
+        tomentdatapack.sprites[DS_SkeletonBurnt]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[DS_SkeletonBurnt]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[DS_SkeletonBurnt]->flags, 2); // Set dynamic bit flag to 1
+
+    // Callback
+    tomentdatapack.sprites[DS_SkeletonBurnt]->Callback = NULL;
+
+    SDL_FreeSurface(temp1);
+
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
@@ -1043,6 +1120,7 @@ void D_InitLoadSprites(void)
     D_SetObject(altarEmpty, S_AltarEmpty, tomentdatapack.sprites[S_AltarEmpty]->texture, NULL);
     D_SetObject(altarHealth, S_AltarHealth, tomentdatapack.sprites[S_AltarHealth]->texture, NULL);
     D_SetObject(altarMana, S_AltarMana, tomentdatapack.sprites[S_AltarMana]->texture, NULL);
+    D_SetObject(aiSkeletonBurnt, DS_SkeletonBurnt, tomentdatapack.sprites[DS_SkeletonBurnt]->texture, NULL);
 }
 
 

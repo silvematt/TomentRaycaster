@@ -56,6 +56,6 @@ void G_ChangeMap(char* mapID);
 
 void G_UpdateProjectiles(void);
 
-void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, float posz, float verticalAngle, bool isOfPlayer);
+void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, float posz, float verticalAngle, bool isOfPlayer, dynamicSprite_t* aiOwner);
 
 #endif

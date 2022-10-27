@@ -81,6 +81,7 @@ void G_InitGame(void)
 //-------------------------------------
 void G_GameLoop(void)
 {
+
     switch(application.gamestate)
     {
         case GSTATE_MENU:
@@ -90,6 +91,9 @@ void G_GameLoop(void)
         case GSTATE_GAME:
             G_StateGameLoop();
             break;
+
+        default:
+            break;
     }
 }
 
@@ -97,18 +101,21 @@ void G_GameLoop(void)
 void G_StateGameLoop(void)
 {
     curTime = gameTimer->GetTicks(gameTimer);
-    
+
     P_PhysicsTick();
 
     // Handle input
-    I_HandleInput();
+    I_HandleInputGame();
+
+    // If the game state was changed by the game input handler prevent this loop from going forward
+    if(application.gamestate != GSTATE_GAME)
+        return;
 
     // Do stuff
     G_PlayerTick();
     G_UpdateDoors();
     G_AIUpdate();
     G_UpdateProjectiles();
-    
     P_PhysicsEndTick();
 
     // Render
@@ -117,6 +124,7 @@ void G_StateGameLoop(void)
 
     // Displays it on the screen
     R_FinishUpdate();
+
     oldTime = curTime;
 }
 
@@ -126,10 +134,15 @@ void G_StateMenuLoop(void)
     P_PhysicsTick();
 
     // Handles input
-    I_HandleInput();
+    I_HandleInputMenu();
+
+    // If the game state was changed by the menu input handler prevent this loop from going forward
+    // Not doing that could cause the program to freeze at the R_ComposeFrame() call, because in this loop we would try to render as if we were in the game state without having things initialized/updated
+    if(application.gamestate != GSTATE_MENU)
+        return;
 
     P_PhysicsEndTick();
-    
+
     // Clears current render
     SDL_FillRect(win_surface, NULL, r_blankColor);
 
@@ -323,8 +336,10 @@ void G_UpdateProjectiles(void)
                 return;
             }
 
+            // AI hit
             dynamicSprite_t* sprite = NULL;
-            if((sprite = G_GetFromDynamicSpriteMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x)) != NULL)
+            if((sprite = G_GetFromDynamicSpriteMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x)) != NULL &&
+                cur->this.aiOwner != sprite)
             {
                 float damage = 0.0f;
 
@@ -351,6 +366,34 @@ void G_UpdateProjectiles(void)
                 }
 
                 G_AITakeDamage(sprite, damage);
+
+                cur->this.isBeingDestroyed = true;
+                G_AIPlayAnimationOnce(&cur->this, ANIM_DIE);
+                return;
+            }
+
+            // Player hit
+            if(!cur->this.isOfPlayer && cur->this.base.level == player.level && cur->this.base.gridPos.x == player.gridPosition.x && cur->this.base.gridPos.y == player.gridPosition.y)
+            {
+                float damage = 0.0f;
+
+                // Damage sprite
+                switch(cur->this.base.spriteID)
+                {
+                    case S_Fireball1:
+                        damage = 55.65f;
+                        break;
+
+                    case S_IceDart1:
+                        damage = 15.0f;
+                        break;
+
+                    default:
+                        damage = 0.0f;
+                        break;
+                }
+
+                G_PlayerTakeDamage(damage);
 
                 cur->this.isBeingDestroyed = true;
                 G_AIPlayAnimationOnce(&cur->this, ANIM_DIE);
@@ -434,7 +477,7 @@ void G_UpdateProjectiles(void)
 }
 
 
-void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, float posz, float verticalAngle, bool isOfPlayer)
+void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, float posz, float verticalAngle, bool isOfPlayer, dynamicSprite_t* aiOwner)
 {
     // Allocate a node
     projectileNode_t* newNode = (projectileNode_t*)malloc(sizeof(projectileNode_t));
@@ -473,7 +516,8 @@ void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, f
     newNode->this.base.pSpacePos.y = newNode->this.base.centeredPos.y - player.centeredPos.y;
 
     newNode->this.isOfPlayer = isOfPlayer;
-    
+    newNode->this.aiOwner = aiOwner;
+
     newNode->next = NULL;
     if(projectilesHead == NULL)
     {

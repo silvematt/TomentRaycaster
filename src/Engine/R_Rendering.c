@@ -2492,10 +2492,7 @@ void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, in
 void I_AddThinWall(int level, bool horizontal, float rayAngle, int x, float curX, float curY, int gridX, int gridY, float distance)
 {
     if(visibleThinWallsLength >= PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION)
-    {
-        printf("problem");
         return;
-    }
 
     walldata_t* data = &currentThinWalls[visibleThinWallsLength];
     data->level = level;

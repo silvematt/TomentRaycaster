@@ -46,7 +46,9 @@ typedef enum textureID_e
     TEXTURE_Gate1,
     TEXTURE_Gate1Alt,
     TEXTURE_CastleDoor,
-    TEXTURE_Wall1Ladder
+    TEXTURE_Wall1Ladder,
+    TEXTURE_FloorBrick2,
+    TEXTURE_FloorDirt1
 } textureID_e;
 
 // All Floors
@@ -82,7 +84,8 @@ typedef enum spritesObjectID_e
     DS_SkeletonElite,
     S_AltarEmpty,
     S_AltarHealth,
-    S_AltarMana
+    S_AltarMana,
+    DS_SkeletonBurnt
 } spritesObjectID_t;
 
 // All sprites
@@ -352,7 +355,12 @@ typedef enum imgIDs_e
     IMG_ID_BOSS_HEALTHBAR_FILL,
     IMG_ID_S_ALTAR_EMPTY,
     IMG_ID_S_ALTAR_HEALTH,
-    IMG_ID_S_ALTAR_MANA
+    IMG_ID_S_ALTAR_MANA,
+    IMG_ID_AI_SKELETON_BURNT,
+    IMG_ID_AI_SKELETON_BURNT_ATTACK,
+    IMG_ID_AI_SKELETON_BURNT_DEATH,
+    IMG_ID_F_2,
+    IMG_ID_F_DIRT
 } imgIDs_e;
 
 typedef struct archt_s

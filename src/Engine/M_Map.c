@@ -82,7 +82,7 @@ void M_LoadMapAsCurrent(char* mapID)
       }
       currentMap.name[i] = '\0';
 
-
+      
       I_LoadIntFromFile(fp, &currentMap.playerStartingLevel);
 
       // Load Starting player pos
@@ -138,7 +138,8 @@ void M_LoadMapAsCurrent(char* mapID)
 void M_LoadObjectTMap(void)
 {
       for(int i = 0; i < allDynamicSpritesLength; i++)
-            free(allDynamicSprites[i]);
+            if(allDynamicSprites[i])
+                  free(allDynamicSprites[i]);
 
       // Clear maps
       for(int y = 0; y < MAP_HEIGHT; y++)
@@ -488,7 +489,6 @@ static void I_LoadWallMapFromFile(wallObject_t map[MAP_HEIGHT][MAP_WIDTH], FILE*
                         indx++;
                         row++;
                   }
-                  
                   //printf("%c!\n", curLine[indx]);
             }
 

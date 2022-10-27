@@ -379,7 +379,7 @@ void G_PlayerRender(void)
                 // Spawn a projectile   
                 // Angle must be the same for each resolution
                 float angle = (player.verticalHeadMovement / MAX_VERTICAL_HEAD_MOV) * 75.0f;
-                G_SpawnProjectile(player.curSpell, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, player.z-(HALF_TILE_SIZE), angle, true);
+                G_SpawnProjectile(player.curSpell, player.angle, player.level, player.position.x + cos(player.angle) * TILE_SIZE, player.position.y + sin(player.angle) * TILE_SIZE, player.z-(HALF_TILE_SIZE), angle, true, NULL);
                 player.hasCasted = true;
                 player.hasToCast = false;
             }
@@ -674,6 +674,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
 
             if(e->key.keysym.sym == SDLK_ESCAPE)
             {
+                G_SetMenu(&MainMenu);
                 A_ChangeState(GSTATE_MENU);
             }
 

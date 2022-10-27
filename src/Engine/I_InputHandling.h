@@ -20,9 +20,11 @@ typedef struct playerinput_s
 
 extern playerinput_t playerinput;
 
+void I_HandleInputMenu(void);
+
 // -------------------------------
 // Handles SDL Events and input
 // -------------------------------
-void I_HandleInput(void);
+void I_HandleInputGame(void);
 
 #endif

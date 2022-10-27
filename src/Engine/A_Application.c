@@ -30,6 +30,7 @@ void A_InitApplication(void)
     uint32_t winFlags = 0; 
     //uint32_t winFlags = SDL_WINDOW_FULLSCREEN; 
 
+    
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
     application.win = SDL_CreateWindow("Toment", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, winFlags);

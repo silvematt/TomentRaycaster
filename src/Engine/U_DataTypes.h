@@ -126,6 +126,12 @@ typedef struct dynamicSprite_s
     bool bossPreventOpeningDoorsWhileFighting; // If this is true, when this boss will be fought the player will not be able to interact with doors
     bool bossPreventClimbingLaddersWhileFighting; // If this is true, when this boss will be fought the player will not be able to interact with ladders
 
+    void (*BehaviourUpdate)(struct dynamicSprite_s* this);
+    Timer* cooldowns; // spells/abilities cooldowns, used by bosses and casters
+
+    bool aggroedPlayer; // True if this AI already attacked/chased the player
+    int spellInUse;
+    
     SDL_Surface* curAnim;
     int curAnimLength;
     
@@ -144,6 +150,7 @@ typedef struct dynamicSprite_s
     path_t* path;
 
     // Used for projectiles to distinguish between player's projectiles and AI's projectiles
+    struct dynamicSprite_s* aiOwner;
     bool isOfPlayer;
     bool isBeingDestroyed; // called when a projectile hits and awaits the explosion animation to be removed from the list
 
