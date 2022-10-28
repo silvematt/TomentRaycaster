@@ -114,6 +114,7 @@ typedef struct player_s
     // Weapons
     float weaponDistance;
     bool hasAxe;
+    bool hasGreatsword;
 
     // Spells
     bool hasFireball;

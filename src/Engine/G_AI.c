@@ -132,6 +132,8 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
             cur->attributes.criticalModifier = 1.5f;
         break;
     }
+
+    cur->aggroedPlayer = false;
     
 
     // Add it to the dynamic sprite list
@@ -314,7 +316,8 @@ void G_AI_BehaviourMeeleEnemy(dynamicSprite_t* cur)
             G_CheckDynamicSpriteMap(cur->base.level, path.nodes[path.nodesLength-1]->gridPos.y, path.nodes[path.nodesLength-1]->gridPos.x) == false)
         {
             // From here on, the AI is chasing the player so it is safe to say that they're fighting
-            cur->aggroedPlayer = true;
+            if(player.hasBeenInitialized)
+                cur->aggroedPlayer = true;
 
             // Check boss fight
             if(!player.isFightingBoss && cur->isBoss)

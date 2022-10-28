@@ -140,6 +140,7 @@ void D_InitUIAssets(void)
     uiAssets_t* crosshairHit = (uiAssets_t*)malloc(sizeof(uiAssets_t));
     uiAssets_t* bossHealthBarEmpty = (uiAssets_t*)malloc(sizeof(uiAssets_t));
     uiAssets_t* bossHealthBarFill = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* iconGreatsword = (uiAssets_t*)malloc(sizeof(uiAssets_t));
 
     tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR] = selectCursor;
     tomentdatapack.uiAssets[M_ASSET_TITLE] = menuTitle;
@@ -155,8 +156,9 @@ void D_InitUIAssets(void)
     tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT] = crosshairHit;
     tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY] = bossHealthBarEmpty;
     tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL] = bossHealthBarFill;
+    tomentdatapack.uiAssets[G_ASSET_ICON_GREATSWORD] = bossHealthBarFill;
 
-    tomentdatapack.uiAssetsLenght = 14;
+    tomentdatapack.uiAssetsLenght = 15;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -335,6 +337,19 @@ void D_InitUIAssets(void)
     else
         printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    SDL_FreeSurface(temp1);
+
+    // Icon Greatsword
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_GREATSWORD].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_GREATSWORD].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_GREATSWORD))
+    {
+        tomentdatapack.uiAssets[G_ASSET_ICON_GREATSWORD]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_GREATSWORD]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+    }
+    else
+        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 }
 
@@ -658,8 +673,9 @@ void D_InitLoadSprites(void)
     object_t* altarHealth = (object_t*)malloc(sizeof(object_t));
     object_t* altarMana = (object_t*)malloc(sizeof(object_t));
     object_t* aiSkeletonBurnt = (object_t*)malloc(sizeof(object_t));
+    object_t* pickupGreatsword = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.spritesLength = 17; // Set length
+    tomentdatapack.spritesLength = 18; // Set length
 
     D_InitObject(spritesBarrel1);
     D_InitObject(spritesCampfire);
@@ -678,6 +694,7 @@ void D_InitLoadSprites(void)
     D_InitObject(altarHealth);
     D_InitObject(altarMana);
     D_InitObject(aiSkeletonBurnt);
+    D_InitObject(pickupGreatsword);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
@@ -697,6 +714,7 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_AltarHealth] = altarHealth;
     tomentdatapack.sprites[S_AltarMana] = altarMana;
     tomentdatapack.sprites[DS_SkeletonBurnt] = aiSkeletonBurnt;
+    tomentdatapack.sprites[S_PickupGreatsword] = pickupGreatsword;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -1102,7 +1120,24 @@ void D_InitLoadSprites(void)
 
     // Callback
     tomentdatapack.sprites[DS_SkeletonBurnt]->Callback = NULL;
+    SDL_FreeSurface(temp1);
 
+    // Pickup greatsword
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_PIKCUP_GREATSWORD].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_PIKCUP_GREATSWORD].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_PIKCUP_GREATSWORD))
+        tomentdatapack.sprites[S_PickupGreatsword]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.sprites[S_PickupGreatsword]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[S_PickupGreatsword]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[S_PickupGreatsword]->flags, 1); // Set animated sprite bit flag to 1
+    // Sprite-Specific, set the lookup table for the sprite sheets length
+    tomentdatapack.spritesSheetsLenghtTable[S_PickupGreatsword] = 6;
+
+    // Callback
+    tomentdatapack.sprites[S_PickupGreatsword]->Callback = D_CallbackPickup;
+    tomentdatapack.sprites[S_PickupGreatsword]->data = "WEAPON_GREATSWORD";
     SDL_FreeSurface(temp1);
 
     // Final sets
@@ -1121,6 +1156,7 @@ void D_InitLoadSprites(void)
     D_SetObject(altarHealth, S_AltarHealth, tomentdatapack.sprites[S_AltarHealth]->texture, NULL);
     D_SetObject(altarMana, S_AltarMana, tomentdatapack.sprites[S_AltarMana]->texture, NULL);
     D_SetObject(aiSkeletonBurnt, DS_SkeletonBurnt, tomentdatapack.sprites[DS_SkeletonBurnt]->texture, NULL);
+    D_SetObject(pickupGreatsword, S_PickupGreatsword, tomentdatapack.sprites[S_PickupGreatsword]->texture, NULL);
 }
 
 
@@ -1221,12 +1257,16 @@ void D_InitLoadSkies(void)
 {
     // Create Objects
     object_t* skyDefault = (object_t*)malloc(sizeof(object_t));
-    tomentdatapack.skiesLength = 1; // Set length
+    object_t* skyRed = (object_t*)malloc(sizeof(object_t));
+
+    tomentdatapack.skiesLength = 2; // Set length
 
     D_InitObject(skyDefault);
+    D_InitObject(skyRed);
 
     // Put objects in the datapack
     tomentdatapack.skies[SKY_Default1] = skyDefault;
+    tomentdatapack.skies[SKY_Red1] = skyRed;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -1234,7 +1274,7 @@ void D_InitLoadSkies(void)
     SDL_RWops* sdlWops;     // Structure to read bytes
     int offset;             // Offset in the img.archt
 
-    // Floor 1
+    // Sky Default
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SKY_DEFAULT].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_SKY_DEFAULT].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
@@ -1244,8 +1284,19 @@ void D_InitLoadSkies(void)
         tomentdatapack.skies[SKY_Default1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
+    // Sky Red
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SKY_RED].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_SKY_RED].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_SKY_RED))
+        tomentdatapack.skies[SKY_Red1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+    else
+        tomentdatapack.skies[SKY_Red1]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    SDL_FreeSurface(temp1);
+
     // Final sets
     D_SetObject(skyDefault, SKY_Default1, tomentdatapack.skies[SKY_Default1]->texture, NULL);
+    D_SetObject(skyRed, SKY_Red1, tomentdatapack.skies[SKY_Red1]->texture, NULL);
 }
 
 void D_InitLoadPlayersFP(void)
@@ -1253,15 +1304,18 @@ void D_InitLoadPlayersFP(void)
     // Create Objects
     object_t* playerFPHands = (object_t*)malloc(sizeof(object_t));
     object_t* playerFPAxe = (object_t*)malloc(sizeof(object_t));
+    object_t* playerFPGreatsword = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.playersFPLength = 2; // Set length
+    tomentdatapack.playersFPLength = 3; // Set length
 
     D_InitObject(playerFPHands);
     D_InitObject(playerFPAxe);
+    D_InitObject(playerFPGreatsword);
 
     // Put objects in the datapack
     tomentdatapack.playersFP[PLAYER_FP_HANDS] = playerFPHands;
     tomentdatapack.playersFP[PLAYER_FP_AXE] = playerFPAxe;
+    tomentdatapack.playersFP[PLAYER_FP_GREATSWORD] = playerFPGreatsword;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -1357,9 +1411,53 @@ void D_InitLoadPlayersFP(void)
         tomentdatapack.playersFP[PLAYER_FP_AXE]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
     SDL_FreeSurface(temp1);
 
+    // FP Greatsword
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_P_GREATSWORD_IDLE].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_P_GREATSWORD_IDLE].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_P_GREATSWORD_IDLE))
+    {
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+
+        // Load animations as well
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->belongsTo = tomentdatapack.playersFP[0];
+
+        // Idle = Normal
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animIdle = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animIdleSheetLength = 0;
+
+        SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animIdle, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+
+        // Attack
+        int animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_P_GREATSWORD_ATTACK].startingOffset);
+        SDL_RWops* animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_P_GREATSWORD_ATTACK].size);
+        SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animAttack = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animAttackSheetLength = 7;
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animAttackActionFrame = 2;
+        SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animAttack, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        SDL_FreeSurface(animTemp1);
+
+        // Cast Spell
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_P_HANDS_CASTSPELL].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_P_HANDS_CASTSPELL].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animCastSpell = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animCastSpellSheetLength = 6;
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animCastSpellActionFrame = 4;
+        SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animCastSpell, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+        SDL_FreeSurface(animTemp1);
+    }
+    else
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    SDL_FreeSurface(temp1);
+
     // Final sets
     D_SetObject(playerFPHands, PLAYER_FP_HANDS, tomentdatapack.playersFP[PLAYER_FP_HANDS]->texture, NULL);
     D_SetObject(playerFPAxe, PLAYER_FP_AXE, tomentdatapack.playersFP[PLAYER_FP_AXE]->texture, NULL);
+    D_SetObject(playerFPGreatsword, PLAYER_FP_GREATSWORD, tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->texture, NULL);
 }
 
 //-------------------------------------

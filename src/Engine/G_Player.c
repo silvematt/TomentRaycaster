@@ -485,6 +485,10 @@ void G_PlayerUIRender(void)
             curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_AXE]->texture;
             break;
 
+        case PLAYER_FP_GREATSWORD:
+            curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_GREATSWORD]->texture;
+            break;
+
         default:
             curWeapon = tomentdatapack.uiAssets[G_ASSET_ICON_FISTS]->texture;
             break;
@@ -709,10 +713,12 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 G_PlayerSetWeapon(PLAYER_FP_HANDS);
             else if(G_PlayerCanAttack() && player.hasAxe && e->key.keysym.sym == SDLK_2)
                 G_PlayerSetWeapon(PLAYER_FP_AXE);
-            else if(G_PlayerCanAttack() &&  player.hasFireball && e->key.keysym.sym == SDLK_3)
-                G_PlayerSetSpell(SPELL_FIREBALL1);
+            else if(G_PlayerCanAttack() && player.hasGreatsword && e->key.keysym.sym == SDLK_3)
+                G_PlayerSetWeapon(PLAYER_FP_GREATSWORD);
             else if(G_PlayerCanAttack() && player.hasIceDart && e->key.keysym.sym == SDLK_4)
                 G_PlayerSetSpell(SPELL_ICEDART1);
+            else if(G_PlayerCanAttack() &&  player.hasFireball && e->key.keysym.sym == SDLK_5)
+                G_PlayerSetSpell(SPELL_FIREBALL1);
 
         break;
     }
@@ -1176,6 +1182,10 @@ static bool I_PlayerAttack(int attackType)
             damage = 33.5f;
             break;
 
+        case PLAYER_FP_GREATSWORD:
+            damage = 100.0f;
+            break;
+
         default:
             damage = 15.0f;
             break;
@@ -1274,6 +1284,11 @@ void G_PlayerSetWeapon(playerFPID_e weaponID)
         case PLAYER_FP_AXE:
             player.curWeapon = PLAYER_FP_AXE;
             player.weaponDistance = 110.0f;
+            break;
+
+        case PLAYER_FP_GREATSWORD:
+            player.curWeapon = PLAYER_FP_GREATSWORD;
+            player.weaponDistance = 140.0f;
             break;
 
         default:

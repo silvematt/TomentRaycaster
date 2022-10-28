@@ -20,6 +20,16 @@ void D_CallbackPickup(char* data)
         player.hasAxe = true;
         G_PlayerSetWeapon(PLAYER_FP_AXE);
     }
+    else if(strcmp(data, "WEAPON_GREATSWORD") == 0)
+    {
+        printf("Adding Weapon: Greatsword \n");
+
+        alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
+        R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X, ALERT_MESSAGE_DEF_Y, "You picked up a Greatsword", 2.0f, 1.0f);
+
+        player.hasGreatsword = true;
+        G_PlayerSetWeapon(PLAYER_FP_GREATSWORD);
+    }
     else if(strcmp(data, "PICKUP_HEALTH") == 0)
     {
         printf("Adding player's health\n");

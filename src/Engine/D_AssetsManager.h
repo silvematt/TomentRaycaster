@@ -85,14 +85,16 @@ typedef enum spritesObjectID_e
     S_AltarEmpty,
     S_AltarHealth,
     S_AltarMana,
-    DS_SkeletonBurnt
+    DS_SkeletonBurnt,
+    S_PickupGreatsword
 } spritesObjectID_t;
 
 // All sprites
 typedef enum skiesObjectID_e
 {
     // 0 = Empty
-    SKY_Default1 = 1
+    SKY_Default1 = 1,
+    SKY_Red1
 } skiesObjectID_e;
 
 typedef enum objectanimationsID_e
@@ -235,14 +237,16 @@ typedef enum uiAssetsID_e
     G_ASSET_ICON_SPELL_ICEDART1,
     G_ASSET_UI_CROSSHAIR_HIT,
     G_ASSET_BOSS_HEALTHBAR_EMPTY,
-    G_ASSET_BOSS_HEALTHBAR_FILL
+    G_ASSET_BOSS_HEALTHBAR_FILL,
+    G_ASSET_ICON_GREATSWORD
 } uiAssetsID_e;
 
 // FP Player IDs
 typedef enum playerFPID_e
 {
     PLAYER_FP_HANDS = 0,
-    PLAYER_FP_AXE
+    PLAYER_FP_AXE,
+    PLAYER_FP_GREATSWORD
 } playerFPID_e;
 
 
@@ -360,7 +364,12 @@ typedef enum imgIDs_e
     IMG_ID_AI_SKELETON_BURNT_ATTACK,
     IMG_ID_AI_SKELETON_BURNT_DEATH,
     IMG_ID_F_2,
-    IMG_ID_F_DIRT
+    IMG_ID_F_DIRT,
+    IMG_ID_SKY_RED,
+    IMG_ID_PIKCUP_GREATSWORD,
+    IMG_ID_P_GREATSWORD_IDLE,
+    IMG_ID_P_GREATSWORD_ATTACK,
+    IMG_ID_ICON_GREATSWORD
 } imgIDs_e;
 
 typedef struct archt_s

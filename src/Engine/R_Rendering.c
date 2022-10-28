@@ -1033,11 +1033,22 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                     hcurx += (horXa);
                     hcury += (horYa);
                 }
-                else // This is a normal wall
+                // Check if the wall found is not invisible
+                else if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 4) == 0) 
                 {
+                    // This is a normal wall
                     hDistance = fabs(sqrt((((player.centeredPos.x) - hcurx) * ((player.centeredPos.x) - hcurx)) + (((player.centeredPos.y) - hcury) * ((player.centeredPos.y) - hcury))));
                     hobjectIDHit = objectHit;
                     horHitted = true;
+                }
+                else
+                {
+                    hDistance = FLT_MAX;
+                    horHitted = false;
+
+                    // nothing here, next time check next 
+                    hcurx += horXa;
+                    hcury += horYa;
                 }
             }
             else
@@ -1149,11 +1160,21 @@ void R_RaycastLevelNoOcclusion(int level, int x, float _rayAngle)
                     vcurx += (verXa);
                     vcury += (verYa);
                 }
-                else
+                // Check if the wall found is not invisible
+                else if(U_GetBit(&tomentdatapack.walls[objectHit->assetID]->flags, 4) == 0)
                 {
                     vDistance = fabs(sqrt((((player.centeredPos.x) - vcurx) * ((player.centeredPos.x) - vcurx)) + (((player.centeredPos.y) - vcury) * ((player.centeredPos.y) - vcury))));
                     vobjectIDHit = objectHit;
                     verHitted = true;
+                }
+                else
+                {
+                    vDistance = FLT_MAX;
+                    verHitted = false;
+
+                    // nothing here, next time check next 
+                    vcurx += verXa;
+                    vcury += verYa;
                 }
             }
             else

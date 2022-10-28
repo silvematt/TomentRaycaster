@@ -11,8 +11,6 @@ INCLUDE_PATHS = -IC:\MinGWLibs\include\SDL2
 LIBRARY_PATHS = -LC:\MinGWLibs\lib
 
 #COMPILER_FLAGS specifies the additional compilation options we're using
-# -w suppresses all warnings
-# -Wl,-subsystem,windows gets rid of the console window
 COMPILER_FLAGS = -O2
 
 #LINKER_FLAGS specifies the libraries we're linking against
