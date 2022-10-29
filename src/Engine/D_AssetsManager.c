@@ -156,7 +156,7 @@ void D_InitUIAssets(void)
     tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT] = crosshairHit;
     tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY] = bossHealthBarEmpty;
     tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL] = bossHealthBarFill;
-    tomentdatapack.uiAssets[G_ASSET_ICON_GREATSWORD] = bossHealthBarFill;
+    tomentdatapack.uiAssets[G_ASSET_ICON_GREATSWORD] = iconGreatsword;
 
     tomentdatapack.uiAssetsLenght = 15;
 
@@ -674,8 +674,9 @@ void D_InitLoadSprites(void)
     object_t* altarMana = (object_t*)malloc(sizeof(object_t));
     object_t* aiSkeletonBurnt = (object_t*)malloc(sizeof(object_t));
     object_t* pickupGreatsword = (object_t*)malloc(sizeof(object_t));
+    object_t* aiSkeletonLord = (object_t*)malloc(sizeof(object_t));
 
-    tomentdatapack.spritesLength = 18; // Set length
+    tomentdatapack.spritesLength = 19; // Set length
 
     D_InitObject(spritesBarrel1);
     D_InitObject(spritesCampfire);
@@ -695,6 +696,7 @@ void D_InitLoadSprites(void)
     D_InitObject(altarMana);
     D_InitObject(aiSkeletonBurnt);
     D_InitObject(pickupGreatsword);
+    D_InitObject(aiSkeletonLord);
 
     // Put objects in the datapack
     tomentdatapack.sprites[S_Barrel1] = spritesBarrel1;
@@ -715,6 +717,7 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_AltarMana] = altarMana;
     tomentdatapack.sprites[DS_SkeletonBurnt] = aiSkeletonBurnt;
     tomentdatapack.sprites[S_PickupGreatsword] = pickupGreatsword;
+    tomentdatapack.sprites[DS_SkeletonLord] = aiSkeletonLord;
 
     // Fill objects
     // Convert all the surfaces that we will load in the same format as the win_surface
@@ -788,6 +791,13 @@ void D_InitLoadSprites(void)
         tomentdatapack.sprites[DS_Skeleton]->animations->animAttackSheetLength = 4;
         SDL_FreeSurface(animTemp1);
 
+        // Skeleton Resurrect
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_RESURRECTION].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_AI_SKELETON_RESURRECTION].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_Skeleton]->animations->animSpecial1 = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_Skeleton]->animations->animSpecial1SheetLength = 4;
+        SDL_FreeSurface(animTemp1);
     }
     else
         tomentdatapack.sprites[DS_Skeleton]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
@@ -1140,6 +1150,74 @@ void D_InitLoadSprites(void)
     tomentdatapack.sprites[S_PickupGreatsword]->data = "WEAPON_GREATSWORD";
     SDL_FreeSurface(temp1);
 
+    // LOAD DYNAMIC
+    // AI Skeleton Lord
+    offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD].startingOffset);
+    sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD].size);
+    temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    if(D_CheckTextureLoaded(temp1, IMG_ID_SKELETON_LORD))
+    {
+        tomentdatapack.sprites[DS_SkeletonLord]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+
+        // Load animations as well
+        tomentdatapack.sprites[DS_SkeletonLord]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->belongsTo = tomentdatapack.sprites[DS_SkeletonLord];
+
+        // Idle = Normal
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animIdle = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animIdleSheetLength = 0;
+
+        // Skeleton Death
+        int animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_DEATH].startingOffset);
+        SDL_RWops* animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_DEATH].size);
+        SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animDie = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animDieSheetLength = 4;
+        SDL_FreeSurface(animTemp1);
+
+        // Skeleton Attack
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_ATTACK_MELEE].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_ATTACK_MELEE].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animAttack = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animAttackSheetLength = 4;
+        SDL_FreeSurface(animTemp1);
+
+        // Skeleton Cast spell
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_ATTACK_FIREBALL].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_ATTACK_FIREBALL].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animCastSpell = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animCastSpellSheetLength = 5;
+        SDL_FreeSurface(animTemp1);
+
+        // Skeleton Special: Hell
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_SPELL_HELL].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_SPELL_HELL].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animSpecial1 = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animSpecial1SheetLength = 3;
+        SDL_FreeSurface(animTemp1);
+
+        // Skeleton Special: Resurrection
+        animOffset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_SPELL_RESURRECTION].startingOffset);
+        animSdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+animOffset, tomentdatapack.IMGArch.toc[IMG_ID_SKELETON_LORD_SPELL_RESURRECTION].size);
+        animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animSpecial2 = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
+        tomentdatapack.sprites[DS_SkeletonLord]->animations->animSpecial2SheetLength = 3;
+        SDL_FreeSurface(animTemp1);
+
+    }
+    else
+        tomentdatapack.sprites[DS_SkeletonLord]->texture = tomentdatapack.enginesDefaults[EDEFAULT_1]->texture;
+    U_SetBit(&tomentdatapack.sprites[DS_SkeletonLord]->flags, 0); // Set collision bit flag to 1
+    U_SetBit(&tomentdatapack.sprites[DS_SkeletonLord]->flags, 2); // Set dynamic bit flag to 1
+
+    // Callback
+    tomentdatapack.sprites[DS_SkeletonLord]->Callback = NULL;
+
+    SDL_FreeSurface(temp1);
+
     // Final sets
     D_SetObject(spritesBarrel1, S_Barrel1, tomentdatapack.sprites[S_Barrel1]->texture, NULL);
     D_SetObject(spritesCampfire, S_Campfire, tomentdatapack.sprites[S_Campfire]->texture, NULL);
@@ -1157,6 +1235,7 @@ void D_InitLoadSprites(void)
     D_SetObject(altarMana, S_AltarMana, tomentdatapack.sprites[S_AltarMana]->texture, NULL);
     D_SetObject(aiSkeletonBurnt, DS_SkeletonBurnt, tomentdatapack.sprites[DS_SkeletonBurnt]->texture, NULL);
     D_SetObject(pickupGreatsword, S_PickupGreatsword, tomentdatapack.sprites[S_PickupGreatsword]->texture, NULL);
+    D_SetObject(aiSkeletonLord, DS_SkeletonLord, tomentdatapack.sprites[DS_SkeletonLord]->texture, NULL);
 }
 
 
@@ -1436,7 +1515,7 @@ void D_InitLoadPlayersFP(void)
         SDL_Surface* animTemp1 = SDL_LoadBMP_RW(animSdlWops, SDL_TRUE);
         tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animAttack = SDL_ConvertSurface(animTemp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
         tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animAttackSheetLength = 7;
-        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animAttackActionFrame = 2;
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animAttackActionFrame = 3;
         SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->animAttack, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
         SDL_FreeSurface(animTemp1);
 

@@ -696,13 +696,14 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 // Update minimap
                 R_DrawMinimap();
 
+                vector2Int_t deb = {11, 9};
                 if(allDynamicSprites[0] != NULL)
-                    G_PerformPathfindingDebug(allDynamicSprites[0]->base.level, allDynamicSprites[0]->base.gridPos, player.gridPosition);
+                    G_PerformPathfindingDebug(allDynamicSprites[0]->base.level, allDynamicSprites[0]->base.gridPos, deb);
                 else
                 {
                     printf("Tried to debug pathfinding between first dynamic sprite and player, but no dynamic sprite is present in this map... Performing Pathfinding from center of the map to the player...\n");
                     vector2Int_t gridpos = {floor(MAP_WIDTH / 2), floor(MAP_HEIGHT / 2)};
-                    G_PerformPathfindingDebug(player.level, gridpos, player.gridPosition);
+                    G_PerformPathfindingDebug(player.level, gridpos, deb);
                 }
 
                 r_debugPathfinding = false;

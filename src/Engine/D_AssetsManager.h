@@ -86,7 +86,8 @@ typedef enum spritesObjectID_e
     S_AltarHealth,
     S_AltarMana,
     DS_SkeletonBurnt,
-    S_PickupGreatsword
+    S_PickupGreatsword,
+    DS_SkeletonLord
 } spritesObjectID_t;
 
 // All sprites
@@ -102,7 +103,9 @@ typedef enum objectanimationsID_e
     ANIM_IDLE = 0,
     ANIM_ATTACK1,
     ANIM_DIE,
-    ANIM_CAST_SPELL
+    ANIM_CAST_SPELL,
+    ANIM_SPECIAL1,
+    ANIM_SPECIAL2
 } objectanimationsID_e;
 
 // Specific object data for AI
@@ -125,6 +128,15 @@ typedef struct objectAnimations_s
     SDL_Surface* animCastSpell;
     unsigned animCastSpellSheetLength;
     unsigned animCastSpellActionFrame;
+
+    // Extra Animations
+    SDL_Surface* animSpecial1;
+    unsigned animSpecial1SheetLength;
+    unsigned animSpecial1ActionFrame;
+
+    SDL_Surface* animSpecial2;
+    unsigned animSpecial2SheetLength;
+    unsigned animSpecial2ActionFrame;
 } objectanimations_t;
 
 
@@ -369,7 +381,14 @@ typedef enum imgIDs_e
     IMG_ID_PIKCUP_GREATSWORD,
     IMG_ID_P_GREATSWORD_IDLE,
     IMG_ID_P_GREATSWORD_ATTACK,
-    IMG_ID_ICON_GREATSWORD
+    IMG_ID_ICON_GREATSWORD,
+    IMG_ID_SKELETON_LORD,
+    IMG_ID_SKELETON_LORD_ATTACK_MELEE,
+    IMG_ID_SKELETON_LORD_ATTACK_FIREBALL,
+    IMG_ID_SKELETON_LORD_DEATH,
+    IMG_ID_SKELETON_LORD_SPELL_HELL,
+    IMG_ID_SKELETON_LORD_SPELL_RESURRECTION,
+    IMG_ID_AI_SKELETON_RESURRECTION
 } imgIDs_e;
 
 typedef struct archt_s

@@ -99,7 +99,10 @@ typedef enum dynamicSpriteState_e
     DS_STATE_IDLE,
     DS_STATE_MOVING,
     DS_STATE_ATTACKING,
-    DS_STATE_DEAD
+    DS_STATE_DEAD,
+    DS_STATE_CASTING,
+    DS_STATE_SPECIAL1,
+    DS_STATE_SPECIAL2
 } dynamicSpriteState_e;
 
 typedef enum dynamicSpriteType_e
@@ -108,6 +111,8 @@ typedef enum dynamicSpriteType_e
     DS_TYPE_PROJECTILE
 } dynamicSpriteType_e;
 
+
+#define AI_MAX_SPELLS 5
 // -------------------------------
 // Dynamic Sprite data structure, represents dynamic sprites such as AI or projectiles
 // -------------------------------
@@ -127,7 +132,7 @@ typedef struct dynamicSprite_s
     bool bossPreventClimbingLaddersWhileFighting; // If this is true, when this boss will be fought the player will not be able to interact with ladders
 
     void (*BehaviourUpdate)(struct dynamicSprite_s* this);
-    Timer* cooldowns; // spells/abilities cooldowns, used by bosses and casters
+    Timer* cooldowns[AI_MAX_SPELLS]; // spells/abilities cooldowns, used by bosses and casters
 
     bool aggroedPlayer; // True if this AI already attacked/chased the player
     int spellInUse;

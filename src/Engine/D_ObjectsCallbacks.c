@@ -25,7 +25,7 @@ void D_CallbackPickup(char* data)
         printf("Adding Weapon: Greatsword \n");
 
         alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
-        R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X, ALERT_MESSAGE_DEF_Y, "You picked up a Greatsword", 2.0f, 1.0f);
+        R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X-50, ALERT_MESSAGE_DEF_Y, "You picked up a  Greatsword", 2.0f, 1.0f);
 
         player.hasGreatsword = true;
         G_PlayerSetWeapon(PLAYER_FP_GREATSWORD);

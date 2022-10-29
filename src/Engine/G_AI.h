@@ -9,6 +9,7 @@
 
 #define AI_SPELL_ATTACK_DISTANCE 500.0f
 
+
 // Dynamic AI list
 extern dynamicSprite_t* allDynamicSprites[OBJECTARRAY_DEFAULT_SIZE];
 extern unsigned int allDynamicSpritesLength;
@@ -21,11 +22,5 @@ void G_AIPlayAnimationLoop(dynamicSprite_t* cur, objectanimationsID_e animID);
 void G_AITakeDamage(dynamicSprite_t* cur, float amount);
 bool G_AICanAttack(dynamicSprite_t* cur);
 void G_AIAttackPlayer(dynamicSprite_t* cur);
-
-// AI Specific, allows to modify the AI Behaviour for each enemy
-void G_AI_BehaviourMeeleEnemy(dynamicSprite_t* cur);
-void G_AI_BehaviourCasterEnemy(dynamicSprite_t* cur);
-
-void G_AI_SkeletonsLord(dynamicSprite_t* cur);
 
 #endif
