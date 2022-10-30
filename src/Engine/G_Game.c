@@ -301,7 +301,6 @@ void G_ChangeMap(char* mapID)
         M_LoadMapAsCurrent(mapID);
         G_InitPlayer();
     }
-    
 }
 
 void G_UpdateProjectiles(void)
@@ -385,8 +384,11 @@ void G_UpdateProjectiles(void)
             }
 
             // Player hit
-            if(!cur->this.isOfPlayer && cur->this.base.level == player.level && cur->this.base.gridPos.x == player.gridPosition.x && cur->this.base.gridPos.y == player.gridPosition.y)
+            // Add distance checking for being more precise
+            float playerDist = sqrt(cur->this.base.pSpacePos.x*cur->this.base.pSpacePos.x + cur->this.base.pSpacePos.y*cur->this.base.pSpacePos.y);
+            if(!cur->this.isOfPlayer && cur->this.base.level == player.level && cur->this.base.gridPos.x == player.gridPosition.x && cur->this.base.gridPos.y == player.gridPosition.y && playerDist < TILE_SIZE-12)
             {
+                printf("%f\n", playerDist);
                 float damage = 0.0f;
 
                 // Damage sprite

@@ -95,13 +95,13 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
             cur->BehaviourUpdate = G_AI_BehaviourMeeleEnemy;
             
             cur->speed = 4.0f;
-            cur->attributes.maxHealth = 700.0f;
+            cur->attributes.maxHealth = 600.0f;
             cur->attributes.curHealth = cur->attributes.maxHealth;
 
-            cur->attributes.maxMana = 700.0f;
+            cur->attributes.maxMana = 600.0f;
             cur->attributes.curMana = cur->attributes.maxMana;
 
-            cur->attributes.baseDamage = 7.0f;
+            cur->attributes.baseDamage = 5.0f;
             cur->attributes.attackChance = 90;
             cur->attributes.criticalChance = 10;
             cur->attributes.criticalModifier = 1.5f;
@@ -316,6 +316,7 @@ void G_AITakeDamage(dynamicSprite_t* cur, float amount)
     if(cur != NULL && cur->isAlive)
     {
         cur->attributes.curHealth -= amount;
+        cur->aggroedPlayer = true;
         
         // Check death
         if(cur->attributes.curHealth <= 0.0f)

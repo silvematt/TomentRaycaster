@@ -79,6 +79,7 @@ void G_InitPlayer(void)
         player.hasBeenInitialized = true;
 
         player.hasAxe = false;
+        player.hasGreatsword = false;
         player.hasFireball = false;
         player.hasIceDart = false;
     }
