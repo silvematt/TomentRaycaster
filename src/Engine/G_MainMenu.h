@@ -12,7 +12,9 @@ typedef enum
 {
     MENU_START = 0,
     MENU_DEATH,
-    MENU_OPTIONS
+    MENU_OPTIONS,
+    MENU_END_GAME,
+    MENU_ABOUT
 } menusIDs_e;
 
 
@@ -44,6 +46,12 @@ extern menu_t DeathMenu;
 extern menuelement_t OptionsMenuElements[];
 extern menu_t OptionsMenu;
 
+extern menuelement_t EndGameMenuElements[];
+extern menu_t EndGameMenu;
+
+extern menuelement_t AboutMenuElements[];
+extern menu_t AboutMenu;
+
 
 void G_InitMainMenu();
 
@@ -66,17 +74,5 @@ void G_RenderCurrentMenu(void);
 //-------------------------------------
 void G_InMenuInputHandling(SDL_Event* e);
 
-
-//-------------------------------------
-// BUTTONS CALLBACKS
-//-------------------------------------
-static void CALLBACK_MAINMENU_NewGame(void);
-static void CALLBACK_MAINMENU_Options(void);
-static void CALLBACK_MAINMENU_Quit(void);
-
-
-static void CALLBACK_ReturnToMainMenu(void);
-
-static void CALLBACK_OPTIONSMENU_ChangeGraphics(void);
 
 #endif

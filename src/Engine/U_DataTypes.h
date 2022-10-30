@@ -130,6 +130,9 @@ typedef struct dynamicSprite_s
     bool isBoss; // If true, when the AI will attack the player the boss UI will appear
     bool bossPreventOpeningDoorsWhileFighting; // If this is true, when this boss will be fought the player will not be able to interact with doors
     bool bossPreventClimbingLaddersWhileFighting; // If this is true, when this boss will be fought the player will not be able to interact with ladders
+    bool bossPreventActivatingTriggersWhileFighting; // If this is true, when this boss will be fought the player will not be able to interact with triggers
+
+    bool canBeHit;
 
     void (*BehaviourUpdate)(struct dynamicSprite_s* this);
     Timer* cooldowns[AI_MAX_SPELLS]; // spells/abilities cooldowns, used by bosses and casters

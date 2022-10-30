@@ -4,11 +4,16 @@
 #include "T_TextRendering.h"
 #include "D_AssetsManager.h"
 
-static void CALLBACK_Continue(void)
-{
-    if(player.hasBeenInitialized)
-            A_ChangeState(GSTATE_GAME);
-}
+//-------------------------------------
+// BUTTONS CALLBACKS
+//-------------------------------------
+static void CALLBACK_MAINMENU_NewGame(void);
+static void CALLBACK_MAINMENU_Options(void);
+static void CALLBACK_MAINMENU_Quit(void);
+static void CALLBACK_ReturnToMainMenu(void);
+static void CALLBACK_OPTIONSMENU_ChangeGraphics(void);
+static void CALLBACK_MAINMENU_About(void);
+static void CALLBACK_Continue(void);
 
 // ----------------------------
 // Define Menus
@@ -19,7 +24,7 @@ menuelement_t MainMenuElements[] =
     {"New  Game",   {220, 200, 400, 40}, CALLBACK_MAINMENU_NewGame},
     {"Load  Game",  {220, 250, 400, 40}, NULL},
     {"Options",     {220, 300, 400, 40}, CALLBACK_MAINMENU_Options},
-    {"About",       {220, 350, 400, 40}, NULL},
+    {"About",       {220, 350, 400, 40}, CALLBACK_MAINMENU_About},
     {"Quit",        {220, 400, 400, 40}, CALLBACK_MAINMENU_Quit}
 };
 menu_t MainMenu = {MENU_START, MainMenuElements, 6, &MainMenuElements[1]};
@@ -37,6 +42,18 @@ menuelement_t OptionsMenuElements[] =
     {"Return",       {220, 250, 200, 40}, CALLBACK_ReturnToMainMenu},
 };
 menu_t OptionsMenu = {MENU_OPTIONS, OptionsMenuElements, 2, &OptionsMenuElements[0]};
+
+menuelement_t EndGameMenuElements[] =
+{
+    {"Return",    {220, 350, 400, 40}, CALLBACK_ReturnToMainMenu},
+};
+menu_t EndGameMenu = {MENU_END_GAME, EndGameMenuElements, 1, &EndGameMenuElements[0]};
+
+menuelement_t AboutMenuElements[] =
+{
+    {"Return",    {220, 350, 400, 40}, CALLBACK_ReturnToMainMenu},
+};
+menu_t AboutMenu = {MENU_ABOUT, AboutMenuElements, 1, &AboutMenuElements[0]};
 
 menu_t* currentMenu;
 
@@ -85,6 +102,21 @@ void G_RenderCurrentMenuBackground(void)
         case MENU_DEATH:
         {
             T_DisplayTextScaled(FONT_BLKCRY, "You  died!", 180, 80, 2.0f);
+            break;
+        }
+
+        case MENU_END_GAME:
+        {
+            T_DisplayTextScaled(FONT_BLKCRY, "You  won!", 180, 80, 2.0f);
+            T_DisplayTextScaled(FONT_BLKCRY, "You slayed the Lord of all  Skeletons\nand you earnt your freedom.", 140, 200, 1.0f);
+            break;
+        }
+
+        case MENU_ABOUT:
+        {
+            T_DisplayTextScaled(FONT_BLKCRY, "About", 210, 80, 2.0f);
+            T_DisplayTextScaled(FONT_BLKCRY, "Programmer:  Mattia Silvestro  ( silvematt)\nVersion: 1.0", 80, 200, 1.0f);
+
             break;
         }
     }
@@ -184,4 +216,16 @@ static void CALLBACK_OPTIONSMENU_ChangeGraphics(void)
 
     R_SetRenderingGraphics(r_CurrentGraphicsSetting);
     R_ClearRendering();
+}
+
+static void CALLBACK_Continue(void)
+{
+    if(player.hasBeenInitialized)
+            A_ChangeState(GSTATE_GAME);
+}
+
+static void CALLBACK_MAINMENU_About(void)
+{
+    G_SetMenu(&AboutMenu);
+    A_ChangeState(GSTATE_MENU);
 }

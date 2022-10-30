@@ -294,6 +294,7 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
     else
         playerinput.strafe.x = 0.0f; 
 
+    /* Player fly
     if(keyboardState[SDL_SCANCODE_LCTRL])
         if(player.z > 1)
             player.z -= 100 * deltaTime; 
@@ -301,6 +302,7 @@ void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
     if(keyboardState[SDL_SCANCODE_LSHIFT])
         if(player.z < 191)
             player.z += 100 * deltaTime; 
+    */
 
     if(keyboardState[SDL_SCANCODE_KP_MINUS])
     {
@@ -653,19 +655,28 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                 {
                     printf("Tapped a trigger\n");
                     
-                    wallObject_t* object = R_GetWallObjectFromMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
-                    if(tomentdatapack.walls[object->assetID]->Callback != NULL)
+                    if(player.isFightingBoss && player.bossFighting->bossPreventActivatingTriggersWhileFighting)
                     {
-                        // Prevent the player from climbing ladders if he's in a bossfight that does not allow ladders
-                        if(player.isFightingBoss && player.bossFighting->bossPreventClimbingLaddersWhileFighting &&
-                            (object->assetID == W_WallLadder || object->assetID == W_WallLadderDown))
-                        {
-                            alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
-                            R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X, ALERT_MESSAGE_DEF_Y, "You can't do that now.", 2.0f, 1.0f);
-                        }
-                        else
-                            tomentdatapack.walls[object->assetID]->Callback(object->data);
+                        alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
+                        R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X, ALERT_MESSAGE_DEF_Y, "You can't do that now.", 2.0f, 1.0f);
                     }
+                    else
+                    {
+                        wallObject_t* object = R_GetWallObjectFromMap(player.level, player.inFrontGridPosition.y, player.inFrontGridPosition.x);
+                        if(tomentdatapack.walls[object->assetID]->Callback != NULL)
+                        {
+                            // Prevent the player from climbing ladders if he's in a bossfight that does not allow ladders
+                            if(player.isFightingBoss && player.bossFighting->bossPreventClimbingLaddersWhileFighting &&
+                                (object->assetID == W_WallLadder || object->assetID == W_WallLadderDown))
+                            {
+                                alertMessage_t* mess = (alertMessage_t*)malloc(sizeof(alertMessage_t));
+                                R_QueueAlertMessage(mess, ALERT_MESSAGE_DEF_X, ALERT_MESSAGE_DEF_Y, "You can't do that now.", 2.0f, 1.0f);
+                            }
+                            else
+                                tomentdatapack.walls[object->assetID]->Callback(object->data);
+                        }
+                    }
+                    
                 }
             }
 
@@ -1192,7 +1203,7 @@ static bool I_PlayerAttack(int attackType)
             break;
     }
 
-    if(ai != NULL && ai->base.dist < PLAYER_AI_HIT_DISTANCE)
+    if(ai != NULL && ai->base.dist < PLAYER_AI_HIT_DISTANCE && ai->canBeHit)
     {
         printf("Hit an enemy.\n");
 

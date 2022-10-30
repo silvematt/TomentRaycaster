@@ -11,7 +11,7 @@
 
 
 // Dynamic AI list
-extern dynamicSprite_t* allDynamicSprites[OBJECTARRAY_DEFAULT_SIZE];
+extern dynamicSprite_t* allDynamicSprites[OBJECTARRAY_DEFAULT_SIZE_HIGH];
 extern unsigned int allDynamicSpritesLength;
 
 void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y);

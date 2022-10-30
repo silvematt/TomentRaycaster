@@ -6,6 +6,7 @@
 #include "M_Map.h"
 #include "G_Pathfinding.h"
 #include "G_AI.h"
+#include "G_MainMenu.h"
 
 // Game Timer
 Timer* gameTimer;
@@ -71,7 +72,7 @@ void G_InitGame(void)
         projectilesHead = NULL;
     }
 
-    G_ChangeMap("lvl6");
+    G_ChangeMap("lvl1");
     
     gameTimer->Start(gameTimer);
 }
@@ -288,8 +289,19 @@ void G_UpdateDoors(void)
 
 void G_ChangeMap(char* mapID)
 {
-    M_LoadMapAsCurrent(mapID);
-    G_InitPlayer();
+    // Check if game has ended
+    if(strcmp("END_GAME", mapID) == 0)
+    {
+        player.hasBeenInitialized = false;
+        G_SetMenu(&EndGameMenu);
+        A_ChangeState(GSTATE_MENU);
+    }
+    else
+    {
+        M_LoadMapAsCurrent(mapID);
+        G_InitPlayer();
+    }
+    
 }
 
 void G_UpdateProjectiles(void)
@@ -339,7 +351,7 @@ void G_UpdateProjectiles(void)
             // AI hit
             dynamicSprite_t* sprite = NULL;
             if((sprite = G_GetFromDynamicSpriteMap(cur->this.base.level, cur->this.base.gridPos.y, cur->this.base.gridPos.x)) != NULL &&
-                cur->this.aiOwner != sprite)
+                cur->this.aiOwner != sprite && sprite->canBeHit)
             {
                 float damage = 0.0f;
 

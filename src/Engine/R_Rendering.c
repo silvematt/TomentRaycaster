@@ -198,6 +198,7 @@ void R_DrawMinimap(void)
                 R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 255, 0, 0), &curRect);
             }
 
+            /*
             if(DEBUG_VISIBLE_TILES_MINIMAP)
             {
                 if(visibleTiles[y][x])
@@ -213,8 +214,10 @@ void R_DrawMinimap(void)
                     R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 0, 255, 0), &curRect);
                 }
             }
+            */
         }
 
+    /*
     if(DEBUG_VISIBLE_SPRITES_MINIMAP) 
     {
         for(int i = 0; i < visibleSpritesLength; i++)
@@ -240,6 +243,7 @@ void R_DrawMinimap(void)
 
         R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 255, 0, 255), &curRect);
     }
+    */
     
 
     // Draw Direction
@@ -1889,7 +1893,7 @@ void R_DrawSprite(sprite_t* sprite)
     float fixedAngle = ((angle*RADIAN) - player.angle);
     float dist = (sprite->dist * cos(fixedAngle));
 
-    sprite->height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
+    sprite->height = DISTANCE_TO_PROJECTION * TILE_SIZE / sprite->dist;
 
     float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-(HALF_TILE_SIZE)));
 
@@ -1957,7 +1961,7 @@ void R_DrawDynamicSprite(dynamicSprite_t* sprite)
     float fixedAngle = ((angle*RADIAN) - player.angle);
     float dist = (sprite->base.dist * cos(fixedAngle));
 
-    sprite->base.height = DISTANCE_TO_PROJECTION * TILE_SIZE / dist;
+    sprite->base.height = DISTANCE_TO_PROJECTION * TILE_SIZE / sprite->base.dist;
 
     float screenZ = round(DISTANCE_TO_PROJECTION / dist*(player.z-sprite->base.z-(HALF_TILE_SIZE)));
 

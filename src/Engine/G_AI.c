@@ -7,7 +7,7 @@
 #include "G_AIBehaviour.h"
 
 // Dynamic AI list
-dynamicSprite_t* allDynamicSprites[OBJECTARRAY_DEFAULT_SIZE];
+dynamicSprite_t* allDynamicSprites[OBJECTARRAY_DEFAULT_SIZE_HIGH];
 unsigned int allDynamicSpritesLength = 0;
 
 // Initializes the dynamic sprites
@@ -15,7 +15,7 @@ unsigned int allDynamicSpritesLength = 0;
 void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
 {
     // Check if there's room for this ai
-    if(allDynamicSpritesLength+1 >= OBJECTARRAY_DEFAULT_SIZE)
+    if(allDynamicSpritesLength+1 >= OBJECTARRAY_DEFAULT_SIZE_HIGH)
     {
         free (cur);
         return;
@@ -34,6 +34,8 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
     cur->verticalMovementDelta = 0.0f;
     cur->base.gridPos.x = x;
     cur->base.gridPos.y = y;
+
+    cur->canBeHit = true;
 
     // Get World Pos
     cur->base.pos.x = x * TILE_SIZE;
@@ -88,6 +90,7 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
             cur->isBoss = true;
             cur->bossPreventClimbingLaddersWhileFighting = true;
             cur->bossPreventOpeningDoorsWhileFighting = true;
+            cur->bossPreventActivatingTriggersWhileFighting = false;
 
             cur->BehaviourUpdate = G_AI_BehaviourMeeleEnemy;
             
@@ -130,15 +133,16 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
             cur->isBoss = true;
             cur->bossPreventClimbingLaddersWhileFighting = false;
             cur->bossPreventOpeningDoorsWhileFighting = true;
+            cur->bossPreventActivatingTriggersWhileFighting = true;
 
             cur->BehaviourUpdate = G_AI_BehaviourSkeletonLord;
             cur->spellInUse = SPELL_FIREBALL1;
             
             cur->speed = 4.25f;
-            cur->attributes.maxHealth = 2500.0f;
+            cur->attributes.maxHealth = 2250.0f;
             cur->attributes.curHealth = cur->attributes.maxHealth;
 
-            cur->attributes.maxMana = 2500.0f;
+            cur->attributes.maxMana = 2250.0f;
             cur->attributes.curMana = cur->attributes.maxMana;
 
             cur->attributes.baseDamage = 20.0f;

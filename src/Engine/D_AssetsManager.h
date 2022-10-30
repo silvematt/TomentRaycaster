@@ -10,6 +10,8 @@
 // DEFINES
 // --------------------------------------------
 #define OBJECTARRAY_DEFAULT_SIZE 256
+#define OBJECTARRAY_DEFAULT_SIZE_HIGH 2048
+
 #define MAX_TOC_LENGTH 256
 
 // All Floors
