@@ -30,7 +30,7 @@ void I_HandleInputGame(void)
     // Send Input event to subsystems
     if(application.gamestate == GSTATE_GAME)
     {
-        G_InGameInputHandling(keyboard_state, &e);
+        G_InGameInputHandling(keyboard_state);
     }
 }
 

@@ -277,7 +277,7 @@ void G_PlayerCollisionCheck()
 //-------------------------------------
 // Handles Input from the player 
 //-------------------------------------
-void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e)
+void G_InGameInputHandling(const uint8_t* keyboardState)
 {
     // Forward / backwards
     if(keyboardState[SDL_SCANCODE_UP] || keyboardState[SDL_SCANCODE_W])
@@ -593,6 +593,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                     player.hasCasted = false;
                 }
             }
+            break;
 
 
         case SDL_KEYUP:
@@ -680,15 +681,12 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
                     
                 }
             }
-
-            if(e->key.keysym.sym == SDLK_c)
+            else if(e->key.keysym.sym == SDLK_c)
             {
                 if(G_PlayerCanAttack())
                     I_PlayerCastSpell(player.curSpell);
             }
-
-
-            if(e->key.keysym.sym == SDLK_ESCAPE)
+            else if(e->key.keysym.sym == SDLK_ESCAPE)
             {
                 G_SetMenu(&MainMenu);
                 A_ChangeState(GSTATE_MENU);
@@ -701,7 +699,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
             }
             */
 
-            if(e->key.keysym.sym == SDLK_F2)
+            else if(e->key.keysym.sym == SDLK_F2)
             {
                 r_debugPathfinding = true;
 
@@ -722,7 +720,7 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
             }
 
             // Change Weapons
-            if(G_PlayerCanAttack() && e->key.keysym.sym == SDLK_1)
+            else if(G_PlayerCanAttack() && e->key.keysym.sym == SDLK_1)
                 G_PlayerSetWeapon(PLAYER_FP_HANDS);
             else if(G_PlayerCanAttack() && player.hasAxe && e->key.keysym.sym == SDLK_2)
                 G_PlayerSetWeapon(PLAYER_FP_AXE);

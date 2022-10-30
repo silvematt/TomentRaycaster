@@ -148,7 +148,7 @@ void G_PlayerTick(void);
 //-------------------------------------
 // Handles Input from the player while reading the keyboard state
 //-------------------------------------
-void G_InGameInputHandling(const uint8_t* keyboardState, SDL_Event* e);
+void G_InGameInputHandling(const uint8_t* keyboardState);
 
 //-------------------------------------
 // Handles Input from the player while doing the Event Input Handling
