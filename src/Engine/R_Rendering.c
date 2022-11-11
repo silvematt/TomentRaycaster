@@ -2448,7 +2448,7 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
         if(x < PROJECTION_PLANE_WIDTH && x >= 0 && i < PROJECTION_PLANE_HEIGHT && i >= 0) // Don't overflow
         {
             // Extract pixel
-            Uint32 pixel = R_GetPixelFromSurface(texture, xOffset, textureY);
+            Uint32 pixel = R_GetPixelFromSurface(texture, xOffset, SDL_clamp(textureY, 0, texture->h-1));
 
             // Update the Z buffer;
              if(pixel != r_transparencyColor)
