@@ -429,8 +429,11 @@ void G_UpdateProjectiles(void)
                 if(cur->previous != NULL)
                     cur->previous->next = cur->next;
 
-                free(cur->this.animTimer);
-                free(cur);
+                projectileNode_t* dead = cur;
+                cur = cur->next;
+                free(dead->this.animTimer);
+                free(dead);
+                continue;
             }
         }
 
