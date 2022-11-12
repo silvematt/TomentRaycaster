@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../dbj.h"
 #include "R_Rendering.h"
 #include "A_Application.h"
 #include "D_AssetsManager.h"
@@ -40,7 +41,7 @@ void D_SetObject(object_t* obj, int id, SDL_Surface* texture, object_t* alt)
     obj->ID = id;
     
     if(texture == NULL)
-        printf("FATAL ERROR! Setting Object: Could not load texture with ID: %d\n", id);
+        DBJ_TERROR("FATAL ERROR! Setting Object: Could not load texture with ID: %d" , id );
 
     obj->texture = texture;
     obj->alt = alt;
@@ -50,7 +51,7 @@ bool D_CheckTextureLoaded(SDL_Surface* ptr, int ID)
 {
     if(ptr == NULL)
     {
-        printf("ERROR! Could not load IMG_ID:\"%d\", the file could not exist or could be corrupted. Attempting to fall back to Engines Defaults...\n", ID);
+        DBJ_TERROR("ERROR! Could not load IMG_ID: %d, the file could not exist or could be corrupted. Attempting to fall back to Engines Defaults...", ID);
         return false;
     }
 
@@ -64,11 +65,15 @@ void D_OpenArchs(void)
 {
     archt_t* curArch;
 
+#ifdef _DEBUG
+    const char * dcd_ = dbj_current_directory();
+#endif // _DEBUG
+
     //-------------------------------------
     // Open IMG Arch
     //-------------------------------------
     curArch = &tomentdatapack.IMGArch;
-    curArch->file = fopen("Data/img.archt", "rb");
+    DBJ_TERROR_NULL( curArch->file = fopen("./bin/Data/img.archt", "rb") ) ;
 
     // Get file lenght
     fseek(curArch->file, 0, SEEK_END);
@@ -95,7 +100,7 @@ void D_OpenArchs(void)
     rewind(curArch->file);
 
     // Allocate the buffer to allow reading the file and fill it
-    curArch->buffer = (byte *)malloc((curArch->fileLength) * sizeof(byte));
+    curArch->buffer = (byte *)DBJ_MALLOC((curArch->fileLength) * sizeof(byte));
     fread(tomentdatapack.IMGArch.buffer, (tomentdatapack.IMGArch.fileLength), 1, tomentdatapack.IMGArch.file);
 }
 
@@ -106,7 +111,7 @@ void D_OpenArchs(void)
 //-------------------------------------
 void D_InitAssetManager(void)
 {
-    printf("Initializing Assets Manager...\n");
+    DBJ_PRINT("Initializing Assets Manager...\n");
 
     D_OpenArchs();
 
@@ -126,21 +131,21 @@ void D_InitAssetManager(void)
 
 void D_InitUIAssets(void)
 {    
-    uiAssets_t* selectCursor = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* menuTitle = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* healthBarEmpty = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* healthBarFill = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* manaBarEmpty = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* manaBarFill = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* iconFists = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* iconAxe = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* iconSpellFireball1 = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* crosshair = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* iconSpellIceDart = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* crosshairHit = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* bossHealthBarEmpty = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* bossHealthBarFill = (uiAssets_t*)malloc(sizeof(uiAssets_t));
-    uiAssets_t* iconGreatsword = (uiAssets_t*)malloc(sizeof(uiAssets_t));
+    uiAssets_t* selectCursor = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* menuTitle = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* healthBarEmpty = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* healthBarFill = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* manaBarEmpty = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* manaBarFill = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* iconFists = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* iconAxe = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* iconSpellFireball1 = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* crosshair = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* iconSpellIceDart = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* crosshairHit = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* bossHealthBarEmpty = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* bossHealthBarFill = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
+    uiAssets_t* iconGreatsword = (uiAssets_t*)DBJ_MALLOC(sizeof(uiAssets_t));
 
     tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR] = selectCursor;
     tomentdatapack.uiAssets[M_ASSET_TITLE] = menuTitle;
@@ -170,10 +175,12 @@ void D_InitUIAssets(void)
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_MENU_SELECT_CURSOR].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MENU_SELECT_CURSOR].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    
     if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_SELECT_CURSOR))
         tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        DBJ_TERROR("FATAL ERROR! Engine Default "  DBJ_STR(IMG_ID_EDEFAULT_1) " failed to load. Further behaviour is undefined.\n");
+    
     SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
@@ -181,10 +188,12 @@ void D_InitUIAssets(void)
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_MENU_TITLE].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MENU_TITLE].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
+    
     if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_TITLE))
         tomentdatapack.uiAssets[M_ASSET_TITLE]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        DBJ_TERROR("FATAL ERROR! Engine Default " DBJ_STR(IMG_ID_EDEFAULT_1) " failed to load. Further behaviour is undefined.\n");
+
     SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_TITLE]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
@@ -192,50 +201,58 @@ void D_InitUIAssets(void)
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_HEALTHBAR_EMPTY].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_HEALTHBAR_EMPTY].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_HEALTHBAR_EMPTY))
+    
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_HEALTHBAR_EMPTY));
         tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
-    SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
+
+        //else
+    //    DBJ_TERROR("FATAL ERROR! Engine Default " DBJ_STR(IMG_ID_EDEFAULT_1) " failed to load. Further behaviour is undefined.\n" );
+
+        SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
     // HEALTHBAR_FILL
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_HEALTHBAR_FILL].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_HEALTHBAR_FILL].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_HEALTHBAR_FILL))
+    
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_HEALTHBAR_FILL));
     {
         tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // MANABAR_EMPTY
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_MANABAR_EMPTY].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MANABAR_EMPTY].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_MANABAR_EMPTY))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_MANABAR_EMPTY));
     {
         tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // MANABAR_FILL
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_MANABAR_FILL].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_MANABAR_FILL].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_MANABAR_FILL))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_MANABAR_FILL));
     {
         tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+
     SDL_FreeSurface(temp1);
 
     // Load Icons
@@ -243,88 +260,99 @@ void D_InitUIAssets(void)
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_FISTS].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_FISTS].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_FISTS))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_ICON_FISTS));
     {
         tomentdatapack.uiAssets[G_ASSET_ICON_FISTS]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_FISTS]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+
     SDL_FreeSurface(temp1);
 
     // Icon Axe
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_AXE].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_AXE].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_AXE))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_ICON_AXE));
     {
         tomentdatapack.uiAssets[G_ASSET_ICON_AXE]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_AXE]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+
     SDL_FreeSurface(temp1);
 
     // Icon Spell Fireball
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_SPELL_FIREBALL1].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_SPELL_FIREBALL1].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_SPELL_FIREBALL1))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_ICON_SPELL_FIREBALL1));
     {
         tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // Crosshair
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_UI_CROSSHAIR].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_UI_CROSSHAIR].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_UI_CROSSHAIR))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_UI_CROSSHAIR));
     {
         tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // Icon Spell Ice Dart
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_SPELL_ICEDART1].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_SPELL_ICEDART1].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_SPELL_ICEDART1))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_ICON_SPELL_ICEDART1));
     {
         tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+
     SDL_FreeSurface(temp1);
 
     // Crosshair Hit
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_UI_CROSSHAIR_HIT].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_UI_CROSSHAIR_HIT].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_UI_CROSSHAIR_HIT))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_UI_CROSSHAIR_HIT));
     {
         tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+
     SDL_FreeSurface(temp1);
 
     // BOSS_HEALTHBAR_EMPTY
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_BOSS_HEALTHBAR_EMPTY].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_BOSS_HEALTHBAR_EMPTY].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_BOSS_HEALTHBAR_EMPTY))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_BOSS_HEALTHBAR_EMPTY));
         tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
@@ -332,10 +360,11 @@ void D_InitUIAssets(void)
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_BOSS_HEALTHBAR_FILL].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_BOSS_HEALTHBAR_FILL].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_BOSS_HEALTHBAR_FILL))
+    
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_BOSS_HEALTHBAR_FILL))
         tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
@@ -343,13 +372,13 @@ void D_InitUIAssets(void)
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_ICON_GREATSWORD].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_ICON_GREATSWORD].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_ICON_GREATSWORD))
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_ICON_GREATSWORD))
     {
         tomentdatapack.uiAssets[G_ASSET_ICON_GREATSWORD]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_GREATSWORD]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 }
 
@@ -357,7 +386,7 @@ void D_InitUIAssets(void)
 void D_InitEnginesDefaults(void)
 {    
     // Create Objects
-    object_t* texturefallback = (object_t*)malloc(sizeof(object_t));
+    object_t* texturefallback = (object_t*)DBJ_MALLOC(sizeof(object_t));
     tomentdatapack.enginesDefaultsLength = 1; // Set length
 
     D_InitObject(texturefallback);
@@ -375,10 +404,11 @@ void D_InitEnginesDefaults(void)
     offset = tomentdatapack.IMGArch.tocOffset + (tomentdatapack.IMGArch.toc[IMG_ID_EDEFAULT_1].startingOffset);
     sdlWops = SDL_RWFromConstMem((byte*)tomentdatapack.IMGArch.buffer+offset, tomentdatapack.IMGArch.toc[IMG_ID_EDEFAULT_1].size);
     temp1 = SDL_LoadBMP_RW(sdlWops, SDL_TRUE);
-    if(D_CheckTextureLoaded(temp1, IMG_ID_EDEFAULT_1))
+
+    DBJ_TERROR_FALSE(D_CheckTextureLoaded(temp1, IMG_ID_EDEFAULT_1))
         tomentdatapack.enginesDefaults[EDEFAULT_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
-    else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+    //else
+    //    printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
         
     SDL_FreeSurface(temp1);
 
@@ -389,17 +419,17 @@ void D_InitEnginesDefaults(void)
 void D_InitLoadTextures(void)
 {
     // Create Objects
-    textureObject_t* wallBrick1 = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* wallBrick1Dark = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* floorBrick1 = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* ceilingWood1 = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* wall2 = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* gate1 = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* gate1Alt = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* castleDoor = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* wall1Ladder = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* floorBrick2 = (textureObject_t*)malloc(sizeof(textureObject_t));
-    textureObject_t* floorDirt1 = (textureObject_t*)malloc(sizeof(textureObject_t));
+    textureObject_t* wallBrick1 = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* wallBrick1Dark = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* floorBrick1 = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* ceilingWood1 = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* wall2 = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* gate1 = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* gate1Alt = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* castleDoor = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* wall1Ladder = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* floorBrick2 = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
+    textureObject_t* floorDirt1 = (textureObject_t*)DBJ_MALLOC(sizeof(textureObject_t));
 
     tomentdatapack.texturesLength = 11; // Set length
 
@@ -564,15 +594,15 @@ void D_InitLoadTextures(void)
 void D_InitLoadWalls(void)
 {
     // Create Objects
-    wallAsset_t* wall = (wallAsset_t*)malloc(sizeof(wallAsset_t));
-    wallAsset_t* thinWallHor = (wallAsset_t*)malloc(sizeof(wallAsset_t));
-    wallAsset_t* thinWallVer = (wallAsset_t*)malloc(sizeof(wallAsset_t));
-    wallAsset_t* doorHor = (wallAsset_t*)malloc(sizeof(wallAsset_t));
-    wallAsset_t* doorVer = (wallAsset_t*)malloc(sizeof(wallAsset_t));
-    wallAsset_t* wallTriggerChangeMap = (wallAsset_t*)malloc(sizeof(wallAsset_t));
-    wallAsset_t* wallLadder = (wallAsset_t*)malloc(sizeof(wallAsset_t));
-    wallAsset_t* wallLadderDown = (wallAsset_t*)malloc(sizeof(wallAsset_t));
-    wallAsset_t* wallInvisible = (wallAsset_t*)malloc(sizeof(wallAsset_t));
+    wallAsset_t* wall = (wallAsset_t*)DBJ_MALLOC(sizeof(wallAsset_t));
+    wallAsset_t* thinWallHor = (wallAsset_t*)DBJ_MALLOC(sizeof(wallAsset_t));
+    wallAsset_t* thinWallVer = (wallAsset_t*)DBJ_MALLOC(sizeof(wallAsset_t));
+    wallAsset_t* doorHor = (wallAsset_t*)DBJ_MALLOC(sizeof(wallAsset_t));
+    wallAsset_t* doorVer = (wallAsset_t*)DBJ_MALLOC(sizeof(wallAsset_t));
+    wallAsset_t* wallTriggerChangeMap = (wallAsset_t*)DBJ_MALLOC(sizeof(wallAsset_t));
+    wallAsset_t* wallLadder = (wallAsset_t*)DBJ_MALLOC(sizeof(wallAsset_t));
+    wallAsset_t* wallLadderDown = (wallAsset_t*)DBJ_MALLOC(sizeof(wallAsset_t));
+    wallAsset_t* wallInvisible = (wallAsset_t*)DBJ_MALLOC(sizeof(wallAsset_t));
 
     tomentdatapack.wallsLength = 9; // Set length
 
@@ -655,26 +685,29 @@ void D_InitLoadWalls(void)
 
 void D_InitLoadSprites(void)
 {
+#define SZE_ sizeof(object_t)
     // Create Objects
-    object_t* spritesBarrel1 = (object_t*)malloc(sizeof(object_t));
-    object_t* spritesCampfire = (object_t*)malloc(sizeof(object_t));
-    object_t* aiSkeleton = (object_t*)malloc(sizeof(object_t));
-    object_t* spellFireball1 = (object_t*)malloc(sizeof(object_t));
-    object_t* pickupAxe = (object_t*)malloc(sizeof(object_t));
-    object_t* pickupHealthPotion = (object_t*)malloc(sizeof(object_t));
-    object_t* pickupManaPotion = (object_t*)malloc(sizeof(object_t));
-    object_t* spellIceDart1 = (object_t*)malloc(sizeof(object_t));
-    object_t* tomeFireball1 = (object_t*)malloc(sizeof(object_t));
-    object_t* tomeIceDart1 = (object_t*)malloc(sizeof(object_t));
-    object_t* table1 = (object_t*)malloc(sizeof(object_t));
-    object_t* skullStatic = (object_t*)malloc(sizeof(object_t));
-    object_t* aiSkeletonElite = (object_t*)malloc(sizeof(object_t));
-    object_t* altarEmpty = (object_t*)malloc(sizeof(object_t));
-    object_t* altarHealth = (object_t*)malloc(sizeof(object_t));
-    object_t* altarMana = (object_t*)malloc(sizeof(object_t));
-    object_t* aiSkeletonBurnt = (object_t*)malloc(sizeof(object_t));
-    object_t* pickupGreatsword = (object_t*)malloc(sizeof(object_t));
-    object_t* aiSkeletonLord = (object_t*)malloc(sizeof(object_t));
+    object_t* spritesBarrel1 = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* spritesCampfire = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* aiSkeleton = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* spellFireball1 = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* pickupAxe = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* pickupHealthPotion = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* pickupManaPotion = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* spellIceDart1 = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* tomeFireball1 = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* tomeIceDart1 = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* table1 = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* skullStatic = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* aiSkeletonElite = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* altarEmpty = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* altarHealth = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* altarMana = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* aiSkeletonBurnt = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* pickupGreatsword = (object_t*)DBJ_MALLOC(SZE_);
+    object_t* aiSkeletonLord = (object_t*)DBJ_MALLOC(SZE_);
+
+#undef SZE_ 
 
     tomentdatapack.spritesLength = 19; // Set length
 
@@ -768,7 +801,7 @@ void D_InitLoadSprites(void)
         tomentdatapack.sprites[DS_Skeleton]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
 
         // Load animations as well
-        tomentdatapack.sprites[DS_Skeleton]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[DS_Skeleton]->animations = (objectanimations_t*)DBJ_MALLOC(sizeof(objectanimations_t));
         tomentdatapack.sprites[DS_Skeleton]->animations->belongsTo = tomentdatapack.sprites[DS_Skeleton];
 
         // Idle = Normal
@@ -818,7 +851,7 @@ void D_InitLoadSprites(void)
         tomentdatapack.sprites[S_Fireball1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
 
         // Load animations as well
-        tomentdatapack.sprites[S_Fireball1]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[S_Fireball1]->animations = (objectanimations_t*)DBJ_MALLOC(sizeof(objectanimations_t));
         tomentdatapack.sprites[S_Fireball1]->animations->belongsTo = tomentdatapack.sprites[S_Fireball1];
 
         // Idle = Normal
@@ -904,7 +937,7 @@ void D_InitLoadSprites(void)
         tomentdatapack.sprites[S_IceDart1]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
 
         // Load animations as well
-        tomentdatapack.sprites[S_IceDart1]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[S_IceDart1]->animations = (objectanimations_t*)DBJ_MALLOC(sizeof(objectanimations_t));
         tomentdatapack.sprites[S_IceDart1]->animations->belongsTo = tomentdatapack.sprites[S_IceDart1];
 
         // Idle = Normal
@@ -1007,7 +1040,7 @@ void D_InitLoadSprites(void)
         tomentdatapack.sprites[DS_SkeletonElite]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
 
         // Load animations as well
-        tomentdatapack.sprites[DS_SkeletonElite]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[DS_SkeletonElite]->animations = (objectanimations_t*)DBJ_MALLOC(sizeof(objectanimations_t));
         tomentdatapack.sprites[DS_SkeletonElite]->animations->belongsTo = tomentdatapack.sprites[DS_SkeletonElite];
 
         // Idle = Normal
@@ -1099,7 +1132,7 @@ void D_InitLoadSprites(void)
         tomentdatapack.sprites[DS_SkeletonBurnt]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
 
         // Load animations as well
-        tomentdatapack.sprites[DS_SkeletonBurnt]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[DS_SkeletonBurnt]->animations = (objectanimations_t*)DBJ_MALLOC(sizeof(objectanimations_t));
         tomentdatapack.sprites[DS_SkeletonBurnt]->animations->belongsTo = tomentdatapack.sprites[DS_SkeletonBurnt];
 
         // Idle = Normal
@@ -1160,7 +1193,7 @@ void D_InitLoadSprites(void)
         tomentdatapack.sprites[DS_SkeletonLord]->texture = SDL_ConvertSurface(temp1, win_surface->format, SDL_TEXTUREACCESS_TARGET);
 
         // Load animations as well
-        tomentdatapack.sprites[DS_SkeletonLord]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.sprites[DS_SkeletonLord]->animations = (objectanimations_t*)DBJ_MALLOC(sizeof(objectanimations_t));
         tomentdatapack.sprites[DS_SkeletonLord]->animations->belongsTo = tomentdatapack.sprites[DS_SkeletonLord];
 
         // Idle = Normal
@@ -1241,7 +1274,7 @@ void D_InitLoadSprites(void)
 
 void D_InitFontSheets(void)
 {
-    fontsheet_t* fontBlckry = (fontsheet_t*)malloc(sizeof(fontsheet_t));
+    fontsheet_t* fontBlckry = (fontsheet_t*)DBJ_MALLOC(sizeof(fontsheet_t));
 
     tomentdatapack.fontsheetsLength = 1;
 
@@ -1335,8 +1368,8 @@ void D_InitFontSheets(void)
 void D_InitLoadSkies(void)
 {
     // Create Objects
-    object_t* skyDefault = (object_t*)malloc(sizeof(object_t));
-    object_t* skyRed = (object_t*)malloc(sizeof(object_t));
+    object_t* skyDefault = (object_t*)DBJ_MALLOC(sizeof(object_t));
+    object_t* skyRed = (object_t*)DBJ_MALLOC(sizeof(object_t));
 
     tomentdatapack.skiesLength = 2; // Set length
 
@@ -1381,9 +1414,9 @@ void D_InitLoadSkies(void)
 void D_InitLoadPlayersFP(void)
 {
     // Create Objects
-    object_t* playerFPHands = (object_t*)malloc(sizeof(object_t));
-    object_t* playerFPAxe = (object_t*)malloc(sizeof(object_t));
-    object_t* playerFPGreatsword = (object_t*)malloc(sizeof(object_t));
+    object_t* playerFPHands = (object_t*)DBJ_MALLOC(sizeof(object_t));
+    object_t* playerFPAxe = (object_t*)DBJ_MALLOC(sizeof(object_t));
+    object_t* playerFPGreatsword = (object_t*)DBJ_MALLOC(sizeof(object_t));
 
     tomentdatapack.playersFPLength = 3; // Set length
 
@@ -1412,7 +1445,7 @@ void D_InitLoadPlayersFP(void)
         SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_HANDS]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
 
         // Load animations as well
-        tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations = (objectanimations_t*)DBJ_MALLOC(sizeof(objectanimations_t));
         tomentdatapack.playersFP[PLAYER_FP_HANDS]->animations->belongsTo = tomentdatapack.playersFP[0];
 
         // Idle = Normal
@@ -1456,7 +1489,7 @@ void D_InitLoadPlayersFP(void)
         SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_AXE]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
 
         // Load animations as well
-        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.playersFP[PLAYER_FP_AXE]->animations = (objectanimations_t*)DBJ_MALLOC(sizeof(objectanimations_t));
         tomentdatapack.playersFP[PLAYER_FP_AXE]->animations->belongsTo = tomentdatapack.playersFP[0];
 
         // Idle = Normal
@@ -1500,7 +1533,7 @@ void D_InitLoadPlayersFP(void)
         SDL_SetColorKey(tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
 
         // Load animations as well
-        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations = (objectanimations_t*)malloc(sizeof(objectanimations_t));
+        tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations = (objectanimations_t*)DBJ_MALLOC(sizeof(objectanimations_t));
         tomentdatapack.playersFP[PLAYER_FP_GREATSWORD]->animations->belongsTo = tomentdatapack.playersFP[0];
 
         // Idle = Normal

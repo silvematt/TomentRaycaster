@@ -25,7 +25,7 @@
 //  U_ [Utilities]
 // ------------------------------------------------
 
-int main(int argc, char* argv[])
+int wmain(int argc, wchar_t * argw[])
 {
     // Absolute initializations
     A_InitApplication();
