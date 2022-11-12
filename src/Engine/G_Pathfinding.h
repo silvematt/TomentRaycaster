@@ -6,18 +6,44 @@
 #include "M_Map.h"
 #include "U_DataTypes.h"
 
-
+// Pathfinding Related data
 extern pathnode_t frontier[MAP_HEIGHT*MAP_WIDTH+2];
 extern unsigned int frontierLength;
 extern bool visited[MAP_HEIGHT][MAP_WIDTH];
 
+//----------------------------------
+// Returns if the space identified by the parameters is empty or not in the dynamic sprite maps
+//----------------------------------
 extern bool G_CheckDynamicSpriteMap(int level, int y, int x);
+
+//----------------------------------
+// Gets the dynamicSprite identified by the parameter
+//----------------------------------
 extern dynamicSprite_t* G_GetFromDynamicSpriteMap(int level, int y, int x);
+
+//----------------------------------
+// Clears from the Dynamic Sprite Maps
+//----------------------------------
 extern void G_ClearFromDynamicSpriteMap(int level, int y, int x);
 
+//----------------------------------
+// Adds an entity in the Dead Dynamic Sprites Map
+//----------------------------------
 extern void G_AddToDeadDynamicSpriteMap(dynamicSprite_t* cur, int level, int y, int x);
+
+//----------------------------------
+// Returns if the space identified by the parameters is empty or not in the dynamic sprite maps
+//----------------------------------
 extern bool G_CheckDeadDynamicSpriteMap(int level, int y, int x);
+
+//----------------------------------
+// Gets the dynamicSprite identified by the parameter
+//----------------------------------
 extern dynamicSprite_t* G_GetFromDeadDynamicSpriteMap(int level, int y, int x);
+
+//----------------------------------
+// Clears from the Dead Dynamic Sprite Maps
+//----------------------------------
 extern void G_ClearFromDeadDynamicSpriteMap(int level, int y, int x);
 
 //----------------------------------

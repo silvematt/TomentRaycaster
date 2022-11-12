@@ -12,10 +12,10 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
-#define MAX_STRLEN 255      // Max lenght of a filepath
+#define MAX_STRLEN 255      // Max lenght of a string to read
 
 #define MAX_FILEPATH_L 255  // Max lenght of a filepath
-#define MAX_STRL_R 8192      // Max lenght of a fgets while reading
+#define MAX_STRL_R 8192     // Max lenght of a fgets while reading 
 
 
 // Holds the current game state
@@ -48,11 +48,6 @@ extern unsigned int* raycast_pixels;    // pixels of the surface
 // Initializes the application 
 //-------------------------------------
 void A_InitApplication(void);
-
-//-------------------------------------
-// Tick 
-//-------------------------------------
-void A_EngineLoop(void);
 
 //-------------------------------------
 // Quit Application 

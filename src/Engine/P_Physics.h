@@ -33,7 +33,6 @@ float P_CheckCircleCollision(circle_t* c1, circle_t* c2);
 
 
 float P_GetDistance(float x1, float y1, float x2, float y2);
-
 float P_GetDistanceSquared(float x1, float y1, float x2, float y2);
 
 

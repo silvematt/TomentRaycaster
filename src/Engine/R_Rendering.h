@@ -283,7 +283,14 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
 //-------------------------------------
 void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist);
 
+//-------------------------------------
+// Queue an Alert Message to be displayed
+//-------------------------------------
 void R_QueueAlertMessage(alertMessage_t* m, int x, int y, char* msg, float duration, float size);
+
+//-------------------------------------
+// Updates and renders the Alert Messages queue
+//-------------------------------------
 void R_UpdateAlertMessages(void);
 
 #endif

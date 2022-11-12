@@ -1202,7 +1202,7 @@ static bool I_PlayerAttack(int attackType)
             break;
     }
 
-    if(ai != NULL && ai->base.dist < PLAYER_AI_HIT_DISTANCE && ai->canBeHit)
+    if(ai != NULL && ai->canBeHit)
     {
         printf("Hit an enemy.\n");
 
@@ -1289,22 +1289,22 @@ void G_PlayerSetWeapon(playerFPID_e weaponID)
     {
         case PLAYER_FP_HANDS:
             player.curWeapon = PLAYER_FP_HANDS;
-            player.weaponDistance = 90.0f;
+            player.weaponDistance = 85.0f;
             break;
         
         case PLAYER_FP_AXE:
             player.curWeapon = PLAYER_FP_AXE;
-            player.weaponDistance = 110.0f;
+            player.weaponDistance = 90.0f;
             break;
 
         case PLAYER_FP_GREATSWORD:
             player.curWeapon = PLAYER_FP_GREATSWORD;
-            player.weaponDistance = 140.0f;
+            player.weaponDistance = 105.0f;
             break;
 
         default:
             player.curWeapon = PLAYER_FP_HANDS;
-            player.weaponDistance = 100.0f;
+            player.weaponDistance = 85.0f;
             break;
     }
 }

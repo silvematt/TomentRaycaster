@@ -320,9 +320,7 @@ void G_AITakeDamage(dynamicSprite_t* cur, float amount)
         
         // Check death
         if(cur->attributes.curHealth <= 0.0f)
-        {
             G_AIDie(cur);
-        }
     }
 }
 

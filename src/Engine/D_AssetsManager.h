@@ -12,17 +12,16 @@
 #define OBJECTARRAY_DEFAULT_SIZE 256
 #define OBJECTARRAY_DEFAULT_SIZE_HIGH 2048
 
+// Table of Content
 #define MAX_TOC_LENGTH 256
 
-// All Floors
+// Default Fallback Objects
 typedef enum enginesDefaultsID_e
 {
     EDEFAULT_1 = 0
 } enginesDefaultsID_t;
 
-// --------------------------------------------
 // All Walls and doors
-// --------------------------------------------
 typedef enum wallObjectID_e
 {
     // 0 = Empty
@@ -37,6 +36,7 @@ typedef enum wallObjectID_e
     W_WallInvisible
 } wallObjectID_t;
 
+// All Textures IDs
 typedef enum textureID_e
 {
     // 0 = Empty
@@ -52,20 +52,6 @@ typedef enum textureID_e
     TEXTURE_FloorBrick2,
     TEXTURE_FloorDirt1
 } textureID_e;
-
-// All Floors
-typedef enum floorObjectID_e
-{
-    // 0 = Empty
-    F_1 = 1,
-} floorObjectID_t;
-
-// All Celings
-typedef enum ceilingObjectID_e
-{
-    // 0 = Empty
-    C_1 = 1,
-} ceilingObjectID_t;
 
 // All sprites
 typedef enum spritesObjectID_e
@@ -92,7 +78,7 @@ typedef enum spritesObjectID_e
     DS_SkeletonLord
 } spritesObjectID_t;
 
-// All sprites
+// All skies textures
 typedef enum skiesObjectID_e
 {
     // 0 = Empty
@@ -100,6 +86,7 @@ typedef enum skiesObjectID_e
     SKY_Red1
 } skiesObjectID_e;
 
+// Animations of an Object
 typedef enum objectanimationsID_e
 {
     ANIM_IDLE = 0,
@@ -115,9 +102,9 @@ typedef struct objectAnimations_s
 {
     struct object_s* belongsTo;
     
-    SDL_Surface* animIdle;
-    unsigned animIdleSheetLength;
-    unsigned animIdleActionFrame;
+    SDL_Surface* animIdle;          // The image
+    unsigned animIdleSheetLength;   // The sheet lenght
+    unsigned animIdleActionFrame;   // The frame that has to be reached in order to perform the animation action (like casting a spell)
 
     SDL_Surface* animDie;
     unsigned animDieSheetLength;
@@ -142,7 +129,7 @@ typedef struct objectAnimations_s
 } objectanimations_t;
 
 
-// Types of walls
+// Data type for Walls
 typedef struct wallAsset_s
 {
     int ID;
@@ -153,7 +140,7 @@ typedef struct wallAsset_s
     void (*Callback)(char* data);
 } wallAsset_t;
 
-
+// Identify the faces of the walls
 #define TEXTURE_ARRAY_TOP 0
 #define TEXTURE_ARRAY_BOTTOM 1
 #define TEXTURE_ARRAY_LEFT 2
@@ -164,6 +151,7 @@ typedef struct wallAsset_s
 // Wall Objects are dynamic wall data loaded from the map file
 typedef struct wallObject_s
 {
+    // The related wallAsset_t
     int assetID;
 
     // Texture IDs for each face, used for cube walls, after being init they point to texture
@@ -173,9 +161,20 @@ typedef struct wallObject_s
     int texturesArray[6];
 
     // Data of the callback (i.e. the level to load for the wallTrigger asset)
-    char data[256];
+    char data[OBJECTARRAY_DEFAULT_SIZE];
 } wallObject_t;
 
+
+/* object_t Flags
+
+    // ============
+    // For walls
+    // ============
+    // 0000000 0
+    //          \
+    //           1 = Is Ladder
+*/
+// The common Object data
 typedef struct object_s
 {
     int ID;
@@ -190,16 +189,7 @@ typedef struct object_s
     void (*Callback)(char* data);
 } object_t;
 
-
-/* object_t Flags
-
-    // ============
-    // For walls
-    // ============
-    // 0000000 0
-    //          \
-    //           1 = Is Ladder
-*/
+// Lightweight version of object_t suited for textures
 typedef struct textureObject_s
 {
     int ID;
@@ -208,13 +198,13 @@ typedef struct textureObject_s
 } textureObject_t;
 
 
-
 // The Text rendering is not hardcoded to use 16x6 elements font sheets, but the translation map is, 
 // if you wish to use more character or a different map of the characters, you'll have to edit the translation code, 
 // but the system's code should work just fine
 #define FONT_MAX_ELEMENTS_WIDTH 16
 #define FONT_MAX_ELEMENTS_HEIGHT 6
 
+// Font data
 typedef struct fontSheet_s
 {
     unsigned int width;             // Width of the tiles that compose the font sheet
@@ -224,6 +214,7 @@ typedef struct fontSheet_s
     int glyphsWidth[FONT_MAX_ELEMENTS_HEIGHT][FONT_MAX_ELEMENTS_WIDTH];        // The actual used width of each glyph, used for text-spacing
 } fontsheet_t;
 
+// Lightweight version of object_t suited for UI Assets
 typedef struct uiAssets_s
 {
     SDL_Surface* texture;
@@ -318,7 +309,8 @@ typedef struct tocElement_s
     uint32_t size;
 } tocElement_t;
 
-// IDs of the Images in the IMGArchive (MUST BE IN SYNCH WITH ARCH)
+// IDs of the Images in the IMGArchive 
+// MUST BE IN SYNCH WITH ARCH application (Files.txt needs to have the same elements in the same order as this enum) https://github.com/silvematt/TomentARCH
 typedef enum imgIDs_e
 {
     IMG_ID_EDEFAULT_1 = 0,
@@ -393,6 +385,7 @@ typedef enum imgIDs_e
     IMG_ID_AI_SKELETON_RESURRECTION
 } imgIDs_e;
 
+// Archt Data
 typedef struct archt_s
 {
     FILE* file;
@@ -462,12 +455,23 @@ extern tomentdatapack_t tomentdatapack;
 bool D_CheckTextureLoaded(SDL_Surface* ptr, int ID);
 
 //-------------------------------------
-// Initializes defauls for an object
+// Initializes defauls for an object_t
 //-------------------------------------
 void D_InitObject(object_t* obj);
+
+//-------------------------------------
+// Initializes defauls for a wallAsset_t
+//-------------------------------------
 void D_InitWallAsset(wallAsset_t* obj);
+
+//-------------------------------------
+// Initializes defauls for a textureObject_t
+//-------------------------------------
 void D_InitTextureAsset(textureObject_t* obj);
 
+//-------------------------------------
+// Initializes the Asset Manager
+//-------------------------------------
 void D_InitAssetManager(void);
 
 //-------------------------------------
@@ -479,6 +483,11 @@ void D_OpenArchs(void);
 // Closes the archives to and frees buffers
 //-------------------------------------
 void D_CloseArchs(void);
+
+
+//-------------------------------------
+// Initialize the TomentDataPack elements
+//-------------------------------------
 
 void D_InitEnginesDefaults(void);
 void D_InitLoadTextures(void);

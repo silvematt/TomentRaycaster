@@ -5,10 +5,12 @@
 // Definitions
 app_t application;
 
+// Surface of the Window
 SDL_Surface* win_surface;
 int win_width;
 unsigned int* pixels;
 
+// Surface of the rendered raycasting image, scaled appropiately
 SDL_Surface* raycast_surface;
 unsigned int* raycast_pixels;
 
@@ -30,7 +32,6 @@ void A_InitApplication(void)
     uint32_t winFlags = 0; 
     //uint32_t winFlags = SDL_WINDOW_FULLSCREEN; 
 
-    
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
     application.win = SDL_CreateWindow("Toment", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, winFlags);
@@ -46,14 +47,6 @@ void A_InitApplication(void)
 
     // Define entry state for the application
     A_ChangeState(GSTATE_MENU);
-}
-
-//-------------------------------------
-// Engine tick 
-//-------------------------------------
-void A_EngineLoop(void)
-{
-    
 }
 
 //-------------------------------------
@@ -79,6 +72,10 @@ void A_ChangeState(gamestate_e newState)
 
         case GSTATE_GAME:
             SDL_SetRelativeMouseMode(SDL_TRUE);
+            break;
+
+        default:
+            SDL_SetRelativeMouseMode(SDL_FALSE);
             break;
     }
 }

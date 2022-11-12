@@ -6,9 +6,10 @@
 
 #include "U_Timer.h"
 
-#define RADIAN 0.0174533        // 1 Radian
+// 1 Radian
+#define RADIAN 0.0174533        
 
-
+// Byte definition
 typedef	uint8_t byte;
 
 typedef struct vector2_s
@@ -78,7 +79,7 @@ typedef struct sprite_s
     float z;
 } sprite_t;
 
-
+// Entity attributes
 typedef struct entityattributes_s
 {
     float curHealth;
@@ -93,6 +94,7 @@ typedef struct entityattributes_s
     float criticalModifier;
 } entityattributes_t;
 
+// Defines the states of dynamic sprites (AI)
 typedef enum dynamicSpriteState_e
 {
     DS_STATE_NULL = 0,
@@ -105,14 +107,16 @@ typedef enum dynamicSpriteState_e
     DS_STATE_SPECIAL2
 } dynamicSpriteState_e;
 
+// Types of dynamic sprites
 typedef enum dynamicSpriteType_e
 {
     DS_TYPE_AI = 0,
     DS_TYPE_PROJECTILE
 } dynamicSpriteType_e;
 
-
+// Max number of spell an AI can have (Used to create Timers with which create spell logic)
 #define AI_MAX_SPELLS 5
+
 // -------------------------------
 // Dynamic Sprite data structure, represents dynamic sprites such as AI or projectiles
 // -------------------------------

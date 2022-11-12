@@ -39,12 +39,18 @@ extern projectileNode_t* explodingProjectilesHead;
 void G_InitGame(void);
 
 //-------------------------------------
-// Abs Tick 
+// Loop of the application 
 //-------------------------------------
 void G_GameLoop(void);
 
+//-------------------------------------
+// Loop of the game while in menu (GSTATE_MENU) 
+//-------------------------------------
 void G_StateMenuLoop(void);
 
+//-------------------------------------
+// Loop of the game while in game (GSTATE_GAME) 
+//-------------------------------------
 void G_StateGameLoop(void);
 
 //-------------------------------------
@@ -52,10 +58,19 @@ void G_StateGameLoop(void);
 //-------------------------------------
 void G_UpdateDoors(void);
 
+//-------------------------------------
+// Loads the map with ID mapID
+//-------------------------------------
 void G_ChangeMap(char* mapID);
 
+//-------------------------------------
+// Updates the spawned projectiles
+//-------------------------------------
 void G_UpdateProjectiles(void);
 
+//-------------------------------------
+// Spawns a new projectile
+//-------------------------------------
 void G_SpawnProjectile(int id, float angle, int level, float posx, float posy, float posz, float verticalAngle, bool isOfPlayer, dynamicSprite_t* aiOwner);
 
 #endif

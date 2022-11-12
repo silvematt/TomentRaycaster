@@ -10,12 +10,19 @@
 #define PLAYER_WIDTH 16
 #define PLAYER_HEIGHT 16
 
-#define PLAYER_CENTER_FIX 8     // To fix the player position to be at the center instead of the upper corner, this is WIDTH/2
+// To fix the player position to be at the center instead of the upper corner, this is WIDTH/2
+#define PLAYER_CENTER_FIX 8     
 
+// Speed of the player
 #define PLAYER_SPEED 250.0f
+
+// Rotation speed of the player
 #define PLAYER_ROT_SPEED 0.5f
+
+// Speed of the vertical head motion
 #define PLAYER_VERTICAL_HEAD_MOVEMENT_SPEED 60.0f
 
+// Default Player's starting rotation
 #define PLAYER_STARTING_ROT M_PI
 
 // The minimum distance the player can get to the wall
@@ -24,16 +31,20 @@
 // The light that the player will always carry, no matter the current map
 #define PLAYER_POINT_LIGHT_INTENSITY 10
 
-#define PLAYER_AI_HIT_DISTANCE 110.0f
-
+// The attack cone (in grids) of the player
 #define ATTACK_CONE_SIZE 7
+
+// The Max thresold of difference of angle (used to calculate if the AI we're trying to attack is in front of us)
 #define ATTACK_CONE_MAX_DIFF 25
 
+// Amount of seconds the crosshair will turn red when the player hits an AI
 #define CROSSHAIR_HIT_TIME_SECONDS 0.35f
 
+// Climbing speed
 #define PLAYER_CLIMBING_LADDER_UP_SPEED 24
 #define PLAYER_CLIMBING_LADDER_DOWN_SPEED 48
 
+// State of the player
 typedef enum playerState_e
 {
     PSTATE_IDLE = 0,
@@ -42,12 +53,14 @@ typedef enum playerState_e
     PSTATE_CLIMBING_LADDER
 } playerState_e;
 
+// Attacks the player can perform
 typedef enum playerAttacks_e
 {
     P_ATTACK_MELEE_1 = 0,
     P_ATTACK_CAST_FIREBALL1
 } playerAttacks_e;
 
+// Spells (shared with AI)
 typedef enum playerSpells_e
 {
     SPELL_NULL = 0,
@@ -55,15 +68,11 @@ typedef enum playerSpells_e
     SPELL_ICEDART1 = 8
 } playerSpells_e;
 
-struct dynamicSprite_t; // forward declaration
-// ----------------------------------------------------
-// Sets an SDL_Rect
-// ----------------------------------------------------
 typedef struct player_s
 {
     vector2_t position;     // abs SDL position
     vector2_t centeredPos;  // position centered for the player's width and height
-    float z;
+    float z;                // z pos
     int level;              // The current floor level the player is at
     
     circle_t collisionCircle;
@@ -74,7 +83,7 @@ typedef struct player_s
 
     vector2_t deltaPos; // used to calculate movements and collision
 
-    // Minimap rapresentaton
+    // Minimap rapresentaton of the player
     SDL_Surface* surface;
     SDL_Rect surfaceRect;
 
@@ -180,28 +189,69 @@ float G_GetDoorPosition(int level, int y, int x);
 //-------------------------------------
 int G_GetFromObjectTMap(int level, int y, int x);
 
+//-------------------------------------
+// Sets a value of the object T map
+//-------------------------------------
 void G_SetObjectTMap(int level, int y, int x, int value);
 
+//-------------------------------------
+// Checks players collisions
+//-------------------------------------
 void G_PlayerCollisionCheck();
 
+//-------------------------------------
+// Renders the player
+//-------------------------------------
 void G_PlayerRender(void);
 
+//-------------------------------------
+// Renders the player's UI
+//-------------------------------------
 void G_PlayerUIRender(void);
 
+//-------------------------------------
+// Plays an animation once (FP hands)
+//-------------------------------------
 void G_PlayerPlayAnimationOnce(objectanimationsID_e animID);
 
+//-------------------------------------
+// Returns if the player can attack
+//-------------------------------------
 bool G_PlayerCanAttack(void);
 
+//-------------------------------------
+// Makes the player take damage
+//-------------------------------------
 void G_PlayerTakeDamage(float dmg);
 
+//-------------------------------------
+// Drains player's mana
+//-------------------------------------
 void G_PlayerDrainMana(float amount);
 
+//-------------------------------------
+// Adds player's health
+//-------------------------------------
 void G_PlayerGainHealth(float amount);
+
+//-------------------------------------
+// Adds player's mana
+//-------------------------------------
 void G_PlayerGainMana(float amount);
 
+//-------------------------------------
+// Sets Player's Weapon
+//-------------------------------------
 void G_PlayerSetWeapon(playerFPID_e weaponID);
+
+//-------------------------------------
+// Sets Player's Spell
+//-------------------------------------
 void G_PlayerSetSpell(playerSpells_e spellID);
 
+//-------------------------------------
+// Makes player die
+//-------------------------------------
 void G_PlayerDeath();
 
 #endif

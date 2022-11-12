@@ -1,5 +1,18 @@
 #include "U_Timer.h"
 
+// Timer functions
+static void U_TimerInit(Timer* timer);
+static void U_TimerStart(Timer* timer);
+static void U_TimerStop(Timer* timer);
+static void U_TimerPause(Timer* timer);
+static void U_TimerResume(Timer* timer);
+
+static unsigned int U_TimerGetTicks(Timer* timer);
+
+// Timer checks
+static bool U_TimerIsStarted(Timer* timer);
+static bool U_TimerIsPaused(Timer* timer);
+
 Timer* U_TimerCreateNew(void)
 {
     Timer* timer = (Timer*)malloc(sizeof(Timer));

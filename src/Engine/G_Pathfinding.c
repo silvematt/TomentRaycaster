@@ -7,9 +7,11 @@ pathnode_t frontier[MAP_HEIGHT*MAP_WIDTH+2];
 unsigned int frontierLength = 0;
 bool visited[MAP_HEIGHT][MAP_WIDTH];
 
+// Adds a Node to be added to the frontier
 static void I_InsertNode(int level, pathnode_t* node, int gridx, int gridy, int f, int g, int h, pathnode_t* parent, bool debug, dynamicSprite_t* entity);
-static void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug, dynamicSprite_t* entity);
 
+// Adds the nodes adiacent to a Node to be added to the frontier
+static void I_AddAdiacentNodes(int level, int oGridX, int oGridY, pathnode_t* parent, bool debug, dynamicSprite_t* entity);
 
 path_t G_PerformPathfinding(int level, vector2Int_t gridPos, vector2Int_t gridTargetPos, dynamicSprite_t* entity) //entity performing pathfinding
 {

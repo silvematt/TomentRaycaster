@@ -36,7 +36,7 @@ typedef struct menu_s
 
 extern menu_t* currentMenu;
 
-// Menus are initialized at compile-time
+// Menus are defined at compile-time
 extern menuelement_t MainMenuElements[];
 extern menu_t MainMenu;
 
@@ -52,9 +52,14 @@ extern menu_t EndGameMenu;
 extern menuelement_t AboutMenuElements[];
 extern menu_t AboutMenu;
 
-
+//-------------------------------------
+// Initialize the Main Menu state
+//-------------------------------------
 void G_InitMainMenu();
 
+//-------------------------------------
+// Set the MenuState
+//-------------------------------------
 void G_SetMenu(menu_t* menu);
 
 //-------------------------------------
@@ -62,12 +67,10 @@ void G_SetMenu(menu_t* menu);
 //-------------------------------------
 void G_RenderCurrentMenuBackground(void);
 
-
 //-------------------------------------
 // Render menu routine, renders the elements of any menu
 //-------------------------------------
 void G_RenderCurrentMenu(void);
-
 
 //-------------------------------------
 // Manages Menu Input routine

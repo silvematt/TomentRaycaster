@@ -173,7 +173,7 @@ void D_InitUIAssets(void)
     if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_SELECT_CURSOR))
         tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_SELECT_CURSOR]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
@@ -184,7 +184,7 @@ void D_InitUIAssets(void)
     if(D_CheckTextureLoaded(temp1, IMG_ID_MENU_TITLE))
         tomentdatapack.uiAssets[M_ASSET_TITLE]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_SetColorKey(tomentdatapack.uiAssets[M_ASSET_TITLE]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
@@ -195,7 +195,7 @@ void D_InitUIAssets(void)
     if(D_CheckTextureLoaded(temp1, IMG_ID_HEALTHBAR_EMPTY))
         tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
@@ -209,7 +209,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_HEALTHBAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // MANABAR_EMPTY
@@ -222,7 +222,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // MANABAR_FILL
@@ -235,7 +235,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_MANABAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // Load Icons
@@ -249,7 +249,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_FISTS]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // Icon Axe
@@ -262,7 +262,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_AXE]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // Icon Spell Fireball
@@ -275,7 +275,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_FIREBALL1]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // Crosshair
@@ -288,7 +288,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // Icon Spell Ice Dart
@@ -301,7 +301,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_SPELL_ICEDART1]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // Crosshair Hit
@@ -314,7 +314,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_UI_CROSSHAIR_HIT]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 
     // BOSS_HEALTHBAR_EMPTY
@@ -324,7 +324,7 @@ void D_InitUIAssets(void)
     if(D_CheckTextureLoaded(temp1, IMG_ID_BOSS_HEALTHBAR_EMPTY))
         tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_EMPTY]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
@@ -335,7 +335,7 @@ void D_InitUIAssets(void)
     if(D_CheckTextureLoaded(temp1, IMG_ID_BOSS_HEALTHBAR_FILL))
         tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_BOSS_HEALTHBAR_FILL]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     SDL_FreeSurface(temp1);
 
@@ -349,7 +349,7 @@ void D_InitUIAssets(void)
         SDL_SetColorKey(tomentdatapack.uiAssets[G_ASSET_ICON_GREATSWORD]->texture, SDL_TRUE, r_transparencyColor);    // Make transparency color for blitting
     }
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
     SDL_FreeSurface(temp1);
 }
 
@@ -378,7 +378,7 @@ void D_InitEnginesDefaults(void)
     if(D_CheckTextureLoaded(temp1, IMG_ID_EDEFAULT_1))
         tomentdatapack.enginesDefaults[EDEFAULT_1]->texture = SDL_ConvertSurface(temp1, win_surface->format, 0);
     else
-        printf("FATAL ERROR! Engine Default \"%s\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
+        printf("FATAL ERROR! Engine Default \"%d\" failed to load. Further behaviour is undefined.\n", IMG_ID_EDEFAULT_1);
         
     SDL_FreeSurface(temp1);
 

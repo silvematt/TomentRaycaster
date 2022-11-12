@@ -17,6 +17,7 @@
 
 #define UNIT_SIZE 64
 
+// Number of levels a scene has
 #define MAX_N_LEVELS 3
 
 #define MAX_MAP_NAME_LENGTH 16

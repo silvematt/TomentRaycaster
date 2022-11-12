@@ -35,7 +35,6 @@ int main(int argc, char* argv[])
     // Loop
     while(!application.quit)
     {
-        A_EngineLoop();
         G_GameLoop();
     }
 
