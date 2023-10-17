@@ -65,6 +65,19 @@ typedef struct map_s
     // At which level we have abs ceiling
     int absCeilingLevel;
 
+    // Fog
+    bool hasFog;
+
+    int fogColorR;
+    int fogColorG;
+    int fogColorB;
+
+    SDL_Color fogColor;
+    float wallFogMinDist;
+    float wallFogMaxDist;
+    float floorFogMinDist;
+    float floorFogMaxDist;
+
     // Map Dynamics, values are cached in multiple matrixes to avoid having to calculate them each time
     // These values can change during runtime
 

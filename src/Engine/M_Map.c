@@ -120,6 +120,30 @@ void M_LoadMapAsCurrent(char* mapID)
 
       // Read absCeilingLevel
       I_LoadIntFromFile(fp, &currentMap.absCeilingLevel);
+
+      // Read hasAbsCeiling
+      I_LoadBoolFromFile(fp, &currentMap.hasFog);
+
+      I_LoadIntFromFile(fp, &currentMap.fogColorR);
+      I_LoadIntFromFile(fp, &currentMap.fogColorG);
+      I_LoadIntFromFile(fp, &currentMap.fogColorB);
+
+      // Load the fog color as an SDL_Color
+      currentMap.fogColor.r = currentMap.fogColorR;
+      currentMap.fogColor.g = currentMap.fogColorG;
+      currentMap.fogColor.b = currentMap.fogColorB;
+
+      // Read MinWallFog
+      I_LoadFloatFromFile(fp, &currentMap.wallFogMinDist);
+
+      // Read MaxWallFog
+      I_LoadFloatFromFile(fp, &currentMap.wallFogMaxDist);
+
+      // Read FloorFogMin
+      I_LoadFloatFromFile(fp, &currentMap.floorFogMinDist);
+
+      // Read FloorFogMin
+      I_LoadFloatFromFile(fp, &currentMap.floorFogMaxDist);
       
       fclose(fp);
 

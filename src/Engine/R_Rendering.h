@@ -92,6 +92,9 @@ extern uint32_t r_transparencyColor;    // Color marked as "transparency", rende
 // Wall heights, saved for each x for each level
 extern float zBuffer[MAX_PROJECTION_PLANE_HEIGHT][MAX_PROJECTION_PLANE_WIDTH];
 
+extern float floorcastLookUp[MAX_N_LEVELS][MAX_PROJECTION_PLANE_HEIGHT];
+extern float ceilingcastLookUp[MAX_N_LEVELS][MAX_PROJECTION_PLANE_HEIGHT];
+
 // Drawables
 #define MAX_DRAWABLES MAX_PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION + MAXVISABLE
 extern drawabledata_t allDrawables[MAX_DRAWABLES];
@@ -153,12 +156,12 @@ void R_DrawPixel(int x, int y, int color);
 //-------------------------------------
 // Draw a single pixel with shading
 //-------------------------------------
-void R_DrawPixelShaded(int x, int y, int color, float intensity, float distance);
+void R_DrawPixelShaded(int x, int y, int color, float intensity, float dist, bool usesFog, float fogBlendingFactor);
 
 //-------------------------------------
 // Draw a column of pixels with shading
 //-------------------------------------
-void R_DrawColumnOfPixelShaded(int x, int y, int endY, int color, float intensity, float distance);
+void R_DrawColumnOfPixelShaded(int x, int y, int endY, int color, float intensity, float distance, bool usesFog, float fogBlendingFactor);
 
 //-------------------------------------
 // Draw a column of pixel
@@ -223,7 +226,10 @@ void R_DrawThinWall(walldata_t* wall);
 // - rayAngle = the current rayangle
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
-void R_FloorCasting(int end, float rayAngle, int x, float wallHeight);
+void R_FloorCasting(int level, int end, float rayAngle, int x, float wallHeight);
+void R_FloorCastingOld(int end, float rayAngle, int x, float wallHeight);
+
+void R_FloorCastingHor();
 
 //-------------------------------------
 // Floorcast and ceilingcast
@@ -233,6 +239,11 @@ void R_FloorCasting(int end, float rayAngle, int x, float wallHeight);
 // - x = the x coordinate on the screen for this specific floor cast call
 //-------------------------------------
 void R_CeilingCasting(int level, float start, float rayAngle, int x, float wallHeight);
+void R_CeilingCastingOld(int level,float start, float rayAngle, int x, float wallHeight);
+bool R_DoesCeilingCast(wallObject_t* obj);
+
+bool R_DoesFloorCast(wallObject_t* obj);
+void R_CeilingCastingHor(int level);
 
 //-------------------------------------
 // Adds a sprite to the visible sprite array and adds its corresponding drawable
@@ -281,7 +292,7 @@ void R_DrawColumnTextured(int x, int y, int endY, SDL_Surface* texture, int xOff
 //-------------------------------------
 // Draws a column of pixels with texture mapping and shading
 //-------------------------------------
-void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, float wallheight, float intensity, float dist);
+void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, int xOffset, int yOffset, float wallheight, float intensity, float dist, bool hasFog, float fogBlendingFactor);
 
 //-------------------------------------
 // Queue an Alert Message to be displayed

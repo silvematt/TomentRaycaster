@@ -101,9 +101,9 @@ void G_AIInitialize(dynamicSprite_t* cur, int level, int spriteID, int x, int y)
             cur->attributes.maxMana = 600.0f;
             cur->attributes.curMana = cur->attributes.maxMana;
 
-            cur->attributes.baseDamage = 5.0f;
+            cur->attributes.baseDamage = 6.0f;
             cur->attributes.attackChance = 90;
-            cur->attributes.criticalChance = 10;
+            cur->attributes.criticalChance = 25;
             cur->attributes.criticalModifier = 1.5f;
             break;
 

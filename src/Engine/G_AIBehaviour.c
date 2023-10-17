@@ -572,23 +572,20 @@ void G_AI_BehaviourSkeletonLord(dynamicSprite_t* cur)
                 // For ten seconds, attack melee or ranged
                 if(cur->cooldowns[0]->GetTicks(cur->cooldowns[0]) < 10000)
                 {
+                    // Check fireball cooldown
+                    if(cur->cooldowns[1]->GetTicks(cur->cooldowns[1]) > 3000)
+                    {
+                        // In range for attacking (casting spell)
+                        G_AIPlayAnimationOnce(cur, ANIM_CAST_SPELL);
+                        cur->aggroedPlayer = true;
+                    }
                     // Check Attack
-                    if(cur->base.dist < AI_MELEE_ATTACK_DISTANCE && cur->base.level == player.level)
+                    else if(cur->base.dist < AI_MELEE_ATTACK_DISTANCE && cur->base.level == player.level)
                     {
                         // In range for attacking
                         G_AIPlayAnimationOnce(cur, ANIM_ATTACK1);
                         G_AIAttackPlayer(cur);
                         cur->aggroedPlayer = true;
-                    }
-                    else if(cur->base.dist > AI_MELEE_ATTACK_DISTANCE || cur->base.level == player.level)
-                    {
-                        // Check fireball cooldown
-                        if(cur->cooldowns[1]->GetTicks(cur->cooldowns[1]) > 3000)
-                        {
-                            // In range for attacking (casting spell)
-                            G_AIPlayAnimationOnce(cur, ANIM_CAST_SPELL);
-                            cur->aggroedPlayer = true;
-                        }
                     }
                 }
                 else

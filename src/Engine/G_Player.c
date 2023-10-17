@@ -254,8 +254,9 @@ void G_PlayerCollisionCheck()
     // Player->Dynamic Sprites
     //---------------------------------------------------
     
-    // The circle the player has if the delta movement is applied
-    circle_t hypoteticalPlayerCircle = {player.collisionCircle.pos.x += player.deltaPos.x, player.collisionCircle.pos.y += player.deltaPos.y, player.collisionCircle.r};
+    // The circle the player has if the delta movement is applied 
+    // Radius+2 to avoid flickering
+    circle_t hypoteticalPlayerCircle = {player.collisionCircle.pos.x += player.deltaPos.x, player.collisionCircle.pos.y += player.deltaPos.y, player.collisionCircle.r+2};
     for(int i = 0; i < allDynamicSpritesLength; i++)
     {
         if(allDynamicSprites[i]->base.active && allDynamicSprites[i]->base.level == player.level)
@@ -268,6 +269,25 @@ void G_PlayerCollisionCheck()
             {
                 player.deltaPos.x = 0;
                 player.deltaPos.y = 0;
+            }
+
+            // Check if there is collision currently, this can happen when network lags and the AI is moved in front of the player
+            if(P_CheckCircleCollision(&player.collisionCircle, &cur->base.collisionCircle) > 0)
+            {
+                player.deltaPos.x = 0;
+                player.deltaPos.y = 0;
+
+                // Even without moving, there's a collision, resolve it
+                float solvingAngle = atan2(player.collisionCircle.pos.y - cur->base.collisionCircle.pos.y, player.collisionCircle.pos.x - cur->base.collisionCircle.pos.x);
+                float distanceBetweenCircles = P_GetDistance(player.collisionCircle.pos.x, player.collisionCircle.pos.y, cur->base.collisionCircle.pos.x, cur->base.collisionCircle.pos.y);
+
+                float distToSolve = player.collisionCircle.r + cur->base.collisionCircle.r - distanceBetweenCircles;
+
+                // Move player away from colliding object
+                float displacementX = cos(solvingAngle) * distToSolve;
+                float displacementY = sin(solvingAngle) * distToSolve;
+                player.position.x += displacementX;
+                player.position.y += displacementY;
             }
         }
     }
@@ -305,6 +325,7 @@ void G_InGameInputHandling(const uint8_t* keyboardState)
             player.z += 100 * deltaTime; 
     */
 
+    /*
     if(keyboardState[SDL_SCANCODE_KP_MINUS])
     {
         player.attributes.curHealth -= 1.0f;
@@ -324,7 +345,7 @@ void G_InGameInputHandling(const uint8_t* keyboardState)
     {
         player.attributes.curMana += 1.0f;
     }
-
+    */
 
     //playerinput.input.x = SDL_clamp(playerinput.input.x, -1.0f , 1.0f);
     playerinput.input.y = SDL_clamp(playerinput.input.y, -1.0f , 1.0f);
@@ -696,6 +717,25 @@ void G_InGameInputHandlingEvent(SDL_Event* e)
             if(e->key.keysym.sym == SDLK_F1)
             {
                 debugRendering = !debugRendering;
+            }
+            */
+           
+           /*
+           if(e->key.keysym.sym == SDLK_F5)
+            {
+                int curx = player.position.x;
+                int cury = player.position.y;
+                int curz = player.z;
+                float curAngle = player.angle;
+                float curVerticalMovement = player.verticalHeadMovement;
+
+                G_InitGame();
+
+                player.position.x = curx;
+                player.position.y = cury;
+                player.z = curz;
+                player.angle = curAngle;
+                player.verticalHeadMovement = curVerticalMovement;
             }
             */
 
@@ -1194,7 +1234,7 @@ static bool I_PlayerAttack(int attackType)
             break;
 
         case PLAYER_FP_GREATSWORD:
-            damage = 100.0f;
+            damage = 101.0f;
             break;
 
         default:
@@ -1239,7 +1279,7 @@ static bool I_PlayerCastSpell(playerSpells_e spell)
             break;
 
         case SPELL_ICEDART1:
-            manaNeeded = 3.25f;
+            manaNeeded = 7.0f;
             checkSpell = true;
             break;
 

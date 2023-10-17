@@ -82,7 +82,10 @@ void G_InitGame(void)
 //-------------------------------------
 void G_GameLoop(void)
 {
+    Uint32 start_time, frame_time;
+    float fps;
 
+    start_time = SDL_GetTicks();
     switch(application.gamestate)
     {
         case GSTATE_MENU:
@@ -96,6 +99,10 @@ void G_GameLoop(void)
         default:
             break;
     }
+
+    frame_time = SDL_GetTicks()-start_time;
+    fps = (frame_time > 0) ? 1000.0f / frame_time : 0.0f;
+    //printf("%f\n", fps);
 }
 
 
@@ -344,7 +351,11 @@ void G_UpdateProjectiles(void)
             {
                 cur->this.isBeingDestroyed = true;
                 G_AIPlayAnimationOnce(&cur->this, ANIM_DIE);
-                return;
+
+                i++;
+                cur = cur->next;
+
+                continue;
             }
 
             // AI hit
@@ -362,7 +373,7 @@ void G_UpdateProjectiles(void)
                         break;
 
                     case S_IceDart1:
-                        damage = 15.0f;
+                        damage = 33.0f;
                         break;
 
                     default:
@@ -380,7 +391,10 @@ void G_UpdateProjectiles(void)
 
                 cur->this.isBeingDestroyed = true;
                 G_AIPlayAnimationOnce(&cur->this, ANIM_DIE);
-                return;
+
+                i++;
+                cur = cur->next;
+                continue;
             }
 
             // Player hit
@@ -399,7 +413,7 @@ void G_UpdateProjectiles(void)
                         break;
 
                     case S_IceDart1:
-                        damage = 15.0f;
+                        damage = 33.0f;
                         break;
 
                     default:
@@ -411,7 +425,11 @@ void G_UpdateProjectiles(void)
 
                 cur->this.isBeingDestroyed = true;
                 G_AIPlayAnimationOnce(&cur->this, ANIM_DIE);
-                return;
+
+                i++;
+                cur = cur->next;
+
+                continue;
             }
         }
         // The projectile has hit, wait for the death animation to play
