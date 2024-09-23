@@ -129,7 +129,7 @@ void G_RenderCurrentMenuBackground(void)
         case MENU_ABOUT:
         {
             T_DisplayTextScaled(FONT_BLKCRY, "About", 210, 80, 2.0f);
-            T_DisplayTextScaled(FONT_BLKCRY, "Programmer:  Mattia  Silvestro  ( silvematt)\nVersion: 1.2", 80, 200, 1.0f);
+            T_DisplayTextScaled(FONT_BLKCRY, "Programmer:  Mattia  Silvestro  ( silvematt)\nVersion: 1.1   OpenMP", 80, 200, 1.0f);
 
             break;
         }
