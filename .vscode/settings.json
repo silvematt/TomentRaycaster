@@ -14,6 +14,7 @@
         "g_player.h": "c",
         "a_application.h": "c",
         "float.h": "c",
-        "d_assetsmanager.h": "c"
+        "d_assetsmanager.h": "c",
+        "g_game.h": "c"
     }
 }

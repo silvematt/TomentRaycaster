@@ -3,6 +3,7 @@
 
 // External Libraries
 #include "SDL.h"
+#undef main
 
 // Engine
 #include "Engine/A_Application.h"

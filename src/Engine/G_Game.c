@@ -32,6 +32,11 @@ projectileNode_t* projectilesHead = NULL;
 // Projectiles that hit something and are exploding
 projectileNode_t* explodingProjectilesHead = NULL;
 
+bool showFPS = false;
+float readOnlyFPS = 0;
+char fpsText[16];
+int frameCountForFPSDisplay = 0;
+
 //-------------------------------------
 // Initialize game related stuff 
 //-------------------------------------
@@ -75,6 +80,8 @@ void G_InitGame(void)
     G_ChangeMap("lvl1");
     
     gameTimer->Start(gameTimer);
+
+    frameCountForFPSDisplay = 0;
 }
 
 //-------------------------------------
@@ -102,7 +109,14 @@ void G_GameLoop(void)
 
     frame_time = SDL_GetTicks()-start_time;
     fps = (frame_time > 0) ? 1000.0f / frame_time : 0.0f;
-    //printf("%f\n", fps);
+
+    // To display fps on screen
+    frameCountForFPSDisplay++;
+    if(frameCountForFPSDisplay > N_FRAMES_SKIP_FOR_DISPLAY)
+    {
+        readOnlyFPS = fps;
+        frameCountForFPSDisplay = 0;
+    }
 }
 
 

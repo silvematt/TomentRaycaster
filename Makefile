@@ -5,16 +5,16 @@ OBJS = src/Engine/A_Application.c src/Engine/I_InputHandling.c src/Engine/M_Map.
 CC = gcc
 
 #INCLUDE_PATHS specifies the additional include paths we'll need
-INCLUDE_PATHS = -IC:\MinGWLibs\include\SDL2
+INCLUDE_PATHS = -IC:\Lib\SDL2-2.30.1\include
 
 #LIBRARY_PATHS specifies the additional library paths we'll need
-LIBRARY_PATHS = -LC:\MinGWLibs\lib
+LIBRARY_PATHS = -LC:\Lib\SDL2-2.30.1\lib\x86
 
 #COMPILER_FLAGS specifies the additional compilation options we're using
 COMPILER_FLAGS = -O2 -Wl,--subsystem,windows -mwindows
 
 #LINKER_FLAGS specifies the libraries we're linking against
-LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2
+LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -fopenmp
 
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = bin/Toment

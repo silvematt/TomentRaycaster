@@ -12,6 +12,7 @@ static void CALLBACK_MAINMENU_Options(void);
 static void CALLBACK_MAINMENU_Quit(void);
 static void CALLBACK_ReturnToMainMenu(void);
 static void CALLBACK_OPTIONSMENU_ChangeGraphics(void);
+static void CALLBACK_OPTIONSMENU_ChangeShowFPS(void);
 static void CALLBACK_MAINMENU_About(void);
 static void CALLBACK_Continue(void);
 
@@ -38,10 +39,11 @@ menu_t DeathMenu = {MENU_DEATH, DeathMenuElements, 2, &DeathMenuElements[0]};
 
 menuelement_t OptionsMenuElements[] =
 {
-    {"Graphics:",    {220, 200, 400, 40}, CALLBACK_OPTIONSMENU_ChangeGraphics},
-    {"Return",       {220, 250, 200, 40}, CALLBACK_ReturnToMainMenu},
+    {"Graphics:",       {220, 200, 400, 40}, CALLBACK_OPTIONSMENU_ChangeGraphics},
+    {"Fps:",            {220, 250, 400, 40}, CALLBACK_OPTIONSMENU_ChangeShowFPS},
+    {"Return",          {220, 300, 200, 40}, CALLBACK_ReturnToMainMenu},
 };
-menu_t OptionsMenu = {MENU_OPTIONS, OptionsMenuElements, 2, &OptionsMenuElements[0]};
+menu_t OptionsMenu = {MENU_OPTIONS, OptionsMenuElements, 3, &OptionsMenuElements[0]};
 
 menuelement_t EndGameMenuElements[] =
 {
@@ -96,6 +98,18 @@ void G_RenderCurrentMenuBackground(void)
                     T_DisplayTextScaled(FONT_BLKCRY, "High", 350, 205, 1.0f);
                     break;
             }
+
+            // Display graphics current setting:
+            switch(showFPS)
+            {
+                case true:
+                    T_DisplayTextScaled(FONT_BLKCRY, "true", 300, 255, 1.0f);
+                    break;
+                
+                case false:
+                    T_DisplayTextScaled(FONT_BLKCRY, "false", 300, 255, 1.0f);
+                    break;
+            }
             break;
         }
 
@@ -115,7 +129,7 @@ void G_RenderCurrentMenuBackground(void)
         case MENU_ABOUT:
         {
             T_DisplayTextScaled(FONT_BLKCRY, "About", 210, 80, 2.0f);
-            T_DisplayTextScaled(FONT_BLKCRY, "Programmer:  Mattia  Silvestro  ( silvematt)\nVersion: 1.1", 80, 200, 1.0f);
+            T_DisplayTextScaled(FONT_BLKCRY, "Programmer:  Mattia  Silvestro  ( silvematt)\nVersion: 1.2", 80, 200, 1.0f);
 
             break;
         }
@@ -216,6 +230,11 @@ static void CALLBACK_OPTIONSMENU_ChangeGraphics(void)
 
     R_SetRenderingGraphics(r_CurrentGraphicsSetting);
     R_ClearRendering();
+}
+
+static void CALLBACK_OPTIONSMENU_ChangeShowFPS(void)
+{
+    showFPS = !showFPS;
 }
 
 static void CALLBACK_Continue(void)

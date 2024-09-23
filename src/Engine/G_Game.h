@@ -11,6 +11,8 @@
 #define DOOR_OPEN_SPEED 100.0f
 #define DOOR_CLOSE_SPEED 100.0f
 
+#define N_FRAMES_SKIP_FOR_DISPLAY 20
+
 // Game Timer
 extern Timer* gameTimer;
 
@@ -31,6 +33,11 @@ extern float doorpositionsLevel2[MAP_HEIGHT][MAP_WIDTH]; // Timer holding the po
 
 extern projectileNode_t* projectilesHead;
 extern projectileNode_t* explodingProjectilesHead;
+
+extern bool showFPS;
+extern float readOnlyFPS; // to write FPS on screen
+extern char fpsText[16];
+extern int frameCountForFPSDisplay; // to update readOnlyFPS not everyframe, but every x frames 
 
 
 //-------------------------------------

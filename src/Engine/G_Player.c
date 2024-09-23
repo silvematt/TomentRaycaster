@@ -591,6 +591,13 @@ void G_PlayerUIRender(void)
         // Boss Name
         T_DisplayText(FONT_BLKCRY, player.bossFighting->base.name, 80, 380);
     }
+
+    // Show FPS
+    if(showFPS)
+    {
+        snprintf(fpsText, 16, "%d", (int)readOnlyFPS);
+        T_DisplayText(FONT_BLKCRY, fpsText, 580, 20);
+    }
 }
 //-------------------------------------
 // Handles Input from the player while doing the Event Input Handling
