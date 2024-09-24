@@ -304,4 +304,6 @@ void R_QueueAlertMessage(alertMessage_t* m, int x, int y, char* msg, float durat
 //-------------------------------------
 void R_UpdateAlertMessages(void);
 
+int R_ThreadRoutine(void* data);
+
 #endif

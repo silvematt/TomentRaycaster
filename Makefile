@@ -14,7 +14,7 @@ LIBRARY_PATHS = -LC:\Lib\SDL2-2.30.1\lib\x86
 COMPILER_FLAGS = -O2 -Wl,--subsystem,windows -mwindows
 
 #LINKER_FLAGS specifies the libraries we're linking against
-LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -fopenmp
+LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2
 
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = bin/Toment

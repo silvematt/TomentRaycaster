@@ -15,6 +15,7 @@
         "a_application.h": "c",
         "float.h": "c",
         "d_assetsmanager.h": "c",
-        "g_game.h": "c"
+        "g_game.h": "c",
+        "sdl_thread.h": "c"
     }
 }

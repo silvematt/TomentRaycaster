@@ -55,6 +55,17 @@ int PROJECTION_PLANE_CENTER;
 //#define DISTANCE_TO_PROJECTION ((PROJECTION_PLANE_WIDTH / 2) / tan(PLAYER_FOV /2))
 int DISTANCE_TO_PROJECTION;
 
+// CurrentLevel and CurrentPlayersLevel are used in the thread function to render the correct level
+int currentLevel;
+int currentPlayersLevel;
+
+// These are shared between threads to calculate floorcasting/ceilingcasting
+float curCosRayAngle;
+float curSinRayAngle;
+float curCosFinalRayAngle;
+float curSinFinalRayAngle;
+float curCeilingHeight;
+
 // =========================================
 // Static functions
 // =========================================
@@ -302,45 +313,26 @@ void I_Ray(int level, int playersLevel)
     visibleSpritesLength = 0;
     visibleThinWallsLength = 0;
     allDrawablesLength = 0;
+    
+    // Parallelize
+    currentLevel = level;
+    currentPlayersLevel = playersLevel;
+    extingThreads = 0;
 
-    float rayAngle = player.angle - (RADIAN * (PLAYER_FOV / 2));
+    // SELECT JOB FOR THREADS
+    currentThreadJob = TS_RAYCAST;
 
-    // Cast a ray foreach pixel of the projection plane
-    #pragma omp parallel private(rayAngle)
-    {
-        int t = omp_get_num_threads();
-        int ID = omp_get_thread_num();
-        int N = PROJECTION_PLANE_WIDTH;
-        int nLoc = N/t;
-        int r = N%t;
-        int step = 0;
+    for(int i = 0; i < cpuCount; i++)
+        *(threadDone[i]) = false;
 
-        if (ID < r)
-        { 
-            nLoc++;
-            step=0;
-        }
-        else
-            step=r;
+    threadIterationFinished = false;
 
-        for(int x = ID*nLoc; x < (ID + 1) * nLoc + step; x++)
-        {
-            rayAngle = player.angle - (RADIAN * (PLAYER_FOV / 2)) + (((RADIAN * PLAYER_FOV) / PROJECTION_PLANE_WIDTH) * x);
-            bool occlusionEnabled = (level == playersLevel) ? true : false; // for now player can only be on level 0
+    // Unlock the threads
+    for(int i = 0; i < cpuCount; i++)
+        SDL_SemPost(renderingThreadSemaphore);
 
-            // Variables set by Raycast functions to draw floor
-            float outHeight;
-            float outEnd;
-
-            if(occlusionEnabled)
-                R_RaycastPlayersLevel(level, x, rayAngle);
-            else
-                R_RaycastLevelNoOcclusion(level, x, rayAngle);
-        }
-        // Check next ray
-        rayAngle += (RADIAN * PLAYER_FOV) / PROJECTION_PLANE_WIDTH;
-    }
-    #pragma omp barrier
+    // Wait for all threads to finish
+    SDL_SemWait(mainThreadWaitSem);
 
     // Perform post-raycast operations
     R_DrawDrawables();
@@ -387,7 +379,6 @@ void R_Raycast(void)
     if(currentMap.hasAbsCeiling)
         R_CeilingCastingHor(currentMap.absCeilingLevel);
 
-    // Raycast player's level
     I_Ray(player.level, player.level);
 
     SDL_Rect size = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
@@ -1777,81 +1768,29 @@ void R_FloorCastingHor()
 
     // Precompute cos/sin
     float cosBeta = cos(beta);
-    float cosrayAngle = cos(rayAngle);
-    float sinrayAngle = sin(rayAngle);
+    curCosRayAngle = cos(rayAngle);
+    curSinRayAngle = sin(rayAngle);
 
-    float cosfinalRayAngle = cos(finalRayAngle);
-    float sinfinalRayAngle = sin(finalRayAngle);
+    // Parallelize
+    curCosFinalRayAngle = cos(finalRayAngle);
+    curSinFinalRayAngle = sin(finalRayAngle);
 
-    #pragma omp parallel for
-    for(int y = PROJECTION_PLANE_CENTER+1+ player.verticalHeadMovement; y < PROJECTION_PLANE_HEIGHT; y++)
-    {
-        // Get distance
-        float straightlinedist = (player.z * DISTANCE_TO_PROJECTION) / (y - (PROJECTION_PLANE_CENTER+ player.verticalHeadMovement));
-        //float d1 = straightlinedist / cosBeta;
+    extingThreads = 0;
 
-        // Calculate lighting intensity
-        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / straightlinedist;
-        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
+    // SELECT JOB FOR THREADS
+    currentThreadJob = TS_FLOORCAST;
 
-        // Linear Fog
-        bool hasFog = currentMap.hasFog;
-        float fogBlendingFactor = 0.0f;
-        if(currentMap.hasFog)
-            fogBlendingFactor = SDL_clamp((currentMap.floorFogMaxDist - straightlinedist) / (currentMap.floorFogMaxDist-currentMap.floorFogMinDist), 0, 1); // Calculate blending factor based on distance and max/min distances
-        
-        // Get coordinates
-        float floorx1 = player.centeredPos.x + (cosrayAngle * straightlinedist);
-        float floory1 = player.centeredPos.y + (sinrayAngle * straightlinedist);
+    for(int i = 0; i < cpuCount; i++)
+        *(threadDone[i]) = false;
 
-        float floor_xa = straightlinedist * (cosfinalRayAngle - cosrayAngle) / PROJECTION_PLANE_WIDTH;
-        float floor_ya = straightlinedist * (sinfinalRayAngle - sinrayAngle) / PROJECTION_PLANE_WIDTH;
+    threadIterationFinished = false;
 
-        float floorx = floorx1;
-        float floory = floory1;
+    // Unlock the threads
+    for(int i = 0; i < cpuCount; i++)
+        SDL_SemPost(renderingThreadSemaphore);
 
-        for(int x = 0; x < PROJECTION_PLANE_WIDTH; x++)
-        {
-            // Get map coordinates
-            int curGridX = floor(floorx / TILE_SIZE);
-            int curGridY = floor(floory / TILE_SIZE);
-
-            floorx += floor_xa;
-            floory += floor_ya;
-
-            int floorObjectID = -1;
-            int ceilingObjectID = -1;
-
-            // If the ray is in a grid that is inside the map
-            if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
-            {
-                floorObjectID = currentMap.floorMap[curGridY][curGridX];
-
-                // Check the floor texture at that point
-                if(floorObjectID >= 1)
-                {
-                    // Get textels
-                    int textureX = (int)floorx % TILE_SIZE;
-                    int textureY = (int)floory % TILE_SIZE;
-                    
-                    // Draw floor
-                    R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.textures[floorObjectID]->texture, textureX, textureY), floorLighting, straightlinedist, hasFog, fogBlendingFactor);
-
-                    /*
-                    if(debugRendering)
-                    {
-                        SDL_Delay(5);
-                        SDL_UpdateWindowSurface(application.win);
-                        SDL_Rect size = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
-                        SDL_BlitScaled(raycast_surface, NULL, win_surface, &size);
-                    }
-                    */
-                }
-            }
-        }
-
-    }
-    // omp parallel for implies barrier at the end
+    // Wait for all threads to finish
+    SDL_SemWait(mainThreadWaitSem);
 }
 
 //-------------------------------------
@@ -2045,71 +1984,28 @@ void R_CeilingCastingHor(int level)
     float cosrayAngle = cos(rayAngle);
     float sinrayAngle = sin(rayAngle);
 
-    float cosfinalRayAngle = cos(finalRayAngle);
-    float sinfinalRayAngle = sin(finalRayAngle);
+    // Parallelize
+    curCosFinalRayAngle = cos(finalRayAngle);
+    curSinFinalRayAngle = sin(finalRayAngle);
 
-    float ceilingHeight = TILE_SIZE * (level+1);
+    curCeilingHeight = TILE_SIZE * (level+1);
 
-    #pragma omp parallel for
-    for(int y = PROJECTION_PLANE_CENTER+1+ player.verticalHeadMovement; y >= 0; y--)
-    {
-        // Get distance
-        float straightlinedist = (((ceilingHeight - player.z) * DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER+ player.verticalHeadMovement)-y));
-        //float d = straightlinedist / cos(beta);
+    extingThreads = 0;
 
-        // Calculate lighting intensity
-        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / straightlinedist;
-        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
+    // SELECT JOB FOR THREADS
+    currentThreadJob = TS_CEILINGCAST;
 
-        // LinearFog
-        bool hasFog = currentMap.hasFog;
-        float fogBlendingFactor = 0.0f;
-        if(hasFog)
-            fogBlendingFactor = SDL_clamp((currentMap.floorFogMaxDist - straightlinedist) / (currentMap.floorFogMaxDist-currentMap.floorFogMinDist), 0, 1); // Calculate blending factor based on distance and max/min distances
+    for(int i = 0; i < cpuCount; i++)
+        *(threadDone[i]) = false;
 
-        // Get coordinates
-        float floorx1 = player.centeredPos.x + (cosrayAngle * straightlinedist);
-        float floory1 = player.centeredPos.y + (sinrayAngle * straightlinedist);
+    threadIterationFinished = false;
 
-        float floor_xa = straightlinedist * (cosfinalRayAngle - cosrayAngle) / PROJECTION_PLANE_WIDTH;
-        float floor_ya = straightlinedist * (sinfinalRayAngle - sinrayAngle) / PROJECTION_PLANE_WIDTH;
+    // Unlock the threads
+    for(int i = 0; i < cpuCount; i++)
+        SDL_SemPost(renderingThreadSemaphore);
 
-        float floorx = floorx1;
-        float floory = floory1;
-
-        for(int x = 0; x < PROJECTION_PLANE_WIDTH; x++)
-        {
-            // Get map coordinates
-            int curGridX = floor(floorx / TILE_SIZE);
-            int curGridY = floor(floory / TILE_SIZE);
-
-            floorx += floor_xa;
-            floory += floor_ya;
-
-            int floorObjectID = -1;
-            int ceilingObjectID = -1;
-
-            // If the ray is in a grid that is inside the map
-            if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
-            {
-                floorObjectID = currentMap.ceilingMap[curGridY][curGridX];
-
-                // Check the floor texture at that point
-                if(floorObjectID >= 1)
-                {
-                    // Get textels
-                    int textureX = (int)floorx % TILE_SIZE;
-                    int textureY = (int)floory % TILE_SIZE;
-
-                    // Draw floor
-                    R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.textures[floorObjectID]->texture, textureX, textureY), floorLighting, straightlinedist, hasFog, fogBlendingFactor);
-
-                }
-            }
-        }
-
-    }
-    // omp parallel for implies barrier at the end
+    // Wait for all threads to finish
+    SDL_SemWait(mainThreadWaitSem);
 }
 
 bool R_DoesCeilingCast(wallObject_t* obj)
@@ -2203,103 +2099,95 @@ void R_DrawThinWall(walldata_t* cur)
 //-------------------------------------
 void R_AddToVisibleSprite(int gridX, int gridY, int level, int spriteID)
 {
-    #pragma omp critical
-    {
-        // Check if it's a dynamic
-        if(U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 1)
-        {
+     // Check if it's a dynamic
+    if(U_GetBit(&tomentdatapack.sprites[spriteID]->flags, 2) == 1)
+        return;
 
-        }
-        else
-        {
+    SDL_LockMutex(rayDataMutex);
+    visibleSprites[visibleSpritesLength].level = level;
 
-            visibleSprites[visibleSpritesLength].level = level;
+    // Save Grid Pos
+    visibleSprites[visibleSpritesLength].gridPos.x = gridX;
+    visibleSprites[visibleSpritesLength].gridPos.y = gridY;
 
-            // Save Grid Pos
-            visibleSprites[visibleSpritesLength].gridPos.x = gridX;
-            visibleSprites[visibleSpritesLength].gridPos.y = gridY;
+    // Get World Pos
+    visibleSprites[visibleSpritesLength].pos.x = gridX * TILE_SIZE;
+    visibleSprites[visibleSpritesLength].pos.y = gridY * TILE_SIZE;
 
-            // Get World Pos
-            visibleSprites[visibleSpritesLength].pos.x = gridX * TILE_SIZE;
-            visibleSprites[visibleSpritesLength].pos.y = gridY * TILE_SIZE;
+    visibleSprites[visibleSpritesLength].centeredPos.x = visibleSprites[visibleSpritesLength].pos.x + (HALF_TILE_SIZE);
+    visibleSprites[visibleSpritesLength].centeredPos.y = visibleSprites[visibleSpritesLength].pos.y + (HALF_TILE_SIZE);
 
-            visibleSprites[visibleSpritesLength].centeredPos.x = visibleSprites[visibleSpritesLength].pos.x + (HALF_TILE_SIZE);
-            visibleSprites[visibleSpritesLength].centeredPos.y = visibleSprites[visibleSpritesLength].pos.y + (HALF_TILE_SIZE);
+    // Get Player Space pos
+    visibleSprites[visibleSpritesLength].pSpacePos.x = visibleSprites[visibleSpritesLength].centeredPos.x - player.centeredPos.x;
+    visibleSprites[visibleSpritesLength].pSpacePos.y = visibleSprites[visibleSpritesLength].centeredPos.y - player.centeredPos.y;
 
-            // Get Player Space pos
-            visibleSprites[visibleSpritesLength].pSpacePos.x = visibleSprites[visibleSpritesLength].centeredPos.x - player.centeredPos.x;
-            visibleSprites[visibleSpritesLength].pSpacePos.y = visibleSprites[visibleSpritesLength].centeredPos.y - player.centeredPos.y;
+    // Calculate the distance to player
+    visibleSprites[visibleSpritesLength].dist = sqrt(visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x + visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y);
 
-            // Calculate the distance to player
-            visibleSprites[visibleSpritesLength].dist = sqrt(visibleSprites[visibleSpritesLength].pSpacePos.x*visibleSprites[visibleSpritesLength].pSpacePos.x + visibleSprites[visibleSpritesLength].pSpacePos.y*visibleSprites[visibleSpritesLength].pSpacePos.y);
+    // Get ID
+    visibleSprites[visibleSpritesLength].spriteID = spriteID;
+    visibleSprites[visibleSpritesLength].sheetLength = tomentdatapack.spritesSheetsLenghtTable[spriteID];
 
-            // Get ID
-            visibleSprites[visibleSpritesLength].spriteID = spriteID;
-            visibleSprites[visibleSpritesLength].sheetLength = tomentdatapack.spritesSheetsLenghtTable[spriteID];
+    // Sprite is also a drawable
+    // Add it to the drawables
+    allDrawables[allDrawablesLength].type = DRWB_SPRITE;
+    allDrawables[allDrawablesLength].spritePtr = &visibleSprites[visibleSpritesLength];
+    
+    // Quick variable access
+    allDrawables[allDrawablesLength].dist = visibleSprites[visibleSpritesLength].dist;
+    
+    // Increment indexes
+    allDrawablesLength++;
+    visibleSpritesLength++;
 
-            // Sprite is also a drawable
-            // Add it to the drawables
-            allDrawables[allDrawablesLength].type = DRWB_SPRITE;
-            allDrawables[allDrawablesLength].spritePtr = &visibleSprites[visibleSpritesLength];
-            
-            // Quick variable access
-            allDrawables[allDrawablesLength].dist = visibleSprites[visibleSpritesLength].dist;
-            
-            // Increment indexes
-            allDrawablesLength++;
-            visibleSpritesLength++;
-
-            
-            // Mark this sprite as added so we don't get duplicates
-            visibleTiles[gridY][gridX] = true;
-        }
-    }
+    
+    // Mark this sprite as added so we don't get duplicates
+    visibleTiles[gridY][gridX] = true;
+    SDL_UnlockMutex(rayDataMutex);
 }
 
 void R_AddDynamicToVisibleSprite(int level, int gridX, int gridY)
 {
-    #pragma omp critical
-    {
-        // Check if it's a dynamic
-        dynamicSprite_t* dynamicSprite = G_GetFromDynamicSpriteMap(level, gridY, gridX);
+    SDL_LockMutex(rayDataMutex);
+    // Check if it's a dynamic
+    dynamicSprite_t* dynamicSprite = G_GetFromDynamicSpriteMap(level, gridY, gridX);
 
-        // Sprite is also a drawable
-        // Add it to the drawables
-        allDrawables[allDrawablesLength].type = DRWB_DYNAMIC_SPRITE;
-        allDrawables[allDrawablesLength].dynamicSpritePtr = G_GetFromDynamicSpriteMap(level, gridY, gridX);
-        
-        // Quick variable access
-        allDrawables[allDrawablesLength].dist = dynamicSprite->base.dist;
-        
-        // Increment indexes
-        allDrawablesLength++;
+    // Sprite is also a drawable
+    // Add it to the drawables
+    allDrawables[allDrawablesLength].type = DRWB_DYNAMIC_SPRITE;
+    allDrawables[allDrawablesLength].dynamicSpritePtr = G_GetFromDynamicSpriteMap(level, gridY, gridX);
+    
+    // Quick variable access
+    allDrawables[allDrawablesLength].dist = dynamicSprite->base.dist;
+    
+    // Increment indexes
+    allDrawablesLength++;
 
-        // Mark this sprite as added so we don't get duplicates
-        visibleTiles[gridY][gridX] = true;
-    }
+    // Mark this sprite as added so we don't get duplicates
+    visibleTiles[gridY][gridX] = true;
+    SDL_UnlockMutex(rayDataMutex);
 }
 
 void R_AddDeadDynamicToVisibleSprite(int level, int gridX, int gridY)
 {
-    #pragma omp critical
-    {
-        // Check if it's a dynamic
-        dynamicSprite_t* dynamicSprite = G_GetFromDeadDynamicSpriteMap(level, gridY, gridX);
+    SDL_LockMutex(rayDataMutex);
+    // Check if it's a dynamic
+    dynamicSprite_t* dynamicSprite = G_GetFromDeadDynamicSpriteMap(level, gridY, gridX);
 
-        // Sprite is also a drawable
-        // Add it to the drawables
-        allDrawables[allDrawablesLength].type = DRWB_DYNAMIC_SPRITE;
-        allDrawables[allDrawablesLength].dynamicSpritePtr = G_GetFromDeadDynamicSpriteMap(level, gridY, gridX);
-        
-        // Quick variable access
-        allDrawables[allDrawablesLength].dist = dynamicSprite->base.dist;
-        
-        // Increment indexes
-        allDrawablesLength++;
+    // Sprite is also a drawable
+    // Add it to the drawables
+    allDrawables[allDrawablesLength].type = DRWB_DYNAMIC_SPRITE;
+    allDrawables[allDrawablesLength].dynamicSpritePtr = G_GetFromDeadDynamicSpriteMap(level, gridY, gridX);
+    
+    // Quick variable access
+    allDrawables[allDrawablesLength].dist = dynamicSprite->base.dist;
+    
+    // Increment indexes
+    allDrawablesLength++;
 
-        // Mark this sprite as added so we don't get duplicates
-        visibleTiles[gridY][gridX] = true;
-    }
+    // Mark this sprite as added so we don't get duplicates
+    visibleTiles[gridY][gridX] = true;
+    SDL_UnlockMutex(rayDataMutex);
 }
 
 //-------------------------------------
@@ -2982,41 +2870,36 @@ void R_DrawStripeTexturedShaded(int x, int y, int endY, SDL_Surface* texture, in
 // Save the information about this hit, it will be drawn later after this ray draws a wall
 void I_AddThinWall(int level, bool horizontal, float rayAngle, int x, float curX, float curY, int gridX, int gridY, float distance)
 {
-    #pragma omp critical
-    {
-        if(visibleThinWallsLength >= PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION)
-        {
+    if(visibleThinWallsLength >= PROJECTION_PLANE_WIDTH * MAX_THIN_WALL_TRANSPARENCY_RECURSION)
+        return;
 
-        }
-        else
-        {
-            walldata_t* data = &currentThinWalls[visibleThinWallsLength];
-            data->level = level;
-            data->rayAngle = rayAngle;
-            data->x = x;
-            data->curX = curX;
-            data->curY = curY;
-            data->distance = distance;
-            data->gridPos.x = gridX;
-            data->gridPos.y = gridY;
-            data->objectHit = R_GetWallObjectFromMap(level, gridY, gridX);
-            data->isVertical = !horizontal;
+    SDL_LockMutex(rayDataMutex);
+    walldata_t* data = &currentThinWalls[visibleThinWallsLength];
+    data->level = level;
+    data->rayAngle = rayAngle;
+    data->x = x;
+    data->curX = curX;
+    data->curY = curY;
+    data->distance = distance;
+    data->gridPos.x = gridX;
+    data->gridPos.y = gridY;
+    data->objectHit = R_GetWallObjectFromMap(level, gridY, gridX);
+    data->isVertical = !horizontal;
 
-            if(horizontal)
-                data->extraData = (curX - (UNIT_SIZE*gridX)) < G_GetDoorPosition(data->level, gridY, gridX); // Is Door Visible (we have to ceil cast even if the door is closed, but we don't have to show the actual door if it is closed)
-            else
-                data->extraData = (curY - (UNIT_SIZE*gridY)) < G_GetDoorPosition(data->level, gridY, gridX);
+    if(horizontal)
+        data->extraData = (curX - (UNIT_SIZE*gridX)) < G_GetDoorPosition(data->level, gridY, gridX); // Is Door Visible (we have to ceil cast even if the door is closed, but we don't have to show the actual door if it is closed)
+    else
+        data->extraData = (curY - (UNIT_SIZE*gridY)) < G_GetDoorPosition(data->level, gridY, gridX);
 
-            // Add it to the drawables
-            allDrawables[allDrawablesLength].type = DRWB_WALL;
-            allDrawables[allDrawablesLength].wallPtr = &currentThinWalls[visibleThinWallsLength];
-            // Quick variable access
-            allDrawables[allDrawablesLength].dist = data->distance;
+    // Add it to the drawables
+    allDrawables[allDrawablesLength].type = DRWB_WALL;
+    allDrawables[allDrawablesLength].wallPtr = &currentThinWalls[visibleThinWallsLength];
+    // Quick variable access
+    allDrawables[allDrawablesLength].dist = data->distance;
 
-            allDrawablesLength++;
-            visibleThinWallsLength++;
-        }
-    }
+    allDrawablesLength++;
+    visibleThinWallsLength++;
+    SDL_UnlockMutex(rayDataMutex);
 }
 
 static void I_DebugPathfinding(void)
@@ -3045,4 +2928,343 @@ static void I_DebugPathfinding(void)
                 R_BlitColorIntoScreen(SDL_MapRGB(win_surface->format, 255, 0, 0), &curRect);
             }
         }
+}
+
+void ThreadFunctionRaycast(thread_data_t* d)
+{
+    int t = cpuCount;
+    int ID = d->localID;
+    int N = PROJECTION_PLANE_WIDTH;
+    int nLoc = N/t;
+    int r = N%t;
+    int step = 0;
+
+    if (ID < r)
+    { 
+        nLoc++;
+        step=0;
+    }
+    else
+        step=r;
+
+
+    // Cast a ray foreach pixel of the projection plane of this thread
+    for(int x = ID*nLoc; x < (ID + 1) * nLoc + step; x++)
+    {
+        float rayAngle = player.angle - (RADIAN * (PLAYER_FOV / 2)) + (((RADIAN * PLAYER_FOV) / PROJECTION_PLANE_WIDTH) * x);
+
+        bool occlusionEnabled = (currentLevel == currentPlayersLevel) ? true : false;
+
+        // Variables set by Raycast functions to draw floor
+        float outHeight;
+        float outEnd;
+
+        if(occlusionEnabled)
+            R_RaycastPlayersLevel(currentLevel, x, rayAngle);
+        else
+            R_RaycastLevelNoOcclusion(currentLevel, x, rayAngle);
+
+
+        // Check next ray
+        rayAngle += (RADIAN * PLAYER_FOV) / PROJECTION_PLANE_WIDTH;
+    }
+
+
+    // Say this thread has finished
+    SDL_LockMutex(threadDataMutex);
+    *(threadDone[d->localID]) = true;
+
+    // Check if all threads are done
+    bool oneStillRunning = false;
+    for(int i = 0; i < cpuCount; i++)
+        if(*(threadDone[i]) == false)
+        {
+            oneStillRunning = true;
+            break;
+        }
+
+    // If at least one is still running
+    if(oneStillRunning)
+    {
+        // Wait for the last one until it executes the CondBroadcast
+        while(threadIterationFinished == false)
+            SDL_CondWait(condThreadWait, threadDataMutex);
+    }
+    else
+    {
+        threadIterationFinished = true;
+        SDL_CondBroadcast(condThreadWait);
+    }
+    
+    extingThreads++;
+
+    if(extingThreads == cpuCount)
+        SDL_SemPost(mainThreadWaitSem);
+
+    SDL_UnlockMutex(threadDataMutex);
+}
+
+void ThreadFunctionFloorcast(thread_data_t* d)
+{
+    int t = cpuCount;
+    int ID = d->localID;
+    int N = PROJECTION_PLANE_HEIGHT - (PROJECTION_PLANE_CENTER + 1 + player.verticalHeadMovement);
+    int nLoc = N/t;
+    int r = N%t;
+    int step = 0;
+
+    if (ID < r)
+    { 
+        nLoc++;
+        step=0;
+    }
+    else
+        step=r;
+
+    for(int y = ID*nLoc + (PROJECTION_PLANE_CENTER + 1 + player.verticalHeadMovement); y < (ID + 1) * nLoc + step + (PROJECTION_PLANE_CENTER + 1 + player.verticalHeadMovement); y++)
+    {
+        // Get distance
+        float straightlinedist = (player.z * DISTANCE_TO_PROJECTION) / (y - (PROJECTION_PLANE_CENTER+ player.verticalHeadMovement));
+        //float d1 = straightlinedist / cosBeta;
+
+        // Calculate lighting intensity
+        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / straightlinedist;
+        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
+
+        // Linear Fog
+        bool hasFog = currentMap.hasFog;
+        float fogBlendingFactor = 0.0f;
+        if(currentMap.hasFog)
+            fogBlendingFactor = SDL_clamp((currentMap.floorFogMaxDist - straightlinedist) / (currentMap.floorFogMaxDist-currentMap.floorFogMinDist), 0, 1); // Calculate blending factor based on distance and max/min distances
+        
+        // Get coordinates
+        float floorx1 = player.centeredPos.x + (curCosRayAngle * straightlinedist);
+        float floory1 = player.centeredPos.y + (curSinRayAngle * straightlinedist);
+
+        float floor_xa = straightlinedist * (curCosFinalRayAngle - curCosRayAngle) / PROJECTION_PLANE_WIDTH;
+        float floor_ya = straightlinedist * (curSinFinalRayAngle - curSinRayAngle) / PROJECTION_PLANE_WIDTH;
+
+        float floorx = floorx1;
+        float floory = floory1;
+
+        for(int x = 0; x < PROJECTION_PLANE_WIDTH; x++)
+        {
+            // Get map coordinates
+            int curGridX = floor(floorx / TILE_SIZE);
+            int curGridY = floor(floory / TILE_SIZE);
+
+            floorx += floor_xa;
+            floory += floor_ya;
+
+            int floorObjectID = -1;
+            int ceilingObjectID = -1;
+
+            // If the ray is in a grid that is inside the map
+            if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
+            {
+                floorObjectID = currentMap.floorMap[curGridY][curGridX];
+
+                // Check the floor texture at that point
+                if(floorObjectID >= 1)
+                {
+                    // Get textels
+                    int textureX = (int)floorx % TILE_SIZE;
+                    int textureY = (int)floory % TILE_SIZE;
+                    
+                    // Draw floor
+                    R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.textures[floorObjectID]->texture, textureX, textureY), floorLighting, straightlinedist, hasFog, fogBlendingFactor);
+
+                    /*
+                    if(debugRendering)
+                    {
+                        SDL_Delay(5);
+                        SDL_UpdateWindowSurface(application.win);
+                        SDL_Rect size = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+                        SDL_BlitScaled(raycast_surface, NULL, win_surface, &size);
+                    }
+                    */
+                }
+            }
+        }
+    }
+
+    // Say this thread has finished
+    SDL_LockMutex(threadDataMutex);
+    *(threadDone[d->localID]) = true;
+
+    // Check if all threads are done
+    bool oneStillRunning = false;
+    for(int i = 0; i < cpuCount; i++)
+        if(*(threadDone[i]) == false)
+        {
+            oneStillRunning = true;
+            break;
+        }
+
+    // If at least one is still running
+    if(oneStillRunning)
+    {
+        // Wait for the last one until it executes the CondBroadcast
+        while(threadIterationFinished == false)
+            SDL_CondWait(condThreadWait, threadDataMutex);
+    }
+    else
+    {
+        threadIterationFinished = true;
+        SDL_CondBroadcast(condThreadWait);
+    }
+    
+    extingThreads++;
+
+    if(extingThreads == cpuCount)
+        SDL_SemPost(mainThreadWaitSem);
+
+    SDL_UnlockMutex(threadDataMutex);
+}
+
+void ThreadFunctionCeilingcast(thread_data_t* d)
+{
+    int t = cpuCount; 
+    int ID = d->localID; 
+    int N = PROJECTION_PLANE_CENTER + 1 + player.verticalHeadMovement; 
+    int nLoc = N / t; 
+    int r = N % t; 
+    int step = 0; 
+
+    if (ID < r) 
+    { 
+        nLoc++; 
+        step = 0; 
+    } 
+    else 
+    {
+        step = r;
+    }
+
+    for (int y = PROJECTION_PLANE_CENTER + 1 + player.verticalHeadMovement - (ID * nLoc + step); 
+            y >= PROJECTION_PLANE_CENTER + 1 + player.verticalHeadMovement - ((ID + 1) * nLoc + step); 
+            y--) 
+    {
+        // Get distance
+        float straightlinedist = (((curCeilingHeight - player.z) * DISTANCE_TO_PROJECTION) / ((PROJECTION_PLANE_CENTER+ player.verticalHeadMovement)-y));
+        //float d = straightlinedist / cos(beta);
+
+        // Calculate lighting intensity
+        float floorLighting = (PLAYER_POINT_LIGHT_INTENSITY + currentMap.floorLight) / straightlinedist;
+        floorLighting = SDL_clamp(floorLighting, 0, 1.0f);
+
+        // LinearFog
+        bool hasFog = currentMap.hasFog;
+        float fogBlendingFactor = 0.0f;
+        if(hasFog)
+            fogBlendingFactor = SDL_clamp((currentMap.floorFogMaxDist - straightlinedist) / (currentMap.floorFogMaxDist-currentMap.floorFogMinDist), 0, 1); // Calculate blending factor based on distance and max/min distances
+
+        // Get coordinates
+        float floorx1 = player.centeredPos.x + (curCosRayAngle * straightlinedist);
+        float floory1 = player.centeredPos.y + (curSinRayAngle * straightlinedist);
+
+        float floor_xa = straightlinedist * (curCosFinalRayAngle - curCosRayAngle) / PROJECTION_PLANE_WIDTH;
+        float floor_ya = straightlinedist * (curSinFinalRayAngle - curSinRayAngle) / PROJECTION_PLANE_WIDTH;
+
+        float floorx = floorx1;
+        float floory = floory1;
+
+        for(int x = 0; x < PROJECTION_PLANE_WIDTH; x++)
+        {
+            // Get map coordinates
+            int curGridX = floor(floorx / TILE_SIZE);
+            int curGridY = floor(floory / TILE_SIZE);
+
+            floorx += floor_xa;
+            floory += floor_ya;
+
+            int floorObjectID = -1;
+            int ceilingObjectID = -1;
+
+            // If the ray is in a grid that is inside the map
+            if(curGridX >= 0 && curGridY >= 0 && curGridX < MAP_WIDTH && curGridY < MAP_HEIGHT)
+            {
+                floorObjectID = currentMap.ceilingMap[curGridY][curGridX];
+
+                // Check the floor texture at that point
+                if(floorObjectID >= 1)
+                {
+                    // Get textels
+                    int textureX = (int)floorx % TILE_SIZE;
+                    int textureY = (int)floory % TILE_SIZE;
+
+                    // Draw floor
+                    R_DrawPixelShaded(x, y, R_GetPixelFromSurface(tomentdatapack.textures[floorObjectID]->texture, textureX, textureY), floorLighting, straightlinedist, hasFog, fogBlendingFactor);
+
+                }
+            }
+        }
+    }
+
+    // Say this thread has finished
+    SDL_LockMutex(threadDataMutex);
+    *(threadDone[d->localID]) = true;
+
+    // Check if all threads are done
+    bool oneStillRunning = false;
+    for(int i = 0; i < cpuCount; i++)
+        if(*(threadDone[i]) == false)
+        {
+            oneStillRunning = true;
+            break;
+        }
+
+    // If at least one is still running
+    if(oneStillRunning)
+    {
+        // Wait for the last one until it executes the CondBroadcast
+        while(threadIterationFinished == false)
+            SDL_CondWait(condThreadWait, threadDataMutex);
+    }
+    else
+    {
+        threadIterationFinished = true;
+        SDL_CondBroadcast(condThreadWait);
+    }
+    
+    extingThreads++;
+
+    if(extingThreads == cpuCount)
+        SDL_SemPost(mainThreadWaitSem);
+
+    SDL_UnlockMutex(threadDataMutex);
+}
+
+int R_ThreadRoutine(void* data)
+{
+    thread_data_t* d = (thread_data_t*)data;
+
+    while(1)
+    {
+        // Wait for new render signal
+        SDL_SemWait(renderingThreadSemaphore);
+
+        switch(currentThreadJob)
+        {
+            case TS_RAYCAST:
+            {
+                ThreadFunctionRaycast(d);
+                break;
+            }
+
+            case TS_FLOORCAST:
+            {
+                ThreadFunctionFloorcast(d);
+                break;
+            }
+
+            case TS_CEILINGCAST:
+            {
+                ThreadFunctionCeilingcast(d);
+                break;
+            }
+        }
+    }
+
+    return 0;
 }
