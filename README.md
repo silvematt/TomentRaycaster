@@ -1,7 +1,7 @@
 # TomentRaycaster
 A Software Rendering Raycaster Engine written in C and SDL2.
 
-![alt text](https://i.imgur.com/7oomyDP.png)
+<img width="639" height="503" alt="image" src="https://github.com/user-attachments/assets/61633134-402d-4971-a6b6-9a113050eda7" />
 
 Video: https://www.youtube.com/watch?v=XFCinBirBVw
 
@@ -10,7 +10,8 @@ Video: https://www.youtube.com/watch?v=XFCinBirBVw
 I've written this raycaster following Permadi's paper and Wolfenstein 3D code (and Black Book), as a pilgrimage to my God John Carmack.
 
 Features:
-- Rendering 640x480 (with scalable raycasting resolution) 
+- Multithreaded rendering, using SDL Threads
+- 640x480 with scalable raycasting resolution 
 - Player Input (Walk forward/backwards, fly up/down, rotate, look up/down, strafe, interact)
 - Textured Walls, Floors, Ceilings
 - Thin (offsetted) Walls
